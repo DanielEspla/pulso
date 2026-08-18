@@ -28,6 +28,7 @@ export default function KettlebellView({ templates, history, persistHistory, cyc
   const [rounds, setRounds] = useState(0);
   const [finalRounds, setFinalRounds] = useState(0);
   const [saveMsg, setSaveMsg] = useState("");
+  const [justAdded, setJustAdded] = useState(false);
 
   const program = templates.kettlebellProgram;
   const phaseIndex = kettlebellPhaseIndex(kettlebellProgress.sessionsCompleted);
@@ -50,6 +51,8 @@ export default function KettlebellView({ templates, history, persistHistory, cyc
     ensureAudioUnlocked();
     setRounds((r) => r + 1);
     startRestTimer(`Descanso — ${DAY_LABELS[dayType]}`, restSeconds);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1600);
   };
 
   const startCircuito = () => {
@@ -93,16 +96,16 @@ export default function KettlebellView({ templates, history, persistHistory, cyc
         <p style={styles.cardTitle}>
           {complete ? "Programa de 12 semanas completado" : `Sesión ${kettlebellProgress.sessionsCompleted + 1} de ${TOTAL_PROGRAM_SESSIONS}`}
         </p>
-        <p style={{ fontSize: 13, color: "#F2B705", margin: 0 }}>
+        <p style={{ fontSize: 13, color: "#B86C4E", margin: 0 }}>
           {phase.name} · {phase.weekRange}
         </p>
         {complete && (
-          <p style={{ fontSize: 12, color: "#8A8F98", margin: "6px 0 0" }}>
+          <p style={{ fontSize: 12, color: "#6F6A67", margin: "6px 0 0" }}>
             Has completado las {TOTAL_PROGRAM_SESSIONS} sesiones. La app te sigue mostrando la Fase 3 hasta que decidas el siguiente programa
             (clean, push press, sentadilla en rack).
           </p>
         )}
-        {cycle.deloadActive && <p style={{ fontSize: 12, color: "#F2B705", margin: "6px 0 0" }}>Descarga: peso máximo 12kg esta semana.</p>}
+        {cycle.deloadActive && <p style={{ fontSize: 12, color: "#B86C4E", margin: "6px 0 0" }}>Descarga: peso máximo 12kg esta semana.</p>}
       </div>
 
       <div style={styles.dotsRow}>
@@ -125,7 +128,7 @@ export default function KettlebellView({ templates, history, persistHistory, cyc
               Circuito — {dayPlan.durationMin} min{dayPlan.note ? ` (${dayPlan.note})` : ""}
             </p>
             {displayExercises.map((ex, i) => (
-              <p key={i} style={{ fontSize: 13, color: "#F5F5F0", margin: "4px 0" }}>
+              <p key={i} style={{ fontSize: 13, color: "#1A1E22", margin: "4px 0" }}>
                 {formatExercise(ex, templates.customExerciseNames)}
               </p>
             ))}
@@ -139,7 +142,7 @@ export default function KettlebellView({ templates, history, persistHistory, cyc
               <button style={styles.smallBtn} onClick={() => setRounds((r) => Math.max(0, r - 1))}>
                 −
               </button>
-              <span style={{ fontSize: 22, fontFamily: "'Oswald', sans-serif", fontWeight: 700 }}>{rounds}</span>
+              <span style={{ fontSize: 22, fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700 }}>{rounds}</span>
               <button style={styles.smallBtn} onClick={() => setRounds((r) => r + 1)}>
                 +
               </button>
@@ -151,11 +154,12 @@ export default function KettlebellView({ templates, history, persistHistory, cyc
           <div style={styles.card}>
             <p style={styles.cardTitle}>Primera parte — {dayPlan.rounds} vueltas</p>
             {displayExercises.map((ex, i) => (
-              <p key={i} style={{ fontSize: 13, color: "#F5F5F0", margin: "4px 0" }}>
+              <p key={i} style={{ fontSize: 13, color: "#1A1E22", margin: "4px 0" }}>
                 {formatExercise(ex, templates.customExerciseNames)}
               </p>
             ))}
-            <p style={{ fontSize: 12, color: "#8A8F98", margin: "8px 0 0" }}>Vueltas completadas: {rounds}</p>
+            <p style={{ fontSize: 12, color: "#6F6A67", margin: "8px 0 0" }}>Vueltas completadas: {rounds}</p>
+            {justAdded && <p style={{ ...styles.successText, fontWeight: 600 }}>✓ Vuelta añadida</p>}
             <button style={{ ...styles.addBtn, marginTop: 8 }} onClick={addRound}>
               + Vuelta completada (inicia descanso)
             </button>
@@ -165,7 +169,7 @@ export default function KettlebellView({ templates, history, persistHistory, cyc
             <div style={styles.card}>
               <p style={styles.cardTitle}>Final corto — {dayPlan.finalDurationMin} min</p>
               {displayFinalExercises.map((ex, i) => (
-                <p key={i} style={{ fontSize: 13, color: "#F5F5F0", margin: "4px 0" }}>
+                <p key={i} style={{ fontSize: 13, color: "#1A1E22", margin: "4px 0" }}>
                   {formatExercise(ex, templates.customExerciseNames)}
                 </p>
               ))}
@@ -173,11 +177,11 @@ export default function KettlebellView({ templates, history, persistHistory, cyc
                 Empezar final corto
               </button>
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10 }}>
-                <span style={{ fontSize: 12, color: "#8A8F98" }}>Vueltas del final:</span>
+                <span style={{ fontSize: 12, color: "#6F6A67" }}>Vueltas del final:</span>
                 <button style={styles.smallBtn} onClick={() => setFinalRounds((r) => Math.max(0, r - 1))}>
                   −
                 </button>
-                <span style={{ fontSize: 18, fontFamily: "'Oswald', sans-serif", fontWeight: 700 }}>{finalRounds}</span>
+                <span style={{ fontSize: 18, fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 700 }}>{finalRounds}</span>
                 <button style={styles.smallBtn} onClick={() => setFinalRounds((r) => r + 1)}>
                   +
                 </button>

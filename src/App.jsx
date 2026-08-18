@@ -13,17 +13,19 @@ import {
   saveTimerPrefs,
   loadCycle,
   saveCycle,
+  loadKettlebellProgress,
+  saveKettlebellProgress,
 } from "./lib/storage.js";
 import { shouldOfferDeload, registerTrainedSession, startDeload, postponeDeload, finishDeload, sessionsUntilDeload } from "./lib/cycle.js";
-import { playBeep, vibrateShort } from "./lib/timer.js";
+import { ensureAudioUnlocked, playBeep, vibrateShort } from "./lib/timer.js";
 import TimerPanel from "./components/TimerPanel.jsx";
 import FullBodyView from "./components/FullBodyView.jsx";
-import HiitView from "./components/HiitView.jsx";
+import KettlebellView from "./components/KettlebellView.jsx";
 import HistorialView from "./components/HistorialView.jsx";
 import AjustesView from "./components/AjustesView.jsx";
 
 export default function App() {
-  const [screen, setScreen] = useState("fullbody"); // fullbody | hiit | historial | ajustes
+  const [screen, setScreen] = useState("fullbody"); // fullbody | kettlebell | historial | ajustes
   const [templates, setTemplates] = useState(null);
   const [history, setHistory] = useState(null);
   const [cycle, setCycle] = useState(null);
@@ -35,11 +37,11 @@ export default function App() {
   const [draftAcknowledged, setDraftAcknowledged] = useState(false);
   const [draftRecoveryOffer, setDraftRecoveryOffer] = useState(null);
 
-  // --- Cronómetro de descanso Full Body (genérico, vía TimerPanel) ---
+  // --- Cronómetro de descanso, compartido entre Full Body y Kettlebell ---
   const [restTimer, setRestTimer] = useState(null);
 
-  // --- Sesión HIIT en curso (elevada, sobrevive a cambiar de pestaña) ---
-  const [hiitSession, setHiitSession] = useState(null);
+  // --- Progreso del programa de Kettlebell (12 semanas / 3 fases) ---
+  const [kettlebellProgress, setKettlebellProgress] = useState(null);
 
   const [nowTick, setNowTick] = useState(Date.now());
 
@@ -47,6 +49,7 @@ export default function App() {
     setTemplates(loadTemplatesOrDefault());
     setHistory(loadHistory());
     setCycle(loadCycle());
+    setKettlebellProgress(loadKettlebellProgress());
 
     const storedDraft = loadDraft();
     const hasContent = storedDraft && storedDraft.draftSets && Object.values(storedDraft.draftSets).some((arr) => arr.length > 0);
@@ -115,12 +118,17 @@ export default function App() {
     persistCycle(next);
   };
 
+  const persistKettlebellProgress = (next) => {
+    setKettlebellProgress(next);
+    saveKettlebellProgress(next);
+  };
+
   // ---------------------------------------------------------------------
   // Cronómetro de descanso Full Body
   // ---------------------------------------------------------------------
   const startRestTimer = (label, totalSeconds) => {
     if (!timerPrefs.autoStart) return;
-    setRestTimer({ label, totalSeconds, endTime: Date.now() + totalSeconds * 1000, paused: false, remainingMsAtPause: null, finished: false });
+    setRestTimer({ label, totalSeconds, endTime: Date.now() + totalSeconds * 1000, paused: false, remainingMsAtPause: null, finished: false, originScreen: screen });
   };
   const pauseRestTimer = () =>
     setRestTimer((prev) => (prev && !prev.paused && !prev.finished ? { ...prev, paused: true, remainingMsAtPause: Math.max(0, prev.endTime - Date.now()) } : prev));
@@ -132,23 +140,22 @@ export default function App() {
   const dismissRestTimerFinished = () => setRestTimer(null);
 
   // ---------------------------------------------------------------------
-  // Tics globales: cada segundo mientras haya algo corriendo sin pausar
+  // Tics globales: cada segundo mientras el cronómetro compartido corra
+  // (lo usan tanto Full Body como Kettlebell)
   // ---------------------------------------------------------------------
   useEffect(() => {
-    const anythingRunning =
-      (restTimer && !restTimer.paused && !restTimer.finished) ||
-      (hiitSession &&
-        ((hiitSession.phase === "emom" && !hiitSession.emomPaused) ||
-          (hiitSession.phase === "restBetween" && !hiitSession.restBetween.paused && !hiitSession.restBetween.finished) ||
-          (hiitSession.phase === "amrap" && !hiitSession.amrapPaused && !hiitSession.amrapFinished)));
+    const anythingRunning = restTimer && !restTimer.paused && !restTimer.finished;
     if (!anythingRunning) return;
     const id = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [restTimer, hiitSession]);
+  }, [restTimer]);
 
   useEffect(() => {
     const handler = () => {
-      if (document.visibilityState === "visible") setNowTick(Date.now());
+      if (document.visibilityState === "visible") {
+        setNowTick(Date.now());
+        ensureAudioUnlocked(); // iOS suspende el audio en segundo plano; lo reactivamos al volver
+      }
     };
     document.addEventListener("visibilitychange", handler);
     return () => document.removeEventListener("visibilitychange", handler);
@@ -164,12 +171,12 @@ export default function App() {
     }
   }, [nowTick, restTimer, timerPrefs]);
 
-  const loading = templates === null || history === null || cycle === null;
+  const loading = templates === null || history === null || cycle === null || kettlebellProgress === null;
 
   return (
     <div style={styles.app}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Sora:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
       `}</style>
 
@@ -216,7 +223,7 @@ export default function App() {
         </div>
       )}
 
-      {restTimer && (
+      {restTimer && restTimer.originScreen === screen && (
         <TimerPanel
           timer={restTimer}
           now={nowTick}
@@ -249,17 +256,16 @@ export default function App() {
               registerSessionInCycle("fullbody");
             }}
           />
-        ) : screen === "hiit" ? (
-          <HiitView
+        ) : screen === "kettlebell" ? (
+          <KettlebellView
             templates={templates}
             history={history}
             persistHistory={persistHistory}
             cycle={cycle}
-            hiitSession={hiitSession}
-            setHiitSession={setHiitSession}
-            now={nowTick}
-            timerPrefs={timerPrefs}
-            onSessionSaved={() => registerSessionInCycle("hiit")}
+            kettlebellProgress={kettlebellProgress}
+            persistKettlebellProgress={persistKettlebellProgress}
+            startRestTimer={startRestTimer}
+            onSessionSaved={() => registerSessionInCycle("kettlebell")}
           />
         ) : screen === "historial" ? (
           <HistorialView history={history} templates={templates} />
@@ -275,6 +281,7 @@ export default function App() {
             history={history}
             setHistory={setHistory}
             persistHistory={persistHistory}
+            kettlebellProgress={kettlebellProgress}
           />
         )}
       </main>
@@ -282,7 +289,7 @@ export default function App() {
       <nav style={styles.nav}>
         {[
           ["fullbody", "FULL BODY"],
-          ["hiit", "HIIT"],
+          ["kettlebell", "KETTLEBELL"],
           ["historial", "HISTORIAL"],
           ["ajustes", "AJUSTES"],
         ].map(([key, label]) => (

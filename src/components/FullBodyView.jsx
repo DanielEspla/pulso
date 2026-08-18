@@ -26,6 +26,7 @@ export default function FullBodyView({
   const [saveMsg, setSaveMsg] = useState("");
   const [saveError, setSaveError] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [justAdded, setJustAdded] = useState(false);
 
   const slots = templates.fullBodyTemplate.exercises;
   const current = slots[currentIndex];
@@ -57,6 +58,8 @@ export default function FullBodyView({
     });
     setInputs((prev) => ({ ...prev, [exerciseId]: { weight: "", reps: "", kind: cur.kind } }));
     startRestTimer(exerciseName(exerciseId, templates.customExerciseNames), restSeconds);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1600);
   };
 
   const removeSet = (idx) => {
@@ -103,7 +106,7 @@ export default function FullBodyView({
   return (
     <div>
       <div style={{ ...styles.card, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 13, color: "#8A8F98" }}>Fecha</span>
+        <span style={{ fontSize: 13, color: "#6F6A67" }}>Fecha</span>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={styles.textInput} />
       </div>
 
@@ -127,14 +130,14 @@ export default function FullBodyView({
 
       <div style={styles.card}>
         {lastSession && (
-          <p style={{ fontSize: 12, color: "#8A8F98", margin: "0 0 8px" }}>
+          <p style={{ fontSize: 12, color: "#6F6A67", margin: "0 0 8px" }}>
             Última vez ({fmtDate(lastSession.date)}
             {lastSession.deloadWeek ? ", descarga" : ""}):{" "}
             {lastSession.sets.map((s, i) => `${s.weight}x${s.reps}${s.kind === "aproximacion" ? " aprox" : ""}`).join(", ")}
           </p>
         )}
         {suggestion !== null && (
-          <p style={{ fontSize: 12, color: "#F2B705", margin: "0 0 8px" }}>Descarga: peso sugerido {suggestion} kg (−20%), 2 series de trabajo</p>
+          <p style={{ fontSize: 12, color: "#B86C4E", margin: "0 0 8px" }}>Descarga: peso sugerido {suggestion} kg (−20%), 2 series de trabajo</p>
         )}
 
         {sets.map((s, idx) => (
@@ -149,6 +152,7 @@ export default function FullBodyView({
           </div>
         ))}
 
+        {justAdded && <p style={{ ...styles.successText, fontWeight: 600 }}>✓ Serie añadida</p>}
         <div style={styles.inputRow}>
           <input type="number" inputMode="decimal" placeholder="Kg" value={input.weight} onChange={(e) => updateInput("weight", e.target.value)} style={styles.numInput} />
           <input type="number" inputMode="numeric" placeholder="Reps" value={input.reps} onChange={(e) => updateInput("reps", e.target.value)} style={styles.numInput} />

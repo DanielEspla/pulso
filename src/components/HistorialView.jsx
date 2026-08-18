@@ -115,15 +115,15 @@ export default function HistorialView({ history, templates }) {
           {weightData.length > 0 ? (
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={weightData}>
-                <CartesianGrid stroke="#2A2E38" strokeDasharray="3 3" />
-                <XAxis dataKey="dateLabel" tick={{ fill: "#8A8F98", fontSize: 11 }} />
-                <YAxis tick={{ fill: "#8A8F98", fontSize: 11 }} domain={["dataMin - 5", "dataMax + 5"]} />
-                <Tooltip contentStyle={{ background: "#1C1F26", border: "1px solid #2A2E38", fontSize: 12 }} labelStyle={{ color: "#F5F5F0" }} />
-                <Line type="monotone" dataKey="weight" stroke="#F2B705" strokeWidth={2} dot={{ r: 3 }} />
+                <CartesianGrid stroke="#E3D8C8" strokeDasharray="3 3" />
+                <XAxis dataKey="dateLabel" tick={{ fill: "#6F6A67", fontSize: 11 }} />
+                <YAxis tick={{ fill: "#6F6A67", fontSize: 11 }} domain={["dataMin - 5", "dataMax + 5"]} />
+                <Tooltip contentStyle={{ background: "#2B203A", border: "1px solid #E3D8C8", fontSize: 12 }} labelStyle={{ color: "#F5F1EA" }} />
+                <Line type="monotone" dataKey="weight" stroke="#B86C4E" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <p style={{ fontSize: 12, color: "#8A8F98" }}>Sin datos todavía para este ejercicio.</p>
+            <p style={{ fontSize: 12, color: "#6F6A67" }}>Sin datos todavía para este ejercicio.</p>
           )}
         </div>
       )}
@@ -141,15 +141,15 @@ export default function HistorialView({ history, templates }) {
           {kbData.length > 0 ? (
             <ResponsiveContainer width="100%" height={160}>
               <LineChart data={kbData}>
-                <CartesianGrid stroke="#2A2E38" strokeDasharray="3 3" />
-                <XAxis dataKey="dateLabel" tick={{ fill: "#8A8F98", fontSize: 11 }} />
-                <YAxis tick={{ fill: "#8A8F98", fontSize: 11 }} allowDecimals={false} />
-                <Tooltip contentStyle={{ background: "#1C1F26", border: "1px solid #2A2E38", fontSize: 12 }} labelStyle={{ color: "#F5F5F0" }} />
-                <Line type="monotone" dataKey="rounds" stroke="#6FCF97" strokeWidth={2} dot={{ r: 3 }} />
+                <CartesianGrid stroke="#E3D8C8" strokeDasharray="3 3" />
+                <XAxis dataKey="dateLabel" tick={{ fill: "#6F6A67", fontSize: 11 }} />
+                <YAxis tick={{ fill: "#6F6A67", fontSize: 11 }} allowDecimals={false} />
+                <Tooltip contentStyle={{ background: "#2B203A", border: "1px solid #E3D8C8", fontSize: 12 }} labelStyle={{ color: "#F5F1EA" }} />
+                <Line type="monotone" dataKey="rounds" stroke="#9BB29A" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <p style={{ fontSize: 12, color: "#8A8F98" }}>Sin datos todavía para este día.</p>
+            <p style={{ fontSize: 12, color: "#6F6A67" }}>Sin datos todavía para este día.</p>
           )}
         </div>
       )}

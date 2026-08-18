@@ -3,6 +3,7 @@ import { styles } from "../styles.js";
 import { exerciseName } from "../lib/templates.js";
 import { slugify, todayISO } from "../lib/utils.js";
 import { exportAllData, importAllData, getLastExportDate, setLastExportDate } from "../lib/storage.js";
+import { ensureAudioUnlocked, playBeep, vibrateShort } from "../lib/timer.js";
 
 function resolveOrCreateExerciseId(name, templates, persistTemplates) {
   const id = slugify(name);
@@ -12,7 +13,7 @@ function resolveOrCreateExerciseId(name, templates, persistTemplates) {
   return id;
 }
 
-export default function AjustesView({ templates, persistTemplates, timerPrefs, updateTimerPrefs, cycle, applyImportedCycle, sessionsUntilDeload, history, setHistory, persistHistory }) {
+export default function AjustesView({ templates, persistTemplates, timerPrefs, updateTimerPrefs, cycle, applyImportedCycle, sessionsUntilDeload, history, setHistory, persistHistory, kettlebellProgress }) {
   const [newFbName, setNewFbName] = useState("");
   const [newEmomName, setNewEmomName] = useState("");
   const [newAmrapName, setNewAmrapName] = useState("");
@@ -86,7 +87,7 @@ export default function AjustesView({ templates, persistTemplates, timerPrefs, u
   };
 
   // ---------------- Exportar / Importar ----------------
-  const exportJson = exportAllData(templates, history, cycle);
+  const exportJson = exportAllData(templates, history, cycle, kettlebellProgress);
   const markExported = () => {
     const iso = new Date().toISOString();
     setLastExportDate(iso);
@@ -139,7 +140,7 @@ export default function AjustesView({ templates, persistTemplates, timerPrefs, u
           <div key={e.exerciseId} style={styles.setRow}>
             <span style={{ flex: 1, fontSize: 13.5 }}>{exerciseName(e.exerciseId, templates.customExerciseNames)}</span>
             <input type="number" value={e.restSeconds} onChange={(ev) => updateFbRest(e.exerciseId, parseInt(ev.target.value, 10) || 0)} style={styles.numInput} />
-            <span style={{ fontSize: 11, color: "#8A8F98" }}>seg</span>
+            <span style={{ fontSize: 11, color: "#6F6A67" }}>seg</span>
             <button style={styles.smallBtnDanger} onClick={() => removeFbExercise(e.exerciseId)}>
               Quitar
             </button>
@@ -177,7 +178,7 @@ export default function AjustesView({ templates, persistTemplates, timerPrefs, u
           <div key={c.exerciseId} style={styles.setRow}>
             <span style={{ flex: 1, fontSize: 13.5 }}>{exerciseName(c.exerciseId, templates.customExerciseNames)}</span>
             <input type="number" value={c.targetReps} onChange={(ev) => updateAmrapReps(c.exerciseId, parseInt(ev.target.value, 10) || 0)} style={styles.numInput} />
-            <span style={{ fontSize: 11, color: "#8A8F98" }}>reps</span>
+            <span style={{ fontSize: 11, color: "#6F6A67" }}>reps</span>
             <button style={styles.smallBtnDanger} onClick={() => removeAmrapExercise(c.exerciseId)}>
               Quitar
             </button>
@@ -212,6 +213,23 @@ export default function AjustesView({ templates, persistTemplates, timerPrefs, u
             {timerPrefs.vibration ? "Activada" : "Desactivada"}
           </button>
         </div>
+        <p style={{ fontSize: 11.5, color: "#6F6A67", margin: "8px 0 0", lineHeight: 1.5 }}>
+          En iPhone, Safari no permite vibrar desde una web — es una limitación de Apple, no de esta app. Solo funcionará el sonido.
+        </p>
+        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+          <button
+            style={styles.smallBtn}
+            onClick={() => {
+              ensureAudioUnlocked();
+              playBeep();
+            }}
+          >
+            Probar sonido
+          </button>
+          <button style={styles.smallBtn} onClick={vibrateShort}>
+            Probar vibración
+          </button>
+        </div>
       </div>
 
       <p style={styles.sectionLabel}>Ciclo de descarga</p>
@@ -219,8 +237,20 @@ export default function AjustesView({ templates, persistTemplates, timerPrefs, u
         <p style={{ fontSize: 13.5, margin: "0 0 4px" }}>
           Sesiones entrenadas: {cycle.sessionsSinceLastDeload} de {cycle.targetSessions}
         </p>
-        <p style={{ fontSize: 12, color: "#8A8F98", margin: 0 }}>
+        <p style={{ fontSize: 12, color: "#6F6A67", margin: 0 }}>
           {cycle.deloadActive ? "Semana de descarga activa." : `Próxima descarga en ${sessionsUntilDeload} sesiones.`}
+        </p>
+      </div>
+
+      <p style={styles.sectionLabel}>Programa de Kettlebell</p>
+      <div style={styles.card}>
+        <p style={{ fontSize: 13.5, margin: "0 0 4px" }}>
+          Sesión {kettlebellProgress.sessionsCompleted} de 36 completadas
+        </p>
+        <p style={{ fontSize: 12, color: "#6F6A67", margin: 0 }}>
+          {kettlebellProgress.sessionsCompleted >= 36
+            ? "Programa completado."
+            : `Fase actual: ${templates.kettlebellProgram.phases[Math.min(2, Math.floor(kettlebellProgress.sessionsCompleted / 12))].name}`}
         </p>
       </div>
 
@@ -242,7 +272,7 @@ export default function AjustesView({ templates, persistTemplates, timerPrefs, u
 
       <p style={styles.sectionLabel}>Exportar</p>
       <div style={styles.card}>
-        <p style={{ fontSize: 12, color: "#8A8F98", margin: "0 0 8px" }}>
+        <p style={{ fontSize: 12, color: "#6F6A67", margin: "0 0 8px" }}>
           {lastExport ? `Última copia exportada: ${new Date(lastExport).toLocaleString("es-ES")}.` : "Todavía no has exportado ninguna copia."}
         </p>
         <textarea readOnly value={exportJson} style={styles.jsonTextarea} />
@@ -258,7 +288,7 @@ export default function AjustesView({ templates, persistTemplates, timerPrefs, u
 
       <p style={styles.sectionLabel}>Importar</p>
       <div style={styles.card}>
-        <p style={{ fontSize: 12, color: "#8A8F98", margin: "0 0 8px", lineHeight: 1.5 }}>
+        <p style={{ fontSize: 12, color: "#6F6A67", margin: "0 0 8px", lineHeight: 1.5 }}>
           Se crea copia de seguridad de tus datos actuales antes de importar. Si el archivo no es válido, no se cambia nada.
         </p>
         <textarea value={importText} onChange={(e) => setImportText(e.target.value)} placeholder="Pega aquí el JSON exportado…" style={styles.jsonTextarea} />
