@@ -325,17 +325,3 @@ document.addEventListener("input",e=>{
   const es=e.target.closest('[data-c="esearch"]');if(es)CHG.esearch(es);
 });
 
-/* ---- Datos de ejemplo de entreno ---- */
-function demoGym(p){
-  const g=G(p);const d=gymDefaults(p);applyGymSetup(p,d);p.recalcPending=false;
-  g.meso={start:addDays(weekStart(today()),-14)};
-  const days=[];for(let k=20;k>=1;k--){const dt=addDays(today(),-k);if((p.plan||[])[(parseD(dt).getDay()+6)%7]==="gimnasio")days.push(dt);}
-  days.forEach((dt,n)=>{
-    const sIdx=n%g.plan.sessions.length;const ses=g.plan.sessions[sIdx];
-    const exs=ses.slots.map((sl,i)=>{const ex=EXM[sl.ex];const base={f:60,h:40,a:25,r:12,s:0}[ex.rep]*(ex.req.includes("prensa")?2.5:1);
-      const w=incFor(ex)?roundTo(base+Math.floor(n/3)*incFor(ex),incFor(ex)>=2?incFor(ex):0.5):0;const [lo,hi]=REPS[ex.rep];
-      return {ex:sl.ex,sets:Array.from({length:sl.sets},(_,k)=>({w,r:Math.min(hi,lo+2+(n%3)-k),rir:2,warm:false}))};});
-    g.log.push({id:uid(),date:dt,name:ses.name,sIdx,week:0,wellness:"normal",min:55+n%8,exs});
-  });
-  g.next=days.length%g.plan.sessions.length;
-}

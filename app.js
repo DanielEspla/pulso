@@ -10,7 +10,11 @@ function load(){
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));memoryOnly=false;}catch(e){memoryOnly=true;}}
 const P=()=>S.profiles[S.active];
 function commit(){save();render();}
-function toast(t){UI.toast=t;render();clearTimeout(toast._t);toast._t=setTimeout(()=>{UI.toast=null;render();},2200);}
+function toast(t){
+  let el=document.getElementById("toast");
+  if(!el){el=document.createElement("div");el.id="toast";el.className="toast";el.setAttribute("role","status");document.body.appendChild(el);}
+  el.textContent=t;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>{el.hidden=true;},2400);
+}
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const nf=(n,d=1)=>n==null||isNaN(n)?"—":Number(n).toLocaleString("es-ES",{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -37,7 +41,12 @@ const ic=(n,s="")=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const NAV=[["inicio","Inicio","home"],["entreno","Entreno","dumb"],["registro","Registro","scale"],["dieta","Dieta","plate"],["compra","Compra","cart"],["cocina","Batch cooking","pot"],["alimentos","Alimentos","leaf"],["objetivos","Objetivos","target"],["perfil","Perfil","user"],["copias","Copia de seguridad","save"],["aprende","Por qué Afina","book"]];
 
 /* ===== Render principal ===== */
+let _rendering=false;
 function render(){
+  if(_rendering){setTimeout(render,0);return;}
+  _rendering=true;try{_render();}finally{_rendering=false;}
+}
+function _render(){
   const root=document.getElementById("app");
   const p=P();
   let body;
@@ -47,11 +56,11 @@ function render(){
     const v={inicio:viewInicio,registro:viewRegistro,dieta:viewDieta,compra:viewCompra,cocina:viewCocina,alimentos:viewAlimentos,objetivos:viewObjetivos,perfil:viewPerfil,copias:viewCopias,mas:viewMas,aprende:viewAprende,entreno:viewEntreno}[UI.view]||viewInicio;
     body=`<aside class="side"><div class="brand"><b>Afina</b><span class="muted small">${SLOGAN}</span></div>
       ${NAV.map(([k,t,i])=>`<button class="navi ${UI.view===k?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}
-      <div class="who"><span class="lbl">Perfil</span><div>${esc(p.nombre)}${p.ejemplo?' <span class="muted">(ejemplo)</span>':""}</div></div></aside>
+      <div class="who"><span class="lbl">Perfil</span><div>${esc(p.nombre)}</div></div></aside>
       <main class="main">${v(p)}<p class="disc">Las estimaciones de gasto y grasa corporal son orientativas y no sustituyen la valoración de un profesional sanitario.</p></main>
       <nav class="bnav">${[["inicio","Inicio","home"],["entreno","Entreno","dumb"],["dieta","Dieta","plate"],["registro","Registro","scale"],["mas","Más","more"]].map(([k,t,i])=>`<button class="${UI.view===k||(k==="mas"&&["compra","cocina","alimentos","objetivos","perfil","copias","aprende"].includes(UI.view))?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}</nav>`;
   }
-  root.innerHTML=`<div class="shell">${body}</div>${UI.sheet?`<div class="overlay" data-a="closeSheet"><div class="sheet" data-stop="1">${UI.sheet()}</div></div>`:""}${UI.toast?`<div class="toast">${esc(UI.toast)}</div>`:""}`;
+  root.innerHTML=`<div class="shell">${body}</div>${UI.sheet?`<div class="overlay" data-a="closeSheet"><div class="sheet" data-stop="1">${UI.sheet()}</div></div>`:""}`;
 }
 
 /* ===== Onboarding ===== */
@@ -97,7 +106,7 @@ function viewOnboarding(){
     ${UI.err?`<p class="err" style="margin-top:14px">${esc(UI.err)}</p>`:""}
     <div class="row between" style="margin-top:22px">${step>0?`<button type="button" class="btn" data-a="obBack">Atrás</button>`:"<span></span>"}
     <button class="btn pri" type="submit">${step===OB_STEPS-1?"Crear perfil":"Siguiente"}</button></div></form>
-    ${first&&step===0?`<div class="card flat" style="margin-top:28px"><h3>Antes de empezar</h3><p class="muted small" style="margin:4px 0 12px">Qué busca Afina y cómo funciona tu cuerpo, explicado sin tecnicismos.</p><button class="btn" data-a="openLearn">Leer por qué Afina</button></div><div class="card flat" style="margin-top:12px"><h3>¿Quieres verla funcionando primero?</h3><p class="muted small" style="margin:4px 0 12px">Crea un perfil de ejemplo con cinco semanas de datos inventados. Lo puedes borrar después.</p><button class="btn" data-a="demo">Abrir perfil de ejemplo</button></div>`:""}</div>`;
+    ${first&&step===0?`<div class="card flat" style="margin-top:28px"><h3>Antes de empezar</h3><p class="muted small" style="margin:4px 0 12px">Qué busca Afina y cómo funciona tu cuerpo, explicado sin tecnicismos.</p><button class="btn" data-a="openLearn">Leer por qué Afina</button></div>`:""}</div>`;
 }
 function ritmoHint(d){
   const b=(RITMOS[d.objetivo]||RITMOS.perder)[d.ritmo]||[0,0,0];
@@ -138,26 +147,6 @@ function createProfile(p){
   p.history=[{date:today(),...p.targets,motivo:"Cálculo inicial",tipo:"inicial"}];
   p.weights[today()]=p.peso0;
   S.profiles[p.id]=p;S.active=p.id;
-}
-
-/* ===== Datos de ejemplo ===== */
-function makeDemo(){
-  const p=obToProfile({...obDefaults(),nombre:"Ejemplo",sexo:"H",nac:addDays(today(),-45*365-12),altura:178,peso0:96,cintura0:104,cuello:41,trabajo:"sentado",pasos:7000,deporte:"gimnasio",secundarios:["paddle"],plan:["gimnasio","","gimnasio","","gimnasio","paddle",""],ciclado:true,objetivo:"perder",ritmo:"normal",grasaObj:18,comidas:"4"});
-  p.ejemplo=true;
-  const start=addDays(weekStart(today()),-35);p.creado=start;
-  const t=computeTargets({...p});p.targets={kcal:t.kcal,p:t.p,f:t.f,c:t.c};
-  p.history=[{date:start,...p.targets,motivo:"Cálculo inicial",tipo:"inicial"}];
-  const noise=[0.3,-0.2,0.4,0,-0.3,0.2,-0.1];
-  for(let w=0;w<6;w++){
-    const ws=addDays(start,7*w);
-    for(let d=0;d<7;d++){const day=addDays(ws,d);if(day>today())break;if(d===3&&w%2)continue;p.weights[day]=r1(96-w*0.6-d*0.08+noise[d]);}
-    if(w<5)p.checkins[ws]={cintura:r1(104-w*0.6),pasos:7000+((w*370)%900),entrenos:3,adherencia:w===2?5:6,rendimiento:w===3?"MEJORA":"ESTABLE",ciclo:false,notas:w===2?"Comida familiar el domingo":""};
-  }
-  ["pollo_pechuga","cerdo_lomo","ternera_picada5","arroz_blanco","patata","yogur_proteico","avena","platano","huevo","aove","pavo_loncheado","pan_integral","fresas","calabacin"].forEach(id=>p.prefs[id]=1);
-  ["higado_ternera","cerdo_panceta","sardinas","caballa","coles_bruselas"].forEach(id=>p.prefs[id]=-1);
-  S.profiles[p.id]=p;S.active=p.id;
-  demoGym(p);
-  p.menus[weekStart(today())]=buildWeek(p,weekStart(today()));
 }
 
 /* ===== Gráfica de línea ===== */
@@ -215,11 +204,13 @@ function lastDecisionWeek(p){
 function viewInicio(p){
   const W=weeklyData(p);const cw=weekStart(today());
   const withData=W.filter(w=>w.n>0);
-  const cur=withData[withData.length-1];const prv=withData[withData.length-2];
+  const cur=withData[withData.length-1];
+  const full=withData.filter(w=>w.n>=3);const fc=full[full.length-1],fp=full[full.length-2];
+  const chg=fc&&fp&&fc.week===cur.week?{d:fc.avg-fp.avg,pct:(fc.avg-fp.avg)/fp.avg*100}:null;
   const t=p.targets;const peso=currentWeight(p);const cint=currentWaist(p);
   const bf=bodyFat(p,peso,cint);const tw=targetWeight(p);
   const ad=adaptiveTDEE(p);
-  const ritmo=ad?ad.slope:(cur&&prv?r1((cur.avg-prv.avg)*100)/100:null);
+  const ritmo=ad?ad.slope:(chg?Math.round(chg.d*100)/100:null);
   const ritmoPct=ritmo!=null?ritmo/peso*100:null;
   let proj="";
   if(ritmo&&p.objetivo==="perder"&&ritmo<0&&peso>tw){const wk=Math.ceil((peso-tw)/-ritmo);proj=`A este ritmo, ${nf(tw)} kg en unas ${wk} semanas (${fdate(addDays(today(),wk*7))}).`;}
@@ -243,7 +234,7 @@ function viewInicio(p){
     ${(ev.d==="SUBIR"||ev.d==="BAJAR")?(applied?`<p class="small good">Ajuste aplicado.</p>`:`<div class="row"><button class="btn pri" data-a="applyDec" data-w="${dk}" data-d="${ev.d}">${ev.d==="SUBIR"?"Subir":"Bajar"} ${stepKcal(t)} kcal desde la próxima comida</button></div>`):""}</div>`:""}
   <div class="grid4">
     <div class="stat"><span class="lbl">Media semanal</span><div class="v">${cur?nf(cur.avg):"—"}<small>kg</small></div><div class="d">${cur?`${cur.n} pesada${cur.n===1?"":"s"} · ${fdate(cur.week)}`:"Sin datos"}</div></div>
-    <div class="stat"><span class="lbl">Cambio semanal</span><div class="v ${cur&&prv?(cur.avg<prv.avg?"good":""):""}">${cur&&prv?sgn(cur.avg-prv.avg):"—"}<small>kg</small></div><div class="d">${cur&&prv?sgn((cur.avg-prv.avg)/prv.avg*100,2)+" % del peso":"Necesita dos semanas"}</div></div>
+    <div class="stat"><span class="lbl">Cambio semanal</span><div class="v ${chg&&chg.d<0?"good":""}">${chg?sgn(chg.d):"—"}<small>kg</small></div><div class="d">${chg?sgn(chg.pct,2)+" % del peso":cur&&cur.n<3?"Faltan pesadas esta semana":"Necesita dos semanas"}</div></div>
     <div class="stat"><span class="lbl">Cintura</span><div class="v">${nf(cint)}<small>cm</small></div><div class="d">Inicio ${nf(p.cintura0)} cm</div></div>
     <div class="stat"><span class="lbl">Grasa estimada</span><div class="v">${nf(bf)}<small>%</small></div><div class="d">Objetivo ${nf(p.grasaObj,0)} %</div></div>
   </div>
@@ -352,21 +343,6 @@ function sheetRecipe(mi){
 }
 
 /* ===== Compra ===== */
-function viewCompra(p){
-  const ws=UI.menuWeek;const menu=p.menus[ws];
-  if(!menu)return `<div class="head"><div><h1>Compra</h1></div>${weekNav(ws,"menuW")}</div><div class="card empty"><h2>Primero genera el menú</h2><p class="muted">La lista sale de lo que vas a comer esa semana.</p><button class="btn pri" data-a="go" data-v="dieta">Ir a la dieta</button></div>`;
-  const list=shoppingList(menu);const got=p.shop[ws]||{};
-  const total=list.reduce((a,s)=>a+s.items.length,0);const n=Object.values(got).filter(Boolean).length;
-  const g=x=>x>=1000?nf(x/1000,2)+" kg":Math.round(x)+" g";
-  return `<div class="head"><div><h1>Compra</h1><p class="sub">${n} de ${total} productos</p></div>${weekNav(ws,"menuW")}</div>
-  <div class="stack"><div class="row"><button class="btn" data-a="copyShop">Copiar lista</button>${n?`<button class="btn ghost" data-a="clearShop">Desmarcar todo</button>`:""}</div>
-  ${list.map(s=>`<div class="card shop"><span class="lbl">${s.sec}</span><ul style="margin-top:6px">${s.items.map(it=>`<li class="${got[it.id]?"got":""}"><input type="checkbox" id="sh_${it.id}" data-c="shop" data-id="${it.id}" ${got[it.id]?"checked":""}><label for="sh_${it.id}" style="flex:1;display:flex;justify-content:space-between;gap:10px;cursor:pointer"><span>${esc(it.f.name)}</span><b class="num">${it.f.u?`${Math.ceil(it.q)} ${it.f.un}${Math.ceil(it.q)>1?(/[aeiouáéó]$/.test(it.f.un)?"s":"es"):""}`:g(it.g)}</b></label></li>`).join("")}</ul></div>`).join("")}
-  <p class="hint">Excluye las comidas marcadas como fuera de casa. Cantidades en crudo y sin desperdicio: redondea al formato que encuentres.</p></div>`;
-}
-function shopText(menu){
-  return shoppingList(menu).map(s=>s.sec.toUpperCase()+"\n"+s.items.map(it=>"- "+it.f.name+": "+(it.f.u?Math.ceil(it.q)+" "+it.f.un:Math.round(it.g)+" g")).join("\n")).join("\n\n");
-}
-
 /* ===== Batch cooking ===== */
 function viewCocina(p){
   const ws=UI.menuWeek;const menu=p.menus[ws];
@@ -462,7 +438,7 @@ function viewPerfil(p){
   <div class="card stack"><span class="lbl">Deporte y semana tipo</span>${sportPicker(p,"pf")}
     ${UI.pfDirty?`<div class="alert warn"><span class="dot"></span><div><b>Cambios guardados</b>Recalcula para que se apliquen a tus calorías y macros.<div style="margin-top:8px"><button class="btn sm pri" data-a="recal" data-src="formula">Recalcular objetivos</button></div></div></div>`:""}</div>
   <div class="card stack"><span class="lbl">Perfiles en este dispositivo</span>
-    ${others.length?others.map(o=>`<div class="row between"><span>${esc(o.nombre)}${o.ejemplo?' <span class="muted small">(ejemplo)</span>':""}</span><button class="btn sm" data-a="switch" data-id="${o.id}">Cambiar a este</button></div>`).join(""):`<p class="small muted">Solo hay este perfil. Si otra persona usa este mismo móvil, crea el suyo y así no se mezclan los datos.</p>`}
+    ${others.length?others.map(o=>`<div class="row between"><span>${esc(o.nombre)}</span><button class="btn sm" data-a="switch" data-id="${o.id}">Cambiar a este</button></div>`).join(""):`<p class="small muted">Solo hay este perfil. Si otra persona usa este mismo móvil, crea el suyo y así no se mezclan los datos.</p>`}
     <div class="row"><button class="btn" data-a="newProfile">Crear otro perfil</button></div></div>
   <div class="card stack"><span class="lbl">Borrar perfil</span>
     ${UI.confirm==="delProfile"?`<p>Se borrarán todos los datos de ${esc(p.nombre)} en este dispositivo. No se puede deshacer.</p><div class="row"><button class="btn danger" data-a="delProfile">Sí, borrar</button><button class="btn ghost" data-a="cancelConfirm">Cancelar</button></div>`
@@ -520,7 +496,7 @@ function viewMas(){
 }
 
 /* ===== Acciones ===== */
-function logTargets(p,t,motivo,tipo){p.targets={kcal:t.kcal,p:t.p,f:t.f,c:t.c};p.history.push({date:today(),...p.targets,motivo,tipo});}
+function logTargets(p,t,motivo,tipo){if(tipo==="recal")p.recalcPending=false;p.targets={kcal:t.kcal,p:t.p,f:t.f,c:t.c};p.history.push({date:today(),...p.targets,motivo,tipo});}
 const A={
   go:el=>{UI.view=el.dataset.v;UI.confirm=null;UI.err=null;UI.sheet=null;render();window.scrollTo(0,0);},
   goReg:el=>{UI.regWeek=el.dataset.w;UI.view="registro";render();window.scrollTo(0,0);},
@@ -539,7 +515,6 @@ const A={
     spDone(ns);},
   openLearn:()=>{UI.learn=true;render();window.scrollTo(0,0);},
   closeLearn:()=>{UI.learn=false;render();window.scrollTo(0,0);},
-  demo:()=>{makeDemo();UI.ob=null;UI.view="inicio";commit();},
   regW:el=>{const n=+el.dataset.n;const nw=addDays(UI.regWeek,n);if(nw<=weekStart(today()))UI.regWeek=nw;render();},
   applyDec:el=>{const p=P();const r=applyDecision(p,el.dataset.d);
     if(r.blocked){toast(`No se baja: ya estás en el mínimo de ${kcalFloor(p,currentWeight(p))} kcal. Sube pasos.`);return;}

@@ -30,4 +30,5 @@ Genera:
 - `learn.js` contenidos divulgativos
 - `app.js` pantallas de nutrición, perfil y copias
 - `gymui.js` pantallas de entreno
+- `shop.js` lista de la compra (formatos, merma, despensa, una o dos compras)
 - `main.js` arranque

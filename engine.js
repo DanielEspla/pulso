@@ -251,10 +251,24 @@ const ROLE_Q={P:[60,280,10],C:[30,150,5],B:[20,140,10],D:[100,500,25],G:[0,30,5]
 function banned(p){const s=new Set();(p.restr||[]).forEach(r=>{const x=RESTRICTIONS.find(z=>z[0]===r);if(x)x[2].forEach(t=>s.add(t));});return s;}
 function allowed(p,f){const b=banned(p);return !f.t.some(t=>b.has(t))&&(p.prefs||{})[f.id]!==-1;}
 function cands(p,role,slot,extra){return FOODS.filter(f=>f.r===role&&f.s.includes(slot)&&allowed(p,f)&&(!extra||extra(f)));}
+/* Variedad con cabeza: proteínas e hidratos rotan; lácteos, grasas, panes, fruta y frutos secos
+   se repiten para que la compra sea corta y no sobren diez productos abiertos. */
+const ROLE_CAP={P:5,C:4,V:6,F:4,D:2,B:3,N:2,G:2};
+const ROLE_REUSE={P:false,C:false,V:false,F:true,D:true,B:true,N:true,G:true};
 function pick(p,list,ctx,avoid=[]){
-  const pool=list.filter(f=>!avoid.includes(f.id));const L=pool.length?pool:list;
-  if(!L.length)return null;
-  const ws=L.map(f=>((p.prefs||{})[f.id]===1?4:1)/(1+((ctx&&ctx.use[f.id])||0)*1.5)*(f.id==="aove"?3:1)*(f.r==="P"&&f.f>12?0.35:1)*(f.r==="D"?(f.p>=8?2.5:0.6):1));
+  let pool=list.filter(f=>!avoid.includes(f.id));if(!pool.length)pool=list;
+  if(!pool.length)return null;
+  const role=pool[0].r;
+  if(ctx&&ctx.use){
+    const usedRole=Object.keys(ctx.use).filter(id=>FOOD[id]&&FOOD[id].r===role);
+    if(usedRole.length>=(ROLE_CAP[role]||9)){const r2=pool.filter(f=>usedRole.includes(f.id));if(r2.length)pool=r2;}
+  }
+  const L=pool;
+  const ws=L.map(f=>{
+    const use=(ctx&&ctx.use[f.id])||0;
+    const rep=ROLE_REUSE[f.r]?(1+use*1.5):1/(1+use*1.2);
+    return ((p.prefs||{})[f.id]===1?4:1)*rep*(f.id==="aove"?3:1)*(f.r==="P"&&f.f>12?0.35:1)*(f.r==="D"?(f.p>=8?2.5:0.6):1);
+  });
   let r=Math.random()*ws.reduce((a,b)=>a+b,0);
   for(let i=0;i<L.length;i++){r-=ws[i];if(r<=0)return L[i];}
   return L[L.length-1];

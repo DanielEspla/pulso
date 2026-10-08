@@ -266,3 +266,13 @@ details.card[open] summary::after{content:" −"}
 .hero.row>div{display:flex;flex-direction:column;gap:4px;min-width:0}
 a.btn{color:var(--ink);text-decoration:none}
 a{color:var(--accent)}
+
+.shop li{align-items:flex-start}
+.shop li input{margin-top:3px;flex-shrink:0}
+.shop details{flex:1;min-width:0}
+.shop summary{display:flex;justify-content:space-between;gap:10px;cursor:pointer;list-style:none}
+.shop summary::-webkit-details-marker{display:none}
+.shop summary .sn{min-width:0}
+.shop summary b{text-align:right;flex-shrink:0;max-width:55%}
+.shop li.got .sn{text-decoration:line-through;color:var(--muted)}
+.sdet{display:flex;flex-direction:column;gap:6px;padding:8px 0 4px;font-size:.85rem}
