@@ -25,6 +25,7 @@ Genera:
 
 - `foods.js` base de alimentos
 - `engine.js` cálculos de nutrición, ajuste semanal y generador de menús
+- `goals.js` objetivos (recomposición, estética, definición, volumen limpio, fuerza, longevidad), estilos de dieta y textos de ayuda
 - `exercises.js` biblioteca de ejercicios y material de gimnasio
 - `gym.js` motor de programación y progresión
 - `learn.js` contenidos divulgativos

@@ -276,3 +276,20 @@ a{color:var(--accent)}
 .shop summary b{text-align:right;flex-shrink:0;max-width:55%}
 .shop li.got .sn{text-decoration:line-through;color:var(--muted)}
 .sdet{display:flex;flex-direction:column;gap:6px;padding:8px 0 4px;font-size:.85rem}
+
+.ib{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);background:transparent;font:700 .72rem/1 var(--f-body);font-style:italic;cursor:pointer;vertical-align:middle;margin-left:4px;padding:0;text-transform:none;letter-spacing:0}
+.ib:hover{background:var(--accent-soft)}
+.gcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.gcard{position:relative;border:1px solid var(--line);border-radius:14px;background:var(--surface);min-width:0}
+.gcard.on{border-color:var(--accent);background:var(--accent-soft)}
+.gcard .gsel{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;width:100%;border:0;background:none;padding:12px 34px 12px 12px;cursor:pointer;color:var(--ink);min-height:74px}
+.gcard .gsel span{font-size:.78rem;color:var(--muted)}
+.gcard.on .gsel b{color:var(--accent)}
+.gcard .ib{position:absolute;top:10px;right:10px;margin:0}
+.goalchip{margin-top:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:.82rem;cursor:pointer}
+.goalchip span{color:var(--accent);font-weight:700;margin-left:6px}
+.tech{background:var(--hero);border:1px dashed var(--accent);border-radius:12px;padding:10px 12px}
+.fb3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fb3 button{display:flex;flex-direction:column;gap:2px;align-items:center;text-align:center;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 6px;cursor:pointer;color:var(--ink)}
+.fb3 button span{font-size:.7rem;color:var(--muted)}
+.fb3 button.on{border-color:var(--accent);background:var(--accent-soft)}

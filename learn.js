@@ -45,7 +45,7 @@ function viewAprende(){
   <div class="stack learn">
   <div class="card stack" style="background:var(--accent-soft);border-color:transparent">
     <span class="lbl" style="color:var(--accent)">El objetivo</span>
-    <p class="lead">Afina no es una dieta de castigo. Sirve para aprender a comer bien, entender qué pasa dentro de tu cuerpo y conseguir un cuerpo más sano que te dure muchos años. Sin pasar hambre y sin prohibiciones.</p>
+    <p class="lead">El objetivo de Afina es la recomposición corporal: menos grasa y el mismo o más músculo. Afina no es una dieta de castigo. Sirve para aprender a comer bien, entender qué pasa dentro de tu cuerpo y conseguir un cuerpo más sano que te dure muchos años. Sin pasar hambre y sin prohibiciones.</p>
     <p>Perder grasa es solo la primera parte. Lo que de verdad alarga la vida es mantener el músculo, tener poca grasa abdominal y saber comer sin depender de nadie. Cuando termines, deberías poder hacerlo sin la app.</p>
   </div>
 

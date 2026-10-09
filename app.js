@@ -4,7 +4,7 @@ let S=load();
 let UI={view:"inicio",ob:null,sheet:null,confirm:null,diaIdx:(new Date().getDay()+6)%7,menuWeek:weekStart(today()),regWeek:weekStart(today()),cat:"aves",q:"",toast:null,err:null};
 let memoryOnly=false;
 function load(){
-  try{const r=localStorage.getItem(KEY);if(r){const s=JSON.parse(r);if(s&&s.profiles){Object.values(s.profiles).forEach(migrateSport);return s;}}}catch(e){memoryOnly=true;}
+  try{const r=localStorage.getItem(KEY);if(r){const s=JSON.parse(r);if(s&&s.profiles){Object.values(s.profiles).forEach(x=>{migrateSport(x);syncGoal(x);});return s;}}}catch(e){memoryOnly=true;}
   return {profiles:{},active:null,lastBackup:null};
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));memoryOnly=false;}catch(e){memoryOnly=true;}}
@@ -65,7 +65,7 @@ function _render(){
 
 /* ===== Onboarding ===== */
 const OB_STEPS=6;
-function obDefaults(){return {nombre:"",sexo:"H",nac:"",altura:"",peso0:"",cintura0:"",cuello:"",cadera:"",trabajo:"sentado",pasos:6000,deporte:"gimnasio",secundarios:[],plan:["gimnasio","","gimnasio","","gimnasio","",""],ciclado:false,objetivo:"perder",ritmo:"normal",grasaObj:"",comidas:"4",restr:[],embarazo:false};}
+function obDefaults(){return {nombre:"",sexo:"H",nac:"",altura:"",peso0:"",cintura0:"",cuello:"",cadera:"",trabajo:"sentado",pasos:6000,deporte:"gimnasio",secundarios:[],plan:["gimnasio","","gimnasio","","gimnasio","",""],ciclado:false,objetivo:"perder",meta:"recomp",estilo:"equilibrada",reparto:"igual",recarga:"0",ayunoOn:false,ayunoIni:"13:00",ayunoH:8,ritmo:"normal",grasaObj:"",comidas:"4",restr:[],embarazo:false};}
 function viewOnboarding(){
   if(!UI.ob)UI.ob={step:0,d:obDefaults()};
   const {step,d}=UI.ob;const first=!Object.keys(S.profiles).length;
@@ -82,16 +82,22 @@ function viewOnboarding(){
     <div class="stack"><div class="field"><span>Trabajo</span>${seg("trabajo",[["sentado","Sentado"],["mixto","De pie / mixto"],["fisico","Físico"]])}</div>
     ${num("pasos","Pasos al día","Media aproximada. Si no lo sabes: 4.000 poco activo, 7.000 normal, 10.000 activo.")}
     ${sportPicker(d,"ob")}</div>`;
-  if(step===3)html=`<h2>Objetivo</h2><div class="stack" style="margin-top:16px">
-    <div class="field"><span>Qué buscas</span>${seg("objetivo",[["perder","Perder grasa"],["mantener","Mantener"],["ganar","Ganar músculo"]])}</div>
-    ${d.objetivo!=="mantener"?`<div class="field"><span>Ritmo</span>${seg("ritmo",d.objetivo==="ganar"?[["suave","Suave"],["normal","Normal"]]:[["suave","Suave"],["normal","Normal"],["rapido","Rápido"]])}<span class="hint">${ritmoHint(d)}</span></div>`:""}
-    ${num("grasaObj","Grasa corporal objetivo (%)",`Si lo dejas vacío: ${d.sexo==="H"?18:25} %. Con ella se calcula tu peso objetivo.`)}
-    <div class="field"><span>Comidas al día</span>${seg("comidas",[["2","2"],["3","3"],["3a","3 sin desayuno"],["4","4"],["5","5"]])}</div>
-    ${d.sexo==="M"?`<label class="chk"><input type="checkbox" name="embarazo" id="ob_embarazo" ${d.embarazo?"checked":""}> Embarazo o lactancia</label>`:""}</div>`;
+  if(step===3){const gm=GOALS[d.meta];html=`<h2>Tu objetivo ${infoBtn("objetivo","objetivo")}</h2><p class="muted" style="margin:6px 0 18px">Decide tus calorías, tu proteína y cómo entrenas. Puedes cambiarlo cuando quieras.</p>
+    <div class="stack">${goalCards(d.meta,"obSet")}
+    ${["recomp","definicion","volumen","estetica"].includes(d.meta)?`<div class="field"><span>Ritmo</span>${seg("ritmo",[["suave","Suave"],["normal","Normal"],["rapido","Rápido"]])}<span class="hint">${ritmoHint(d)}</span></div>`:""}
+    ${num("grasaObj","Grasa corporal objetivo (%)",`Si lo dejas vacío: ${d.sexo==="H"?15:23} %. Con ella se calcula tu peso objetivo.`)}
+    <h3 style="margin-top:8px">Cómo quieres comer</h3>
+    <div class="field"><span>Estilo de dieta ${infoBtn("estilo","estilo de dieta")}</span>${choiceCards(DIET_STYLES,d.estilo,"obSet","estilo","e_")}</div>
+    ${d.estilo!=="keto"?`<div class="field"><span>Reparto de hidratos ${infoBtn("reparto","reparto")}</span>${seg("reparto",Object.entries(REPARTOS).map(([k,v])=>[k,v[0]]))}<span class="hint">${REPARTOS[d.reparto][1]}</span></div>`:""}
+    <div class="field"><span>Días de recarga a la semana ${infoBtn("recarga","recarga")}</span>${seg("recarga",[["0","Ninguno"],["1","Uno"],["2","Dos"]])}${d.estilo==="keto"&&d.recarga==="0"?`<span class="hint">En keto se recomienda al menos un día de recarga si entrenas fuerte.</span>`:""}</div>
+    <label class="chk"><input type="checkbox" name="ayunoOn" id="ob_ayunoOn" ${d.ayunoOn?"checked":""} data-c="obRe"><span>Ayuno intermitente ${infoBtn("ayuno","ayuno intermitente")}</span></label>
+    ${d.ayunoOn?`<div class="grid2"><label class="field"><span>Primera comida</span><input class="inp" type="time" name="ayunoIni" id="ob_ayunoIni" value="${esc(d.ayunoIni)}"></label><label class="field"><span>Horas de ventana</span><input class="inp num" type="number" name="ayunoH" id="ob_ayunoH" value="${d.ayunoH}" min="4" max="12"></label></div>`:""}
+    <div class="field"><span>Comidas al día</span>${seg("comidas",(d.ayunoOn?[["2","2"],["3a","3"]]:[["2","2"],["3","3"],["3a","3 sin desayuno"],["4","4"],["5","5"]]))}</div>
+    ${d.sexo==="M"?`<label class="chk"><input type="checkbox" name="embarazo" id="ob_embarazo" ${d.embarazo?"checked":""}> Embarazo o lactancia</label>`:""}</div>`;}
   if(step===4)html=`<h2>Restricciones</h2><p class="muted" style="margin:6px 0 18px">Esto no son gustos: los alimentos afectados no aparecerán nunca. Los gustos los marcas después.</p>
     <div class="grid2">${RESTRICTIONS.map(([k,t])=>`<label class="chk"><input type="checkbox" name="restr" value="${k}" ${d.restr.includes(k)?"checked":""}> ${t}</label>`).join("")}</div>`;
   if(step===5){
-    const prof=obToProfile(d);const t=computeTargets(prof);const tw=targetWeight(prof);
+    const prof=syncGoal(obToProfile(d));const t=computeTargets(prof);const tw=targetWeight(prof);
     html=`<h2>Tu punto de partida</h2><p class="muted" style="margin:6px 0 18px">Es una estimación inicial. A partir de la tercera semana la app la corrige con tu peso real.</p>
     <div class="card stack"><div class="row between"><div><span class="lbl">Calorías objetivo</span><div class="big">${t.kcal}<span class="small muted"> kcal</span></div></div><div style="text-align:right"><span class="lbl">Gasto estimado</span><div class="num" style="font-size:1.2rem;font-weight:700">${t.tdee} kcal</div></div></div>
     ${macroBars(t,t)}
@@ -108,7 +114,18 @@ function viewOnboarding(){
     <button class="btn pri" type="submit">${step===OB_STEPS-1?"Crear perfil":"Siguiente"}</button></div></form>
     ${first&&step===0?`<div class="card flat" style="margin-top:28px"><h3>Antes de empezar</h3><p class="muted small" style="margin:4px 0 12px">Qué busca Afina y cómo funciona tu cuerpo, explicado sin tecnicismos.</p><button class="btn" data-a="openLearn">Leer por qué Afina</button></div>`:""}</div>`;
 }
+function goalCards(sel,act,k="meta"){
+  return `<div class="gcards">${GOAL_ORDER.map(id=>{const g=GOALS[id];return `<div class="gcard ${sel===id?"on":""}"><button type="button" class="gsel" data-a="${act}" data-k="${k}" data-val="${id}"><b>${g.t}</b><span>${g.d}</span></button>${infoBtn("g_"+id,g.t)}</div>`;}).join("")}</div>`;
+}
+function choiceCards(dict,sel,act,k,pre){
+  return `<div class="gcards">${Object.entries(dict).map(([id,v])=>`<div class="gcard ${sel===id?"on":""}"><button type="button" class="gsel" data-a="${act}" data-k="${k}" data-val="${id}"><b>${v[0]}</b><span>${v[1]}</span></button>${infoBtn(pre+id,v[0])}</div>`).join("")}</div>`;
+}
 function ritmoHint(d){
+  const g=GOALS[d.meta];if(g&&Array.isArray(g.band)&&g.obj!=="mantener"){const m={suave:0.75,normal:1,rapido:1.2}[d.ritmo]||1;const b=g.band.map(x=>x*m);
+    return g.obj==="ganar"||d.meta==="volumen"?`Subir entre un ${nf(b[0]*4.3,2)} y un ${nf(b[1]*4.3,2)} % del peso al mes.`:`Perder entre un ${nf(b[0],2)} y un ${nf(b[1],2)} % del peso por semana.`;}
+  return "";
+}
+function ritmoHintOld(d){
   const b=(RITMOS[d.objetivo]||RITMOS.perder)[d.ritmo]||[0,0,0];
   return d.objetivo==="ganar"?`Subir entre ${nf(b[0],2)} y ${nf(b[1],2)} % del peso por semana.`:`Perder entre ${nf(b[0],2)} y ${nf(b[1],2)} % del peso por semana.`;
 }
@@ -132,18 +149,20 @@ function obValidate(step,d){
   if(step===2){if(d.pasos===""||d.pasos<0||d.pasos>40000)return "Revisa los pasos.";if(d.deporte&&!d.plan.includes(d.deporte))return "Asigna al menos un día de la semana a tu deporte principal.";}
   if(step===3){
     const imc=d.peso0/((d.altura/100)**2);
-    if(d.objetivo==="perder"&&imc<18.5)return "Con tu IMC actual la app no plantea pérdida de peso. Elige mantener o ganar.";
+    if(["recomp","definicion"].includes(d.meta)&&imc<18.5)return "Con tu IMC actual la app no plantea pérdida de peso. Elige Volumen limpio, Fuerza o Longevidad.";
+    if(d.ayunoOn&&!(d.ayunoH>=4&&d.ayunoH<=12))return "La ventana de ayuno debe ser de 4 a 12 horas.";
     if(d.grasaObj!==""&&(d.grasaObj<5||d.grasaObj>45))return "La grasa objetivo debe estar entre 5 y 45 %.";
   }
   return null;
 }
 function obToProfile(d){
   return {id:uid(),nombre:d.nombre,sexo:d.sexo,nac:d.nac,altura:+d.altura,peso0:+d.peso0,cintura0:+d.cintura0,cuello:+d.cuello,cadera:+d.cadera||0,
-    trabajo:d.trabajo,pasos:+d.pasos,deporte:d.deporte,secundarios:[...d.secundarios],plan:[...d.plan],ciclado:!!d.deporte&&!!d.ciclado,entrenos:d.plan.filter(Boolean).length,objetivo:d.embarazo?"mantener":d.objetivo,ritmo:d.ritmo,grasaObj:d.grasaObj===""?(d.sexo==="H"?18:25):+d.grasaObj,
-    comidas:d.comidas,restr:d.restr,embarazo:!!d.embarazo,prefs:{},weights:{},checkins:{},history:[],applied:{},menus:{},done:{},shop:{},favs:[],pausa:null,creado:today()};
+    trabajo:d.trabajo,pasos:+d.pasos,deporte:d.deporte,secundarios:[...d.secundarios],plan:[...d.plan],ciclado:!!d.deporte&&!!d.ciclado,entrenos:d.plan.filter(Boolean).length,objetivo:"perder",meta:d.meta,dietaEstilo:d.estilo,reparto:d.estilo==="keto"?"igual":d.reparto,recarga:+d.recarga,ayuno:{on:!!d.ayunoOn,ini:d.ayunoIni||"13:00",h:+d.ayunoH||8},goalSince:today(),ritmo:d.ritmo,grasaObj:d.grasaObj===""?(d.sexo==="H"?15:23):+d.grasaObj,
+    comidas:d.ayunoOn&&!["2","3a"].includes(d.comidas)?"3a":d.comidas,restr:d.restr,embarazo:!!d.embarazo,prefs:{},weights:{},checkins:{},history:[],applied:{},menus:{},done:{},shop:{},favs:[],pausa:null,creado:today()};
 }
 function createProfile(p){
-  const t=computeTargets(p);p.targets={kcal:t.kcal,p:t.p,f:t.f,c:t.c};
+  syncGoal(p);
+  const t=computeTargets(p);p.tdeeRef=t.tdee;p.targets={kcal:t.kcal,p:t.p,f:t.f,c:t.c};
   p.history=[{date:today(),...p.targets,motivo:"Cálculo inicial",tipo:"inicial"}];
   p.weights[today()]=p.peso0;
   S.profiles[p.id]=p;S.active=p.id;
@@ -222,7 +241,8 @@ function viewInicio(p){
   const dots=[];withData.slice(-12).forEach((w,i)=>{Object.entries(p.weights).forEach(([d,kg])=>{if(weekStart(d)===w.week)dots.push({i,y:kg});});});
   const wser=W.filter(w=>w.ci&&w.ci.cintura).slice(-12).map(w=>({l:fdate(w.week),y:w.ci.cintura}));
   const al=alertsFor(p);
-  return `<div class="head"><div><h1>Hola, ${esc(p.nombre)}</h1><p class="sub">${fdateL(today())}</p></div>
+  const gc=goalCfg(p);
+  return `<div class="head"><div><h1>Hola, ${esc(p.nombre)}</h1><p class="sub">${fdateL(today())}</p><button class="goalchip" data-a="go" data-v="objetivos">${gc.t}${gc.fase?" · "+gc.fase.replace("en fase de ",""):""} <span>Cambiar</span></button></div>
     <button class="btn pri" data-a="go" data-v="registro">Registrar</button></div>
   <div class="stack">
   ${p.pausa?`<div class="alert ok"><span class="dot"></span><div><b>Pausa de dieta en curso</b>Comes en mantenimiento desde el ${fdate(p.pausa.desde)}. <button class="btn sm" data-a="go" data-v="objetivos" style="margin-top:8px">Gestionar</button></div></div>`:""}
@@ -298,13 +318,16 @@ function viewDieta(p){
     ${!prefsSet?`<p class="small muted">Todavía no has marcado gustos: usará todos los alimentos permitidos.</p><div class="row" style="justify-content:center"><button class="btn" data-a="go" data-v="alimentos">Elegir alimentos primero</button><button class="btn pri" data-a="genWeek">Generar menú</button></div>`:`<button class="btn pri" data-a="genWeek">Generar menú de la semana</button>`}</div>`;
   const di=UI.diaIdx;const day=menu.days[di];const date=addDays(ws,di);
   const tot=dayTotals(day);const T=day.T||menu.targets;
-  const changed=["kcal","p","f","c"].some(k=>menu.targets[k]!==p.targets[k])||!!menu.ciclado!==!!p.ciclado;
+  const needNew=menu.comidas!==p.comidas;
+  const changed=!needNew&&(["kcal","p","f","c"].some(k=>menu.targets[k]!==p.targets[k])||!!menu.ciclado!==!!p.ciclado||(menu.cfg&&menu.cfg!==menuCfg(p)));
+  const hrs=mealHours(p,day.meals.length);
   const confirmRegen=UI.confirm==="regenWeek";
-  return `<div class="head"><div><h1>Dieta</h1><p class="sub">${MEAL_TXT[menu.comidas]} · ${menu.targets.kcal} kcal de media</p></div>${weekNav(ws,"menuW")}</div>
+  return `<div class="head"><div><h1>Dieta</h1><p class="sub">${DIET_STYLES[p.dietaEstilo||"equilibrada"][0]} · ${MEAL_TXT[menu.comidas]} · ${menu.targets.kcal} kcal de media${ayunoTxt(p)?" · "+ayunoTxt(p):""}</p></div>${weekNav(ws,"menuW")}</div>
   <div class="stack">
-  ${changed?`<div class="alert warn"><span class="dot"></span><div><b>Tus objetivos han cambiado</b>El menú está hecho con otros objetivos (${menu.targets.kcal} kcal). <div style="margin-top:8px"><button class="btn sm pri" data-a="retarget">Ajustar cantidades a ${p.targets.kcal} kcal</button></div></div></div>`:""}
+  ${needNew?`<div class="alert warn"><span class="dot"></span><div><b>Has cambiado el número de comidas</b>Este menú es de ${MEAL_TXT[menu.comidas]}. Rehazlo para aplicar los cambios.<div style="margin-top:8px"><button class="btn sm pri" data-a="genWeek">Rehacer el menú</button></div></div></div>`:""}
+  ${changed?`<div class="alert warn"><span class="dot"></span><div><b>Tu objetivo o tu forma de comer han cambiado</b>El menú está hecho con la configuración anterior. <div style="margin-top:8px"><button class="btn sm pri" data-a="retarget">Ajustar cantidades a ${p.targets.kcal} kcal</button></div></div></div>`:""}
   <div class="tabs">${menu.days.map((_,i)=>{const d=addDays(ws,i);return `<button class="${i===di?"on":""} ${d===today()?"today":""}" data-a="dia" data-i="${i}"><b>${DIAS[i][0]==="M"&&i===2?"X":DIAS[i][0]}</b><span>${parseD(d).getDate()}${menu.days[i].T&&menu.days[i].T.train?" ·E":""}</span></button>`;}).join("")}</div>
-  <div class="card stack"><div class="row between"><div><h2>${DIAS[di]} ${parseD(date).getDate()}</h2>${T.train!==undefined&&(p.plan||[]).some(Boolean)?`<span class="small ${T.train?"good":"muted"}">${T.train&&SPORT[T.sport]?SPORT[T.sport].t:"Descanso"}${menu.ciclado&&T.c!==menu.targets.c?` · ${sgn(T.c-menu.targets.c,0)} g de hidratos`:""}</span>`:""}</div><span class="num"><b>${Math.round(tot.kcal)}</b> <span class="muted">/ ${T.kcal} kcal</span></span></div>
+  <div class="card stack"><div class="row between"><div><h2>${DIAS[di]} ${parseD(date).getDate()}</h2>${T.refeed?`<span class="tag" style="margin:0 6px 0 0">Día de recarga</span>`:""}${T.train!==undefined&&(p.plan||[]).some(Boolean)?`<span class="small ${T.train?"good":"muted"}">${T.train&&SPORT[T.sport]?SPORT[T.sport].t:"Descanso"}${menu.ciclado&&T.c!==menu.targets.c?` · ${sgn(T.c-menu.targets.c,0)} g de hidratos`:""}</span>`:""}</div><span class="num"><b>${Math.round(tot.kcal)}</b> <span class="muted">/ ${T.kcal} kcal</span></span></div>
     <div class="grid3">${[["Proteína","p"],["Grasas","f"],["Hidratos","c"]].map(([n,k])=>`<div><div class="macro-line"><span class="small">${n}</span><span class="num small muted">${Math.round(tot[k])}/${T[k]}</span></div><div class="bar"><i class="${k}" style="width:${clamp(tot[k]/T[k]*100,2,100)}%"></i></div></div>`).join("")}</div>
     ${day.meals.some(m=>m.fuera)?`<p class="small muted">Con comida fuera el total es estimado.</p>`:""}</div>
   ${day.meals.map((m,mi)=>{
@@ -313,7 +336,7 @@ function viewDieta(p){
       <div class="fuera"><b>${esc(m.fuera.label)}</b><br><span class="small">Las demás comidas del día se han ajustado para dejar sitio.</span></div>
       <div class="meal-a"><button class="btn sm" data-a="unFuera" data-m="${mi}">Quitar comida fuera</button></div></div>`;
     const pr=periTag(p,day,mi);
-    return `<div class="card meal ${done?"done":""}"><div class="meal-h"><h3>${esc(m.name)}${pr?` <span class="tag">${pr}</span>`:""}</h3><span class="num muted small">${Math.round(s.kcal)} kcal · P ${Math.round(s.p)} · G ${Math.round(s.f)} · HC ${Math.round(s.c)}</span></div>
+    return `<div class="card meal ${done?"done":""}"><div class="meal-h"><h3>${hrs?`<span class="muted small num">${hrs[mi]} · </span>`:""}${esc(m.name)}${pr?` <span class="tag">${pr}</span>`:""}</h3><span class="num muted small">${Math.round(s.kcal)} kcal · P ${Math.round(s.p)} · G ${Math.round(s.f)} · HC ${Math.round(s.c)}</span></div>
       <div class="items">${m.items.filter(it=>!(FOOD[it.id].id==="aove"&&it.q===0)).map(it=>{const f=FOOD[it.id];const ii=m.items.indexOf(it);return `<button class="item" data-a="swap" data-m="${mi}" data-i="${ii}"><span class="nm">${esc(f.name)}</span><span class="q">${itemQty(f,it.q)}</span></button>`;}).join("")}</div>
       <div class="meal-a"><button class="btn sm ${done?"pri":""}" data-a="done" data-k="${k}">${done?"Hecha":"Marcar hecha"}</button><button class="btn sm" data-a="recipe" data-m="${mi}">Receta</button><button class="btn sm" data-a="regenMeal" data-m="${mi}">Cambiar comida</button><button class="btn sm" data-a="fuera" data-m="${mi}">Como fuera</button><button class="btn sm ghost" data-a="fav" data-m="${mi}">Guardar favorita</button></div></div>`;
   }).join("")}
@@ -395,8 +418,21 @@ function viewAlimentos(p){
 function viewObjetivos(p){
   const t=p.targets;const calc=computeTargets(p);const ad=adaptiveTDEE(p);
   const wd=weeksInDeficit(p);
-  return `<div class="head"><div><h1>Objetivos</h1><p class="sub">${p.objetivo==="perder"?"Perder grasa":p.objetivo==="ganar"?"Ganar músculo":"Mantener"} · ritmo ${RITMO_TXT[p.ritmo].toLowerCase()}</p></div><button class="btn" data-a="editT">Editar a mano</button></div>
+  const gc=goalCfg(p);const showR=["recomp","definicion","volumen","estetica"].includes(p.meta);
+  return `<div class="head"><div><h1>Objetivos</h1><p class="sub">${gc.t}${gc.fase?" · "+gc.fase:""}${showR?" · ritmo "+RITMO_TXT[p.ritmo].toLowerCase():""}</p></div><button class="btn" data-a="editT">Editar a mano</button></div>
   <div class="stack">
+  <div class="card stack"><div class="row between"><span class="lbl">Tu objetivo ${infoBtn("objetivo","objetivo")}</span>${p.goalSince?`<span class="small muted">desde el ${fdate(p.goalSince)}</span>`:""}</div>
+    ${goalCards(p.meta,"goalAsk")}
+    ${showR?`<div class="field"><span>Ritmo</span><div class="seg">${[["suave","Suave"],["normal","Normal"],["rapido","Rápido"]].map(([k,t])=>`<button class="${p.ritmo===k?"on":""}" data-a="cfgSet" data-k="ritmo" data-val="${k}">${t}</button>`).join("")}</div><span class="hint">${ritmoHint({meta:p.meta,ritmo:p.ritmo})}</span></div>`:""}</div>
+  <div class="card stack"><span class="lbl">Cómo comes</span>
+    <div class="field"><span>Estilo de dieta ${infoBtn("estilo","estilo de dieta")}</span>${choiceCards(DIET_STYLES,p.dietaEstilo,"cfgSet","dietaEstilo","e_")}</div>
+    ${p.dietaEstilo!=="keto"?`<div class="field"><span>Reparto de hidratos ${infoBtn("reparto","reparto")}</span><div class="seg">${Object.entries(REPARTOS).map(([k,v])=>`<button class="${p.reparto===k?"on":""}" data-a="cfgSet" data-k="reparto" data-val="${k}">${v[0]}</button>`).join("")}</div><span class="hint">${REPARTOS[p.reparto][1]}</span></div>`:""}
+    <div class="field"><span>Días de recarga ${infoBtn("recarga","recarga")}</span><div class="seg">${[["0","Ninguno"],["1","Uno"],["2","Dos"]].map(([k,t])=>`<button class="${String(p.recarga)===k?"on":""}" data-a="cfgSet" data-k="recarga" data-val="${k}">${t}</button>`).join("")}</div>${refeedDays(p).length?`<span class="hint">Recarga: ${refeedDays(p).map(i=>DIAS[i]).join(" y ")}.</span>`:""}</div>
+    <label class="chk"><input type="checkbox" data-c="cfgAyuno" id="cf_ayuno" ${p.ayuno&&p.ayuno.on?"checked":""}><span>Ayuno intermitente ${infoBtn("ayuno","ayuno")}${p.ayuno&&p.ayuno.on?`<br><span class="hint">${ayunoTxt(p)}</span>`:""}</span></label>
+    ${p.ayuno&&p.ayuno.on?`<div class="grid2"><label class="field"><span>Primera comida</span><input class="inp" type="time" id="cf_ini" data-c="cfgAyIni" value="${esc(p.ayuno.ini)}"></label><label class="field"><span>Horas de ventana</span><input class="inp num" type="number" min="4" max="12" id="cf_h" data-c="cfgAyH" value="${p.ayuno.h}"></label></div>`:""}
+    <div class="field"><span>Comidas al día</span><div class="seg">${((p.ayuno&&p.ayuno.on)?[["2","2"],["3a","3"]]:Object.entries(MEAL_TXT)).map(([k,t])=>`<button class="${p.comidas===k?"on":""}" data-a="cfgSet" data-k="comidas" data-val="${k}">${String(t).replace(" comidas","").replace(" sin desayuno"," sin desayuno")}</button>`).join("")}</div></div>
+    <label class="field"><span>Pasos diarios objetivo ${infoBtn("pasos","pasos")}</span><input class="inp num" type="number" step="500" id="cf_pasos" data-c="cfgPasos" value="${p.pasosObj||""}"></label>
+  </div>
   <div class="card stack"><div class="row between"><span class="lbl">Objetivo diario actual</span><span class="big">${t.kcal}<span class="small muted"> kcal</span></span></div>${macroBars(t)}
     <p class="small">${sportSummary(p)}.</p>
     <p class="small muted">Las subidas y bajadas automáticas mueven sobre todo los hidratos, en escalones de ${stepKcal(t)} kcal. La proteína se mantiene.</p></div>
@@ -430,7 +466,7 @@ function viewPerfil(p){
     <div class="grid3"><label class="field"><span>Nombre</span><input class="inp" name="nombre" id="pf_nombre" value="${esc(p.nombre)}"></label>
     ${sel("sexo","Sexo",[["H","Hombre"],["M","Mujer"]])}<label class="field"><span>Fecha de nacimiento</span><input class="inp" type="date" name="nac" id="pf_nac" value="${esc(p.nac||"")}" max="${today()}"><span class="hint">${p.nac?edadDe(p)+" años":"Añádela para que la edad se actualice sola"}</span></label>${num("altura","Altura (cm)")}${num("cuello","Cuello (cm)","0.1")}${p.sexo==="M"?num("cadera","Cadera (cm)","0.1"):""}
     ${sel("trabajo","Trabajo",[["sentado","Sentado"],["mixto","De pie / mixto"],["fisico","Físico"]])}${num("pasos","Pasos al día")}
-    ${sel("objetivo","Objetivo",[["perder","Perder grasa"],["mantener","Mantener"],["ganar","Ganar músculo"]])}${sel("ritmo","Ritmo",[["suave","Suave"],["normal","Normal"],["rapido","Rápido"]])}${num("grasaObj","Grasa objetivo (%)")}
+${num("grasaObj","Grasa objetivo (%)")}
     ${sel("comidas","Comidas al día",Object.entries(MEAL_TXT))}</div>
     <p class="hint">Al guardar se recalculan los objetivos con la fórmula. Si cambias el número de comidas, rehaz el menú de la semana.</p>
     ${UI.err?`<p class="err">${esc(UI.err)}</p>`:""}
@@ -484,10 +520,8 @@ function sportPicker(d,ns){
 function spTarget(ns){if(ns==="ob"){readOb();return UI.ob.d;}return P();}
 function spDone(ns){const d=spTarget(ns);d.entrenos=(d.plan||[]).filter(Boolean).length;if(ns==="pf"){UI.pfDirty=true;commit();}else render();}
 function periTag(p,day,mi){
-  const g=p.gym;if(!g||!g.setup||!day.T||day.T.sport!=="gimnasio")return "";
-  const names=day.meals.map(m=>m.name);const h=g.setup.hora;
-  let post=h==="manana"?1:h==="mediodia"?names.indexOf("Comida"):names.indexOf("Cena");
-  if(post<0)post=names.length-1;const pre=post-1;
+  const g=p.gym;if(!day.T||!day.T.train||!(g&&g.setup&&day.T.sport==="gimnasio"||p.reparto==="peri"))return "";
+  const {pre,post}=periIdx(p,MEAL_SETS[p.comidas]||day.meals.map(m=>[m.name]));
   return mi===pre?"Antes de entrenar":mi===post?"Después de entrenar":"";
 }
 function viewMas(){
@@ -496,11 +530,11 @@ function viewMas(){
 }
 
 /* ===== Acciones ===== */
-function logTargets(p,t,motivo,tipo){if(tipo==="recal")p.recalcPending=false;p.targets={kcal:t.kcal,p:t.p,f:t.f,c:t.c};p.history.push({date:today(),...p.targets,motivo,tipo});}
+function logTargets(p,t,motivo,tipo){if(t.tdee)p.tdeeRef=t.tdee;if(tipo==="recal")p.recalcPending=false;p.targets={kcal:t.kcal,p:t.p,f:t.f,c:t.c};p.history.push({date:today(),...p.targets,motivo,tipo});}
 const A={
   go:el=>{UI.view=el.dataset.v;UI.confirm=null;UI.err=null;UI.sheet=null;render();window.scrollTo(0,0);},
   goReg:el=>{UI.regWeek=el.dataset.w;UI.view="registro";render();window.scrollTo(0,0);},
-  obSet:el=>{readOb();UI.ob.d[el.dataset.k]=el.dataset.val;if(el.dataset.k==="objetivo"&&el.dataset.val==="ganar"&&UI.ob.d.ritmo==="rapido")UI.ob.d.ritmo="normal";render();},
+  obSet:el=>{readOb();UI.ob.d[el.dataset.k]=el.dataset.val;if(el.dataset.k==="estilo"&&el.dataset.val==="keto"){UI.ob.d.reparto="igual";if(UI.ob.d.recarga==="0")UI.ob.d.recarga="1";}if(el.dataset.k==="objetivo"&&el.dataset.val==="ganar"&&UI.ob.d.ritmo==="rapido")UI.ob.d.ritmo="normal";render();},
   obBack:()=>{readOb();UI.err=null;UI.ob.step--;render();},
   obCancel:()=>{UI.ob=null;UI.err=null;render();},
   spMain:el=>{const ns=el.dataset.ns;const d=spTarget(ns);const old=d.deporte;const id=el.dataset.id;
@@ -513,6 +547,15 @@ const A={
     if(d.secundarios.includes(id)){d.secundarios=d.secundarios.filter(x=>x!==id);d.plan=d.plan.map(x=>x===id?"":x);}
     else{d.secundarios.push(id);const free=[5,6,1,3].find(i=>!d.plan[i]);if(free!==undefined)d.plan[free]=id;}
     spDone(ns);},
+  info:el=>{const k=el.dataset.k;UI.sheet=()=>sheetInfo(k);render();},
+  goalAsk:el=>{const id=el.dataset.val;const p=P();if(id===p.meta){toast("Ya es tu objetivo");return;}UI.sheet=()=>sheetGoal(P(),id);render();},
+  goalDo:el=>{const p=P();const id=el.dataset.k;const old=GOALS[p.meta].t;p.meta=id;p.goalSince=today();if(id==="fuerza"||id==="longevidad")p.ritmo="normal";
+    syncGoal(p);p.pasosObj=GOALS[id].pasos;const t=computeTargets(p);logTargets(p,t,`Cambio de objetivo: ${old} → ${GOALS[id].t}`,"recal");
+    if(p.gym&&p.gym.setup){buildGymPlan(p);p.gym.adj={};}
+    UI.sheet=null;commit();toast(`Objetivo: ${GOALS[id].t}. Dieta y entreno recalculados.`);},
+  cfgSet:el=>{const p=P();const k=el.dataset.k;let v=el.dataset.val;if(k==="recarga")v=+v;p[k]=v;
+    if(k==="dietaEstilo"&&v==="keto"){p.reparto="igual";if(!p.recarga)p.recarga=1;}
+    applyCfg(p,{ritmo:"Cambio de ritmo",dietaEstilo:`Estilo de dieta: ${(DIET_STYLES[p.dietaEstilo]||[""])[0]}`,reparto:"Cambio de reparto",recarga:"Cambio de recargas",comidas:"Cambio de comidas"}[k]);},
   openLearn:()=>{UI.learn=true;render();window.scrollTo(0,0);},
   closeLearn:()=>{UI.learn=false;render();window.scrollTo(0,0);},
   regW:el=>{const n=+el.dataset.n;const nw=addDays(UI.regWeek,n);if(nw<=weekStart(today()))UI.regWeek=nw;render();},
@@ -555,7 +598,7 @@ const A={
   checkImport:()=>{const t=document.getElementById("bk_in").value.trim();UI.bkIn=t;UI.err=null;
     try{const d=JSON.parse(t);if(!d||!["afina","definicion20"].includes(d.app)||!d.profiles)throw 0;UI.pending=d;UI.confirm="import";}catch(e){UI.err="Ese texto no es una copia válida de esta app. Copia el bloque completo.";}
     render();},
-  doImport:el=>{const d=UI.pending;if(!d)return;if(el.dataset.mode==="replace")S.profiles={};Object.values(d.profiles).forEach(migrateSport);Object.assign(S.profiles,d.profiles);
+  doImport:el=>{const d=UI.pending;if(!d)return;if(el.dataset.mode==="replace")S.profiles={};Object.values(d.profiles).forEach(x=>{migrateSport(x);syncGoal(x);});Object.assign(S.profiles,d.profiles);
     if(!S.profiles[S.active])S.active=Object.keys(S.profiles)[0];UI.pending=null;UI.bkIn="";UI.confirm=null;UI.view="inicio";commit();toast("Copia restaurada");},
   closeSheet:(el,e)=>{if(e&&e.target.closest("[data-stop]")&&!e.target.closest('[data-a="closeSheet"]'))return;UI.sheet=null;render();}
 };
@@ -583,14 +626,40 @@ const SUB={
   saveT:f=>{const p=P();const t={p:+f.p.value,f:+f.f.value,c:+f.c.value};if(!(t.p>=40&&t.f>=20&&t.c>=0)){toast("Revisa los valores");return;}
     t.kcal=4*t.p+9*t.f+4*t.c;logTargets(p,t,"Edición manual","manual");UI.sheet=null;commit();},
   saveProfile:f=>{const p=P();const n=k=>+f[k].value;
-    const d={nombre:f.nombre.value.trim(),sexo:f.sexo.value,nac:f.nac.value,altura:n("altura"),cuello:n("cuello"),cadera:f.cadera?n("cadera"):p.cadera,trabajo:f.trabajo.value,pasos:n("pasos"),objetivo:f.objetivo.value,ritmo:f.ritmo.value,grasaObj:n("grasaObj"),comidas:f.comidas.value};
+    const d={nombre:f.nombre.value.trim(),sexo:f.sexo.value,nac:f.nac.value,altura:n("altura"),cuello:n("cuello"),cadera:f.cadera?n("cadera"):p.cadera,trabajo:f.trabajo.value,pasos:n("pasos"),grasaObj:n("grasaObj"),comidas:f.comidas.value};
     if(!d.nombre||!d.nac||ageFrom(d.nac)<18||!(d.altura>=120&&d.altura<=230)||!(d.cuello>=25)){UI.err="Revisa nombre, fecha de nacimiento (18 años o más), altura y cuello.";render();return;}
     if(d.sexo==="M"&&!(d.cadera>=60)){UI.err="Para mujer hace falta la medida de cadera.";render();return;}
-    if(d.objetivo==="ganar"&&d.ritmo==="rapido")d.ritmo="normal";
+
     UI.pfDirty=false;
-    UI.err=null;Object.assign(p,d);const t=computeTargets(p);logTargets(p,t,"Cambio de perfil","recal");commit();toast(`Guardado. Objetivo: ${p.targets.kcal} kcal`);}
+    UI.err=null;Object.assign(p,d);syncGoal(p);const t=computeTargets(p);logTargets(p,t,"Cambio de perfil","recal");commit();toast(`Guardado. Objetivo: ${p.targets.kcal} kcal`);}
 };
+function applyCfg(p,motivo){
+  syncGoal(p);const t=computeTargets(p);
+  if(["kcal","p","f","c"].some(k=>t[k]!==p.targets[k]))logTargets(p,t,motivo||"Cambio de configuración","recal");
+  commit();toast("Guardado. Ajusta el menú en Dieta para aplicarlo.");
+}
+function sheetGoal(p,id){
+  const q=JSON.parse(JSON.stringify(p));q.meta=id;if(id==="fuerza"||id==="longevidad")q.ritmo="normal";syncGoal(q);
+  const a=p.targets,b=computeTargets(q);const g=GOALS[id],gc=goalCfg(q);
+  const lastCh=(p.history||[]).slice().reverse().find(h=>/^Cambio de objetivo/.test(h.motivo||""));const days=lastCh?daysBetween(lastCh.date,today()):99;
+  const row=(l,x,y,u)=>`<tr><td>${l}</td><td class="num">${x}${u}</td><td class="num"><b>${y}${u}</b></td></tr>`;
+  const ent={musculo:"centrado en músculo",fuerza:"centrado en fuerza: básicos pesados",salud:"salud y longevidad: menos fatiga"}[g.train.enfoque];
+  return `<div class="sheet-h"><div><span class="lbl">Cambiar objetivo</span><h2>${g.t}</h2></div><button class="btn ghost sm" data-a="closeSheet">${ic("x",'width="18"')}</button></div>
+  <div class="stack"><p>${esc(g.d)}${gc.fase?` Con tu grasa actual empezarías ${gc.fase}.`:""}</p>
+  <div class="scroll"><table class="t"><thead><tr><th></th><th>Ahora</th><th>Nuevo</th></tr></thead><tbody>
+  ${row("Calorías",a.kcal,b.kcal," kcal")}${row("Proteína",a.p,b.p," g")}${row("Hidratos",a.c,b.c," g")}${row("Grasas",a.f,b.f," g")}</tbody></table></div>
+  <p class="small">Entreno: ${ent}${g.train.vol>1?", con más volumen":g.train.vol<0.95?", con algo menos de volumen":""}${g.train.estetica?" y series extra en los músculos que marcan la silueta":""}. ${p.gym&&p.gym.setup?"El plan de gimnasio se rehace; tu historial se mantiene.":""}</p>
+  ${id==="volumen"&&bodyFat(p,currentWeight(p),currentWaist(p))>(p.sexo==="H"?18:26)?`<div class="alert warn"><span class="dot"></span><div><b>Con tu grasa actual no es lo ideal</b>Con un ${nf(bodyFat(p,currentWeight(p),currentWaist(p)))} % de grasa, comer de más suma sobre todo grasa. Recomposición o Estética te darán mejor resultado ahora; Volumen limpio funciona mejor por debajo de un ${p.sexo==="H"?15:23} %.</div></div>`:""}
+  ${days<28?`<div class="alert warn"><span class="dot"></span><div><b>Cambiaste de objetivo hace ${days} días</b>Para saber si algo funciona hacen falta unas 4 semanas. Puedes cambiar igualmente.</div></div>`:""}
+  <button class="btn pri wide" data-a="goalDo" data-k="${id}">Cambiar a ${g.t}</button>
+  <button class="btn ghost wide" data-a="info" data-k="g_${id}">Qué es ${g.t}</button></div>`;
+}
 const CHG={
+  obRe:el=>{readOb();render();},
+  cfgAyuno:el=>{const p=P();p.ayuno=p.ayuno||{ini:"13:00",h:8};p.ayuno.on=el.checked;if(el.checked&&!["2","3a"].includes(p.comidas))p.comidas="3a";applyCfg(p,"Ayuno intermitente");},
+  cfgAyIni:el=>{const p=P();p.ayuno.ini=el.value||"13:00";commit();},
+  cfgAyH:el=>{const p=P();const h=+el.value;if(h>=4&&h<=12){p.ayuno.h=h;commit();}else toast("Entre 4 y 12 horas");},
+  cfgPasos:el=>{const p=P();const v=+el.value;if(v>=1000&&v<=30000){p.pasosObj=v;commit();}else toast("Revisa los pasos");},
   spDay:el=>{const ns=el.dataset.ns;const d=spTarget(ns);d.plan[+el.dataset.i]=el.value;spDone(ns);},
   spCic:el=>{const ns=el.dataset.ns;const d=spTarget(ns);d.ciclado=el.checked;spDone(ns);},
   dayW:el=>{const p=P();const v=el.value===""?null:parseFloat(el.value.replace(",","."));

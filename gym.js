@@ -4,13 +4,18 @@ const ENFOQUES={musculo:["Ganar o conservar músculo","Hipertrofia: la prioridad
 const HORAS={manana:"Por la mañana",mediodia:"A mediodía",tarde:"Por la tarde",noche:"Por la noche"};
 const DURACIONES=[45,60,75,90];
 const WEEK_SET_MULT=[1,1,1.15,1.25,0.5];
+const WEEK_MULT_LVL={principiante:[1,1,1.1,1.15,0.5],intermedio:[1,1,1.15,1.25,0.5],avanzado:[1.1,1.15,1.25,1.3,0.5]};
+const RIR_LVL={principiante:[3,3,2,2,4],intermedio:[3,2,2,1,4],avanzado:[2,1,1,1,4]};
+const AESTH={H:["hombro_lat","dorsal","pecho","biceps","triceps"],M:["gluteo","hombro_lat","isquios","dorsal"]};
 const WEEK_NAMES=["Semana 1 · Adaptación","Semana 2 · Acumulación","Semana 3 · Acumulación","Semana 4 · Intensificación","Semana 5 · Descarga"];
 
 function gymDefaults(p){
   const items={};GYM_ITEMS.forEach(([id])=>items[id]=!GYM_DEFAULT_OFF.includes(id));
   const dias=(p.plan||[]).map((s,i)=>s==="gimnasio"?i:-1).filter(i=>i>=0);
-  return {nivel:"intermedio",enfoque:"musculo",dias:dias.length?dias:[0,2,4],duracion:60,hora:"tarde",items,dolor:{},prio:[]};
+  return {nivel:"intermedio",enfoque:"musculo",tecnicas:true,dias:dias.length?dias:[0,2,4],duracion:60,hora:"tarde",items,dolor:{},prio:[]};
 }
+function enf(p){if(p.meta&&typeof goalCfg==="function")return goalCfg(p).train.enfoque;return (G(p).setup||{}).enfoque||"musculo";}
+function goalVol(p){if(p.meta&&typeof goalCfg==="function")return goalCfg(p).train.vol;return {perder:0.9,mantener:1,ganar:1.1}[p.objetivo]||1;}
 function G(p){if(!p.gym)p.gym={setup:null,plan:null,meso:null,next:0,log:[],draft:null,noHay:[],pains:[],likes:{}};return p.gym;}
 
 /* ---- Disponibilidad y molestias ---- */
@@ -51,8 +56,8 @@ const SPLIT_WHY={
 function volFactor(p){
   const s=G(p).setup;const ed=edadDe(p);
   const lv={principiante:0.8,intermedio:1,avanzado:1.2}[s.nivel]||1;
-  const ob={perder:0.9,mantener:1,ganar:1.1}[p.objetivo]||1;
-  const en={musculo:1,fuerza:0.95,salud:0.7}[s.enfoque]||1;
+  const ob=goalVol(p);
+  const en={musculo:1,fuerza:0.95,salud:0.7}[enf(p)]||1;
   const ag=ed>=65?0.85:ed>=50?0.95:1;
   return lv*ob*en*ag;
 }
@@ -64,8 +69,8 @@ function scoreEx(p,ex,slot,usedInWeek){
   if(s.nivel==="principiante"){if(ex.B)sc+=3;if(ex.req.includes("barra")&&ex.C)sc-=1.5;}
   if(ex.S)sc+=1.5;if(ex.C)sc+=0.8;if(ex.C&&slot.main)sc+=1;
   if(!ex.C&&(ex.req.includes("poleas")||ex.req.some(r=>GYM_ITEM[r]&&GYM_ITEM[r].k==="maquina")))sc+=0.75;
-  if(s.enfoque==="fuerza"&&slot.main&&ex.req.includes("barra"))sc+=3;
-  if(s.enfoque==="salud"&&ex.B)sc+=1.5;
+  if(enf(p)==="fuerza"&&slot.main&&ex.req.includes("barra"))sc+=3;
+  if(enf(p)==="salud"&&ex.B)sc+=1.5;
   sc-=exPain(p,ex)*3;
   if(slot.pref&&ex.id.includes(slot.pref))sc+=4;
   if(slot.pref&&!ex.id.includes(slot.pref)&&ex.pat==="empuje_h")sc-=1;
@@ -105,30 +110,35 @@ function pairSupersets(list,lvl){
 const VOL_TARGET={principiante:10,intermedio:14,avanzado:18};
 function volTarget(p){
   const s=G(p).setup;const ed=edadDe(p);
-  return VOL_TARGET[s.nivel]*({perder:0.9,mantener:1,ganar:1.1}[p.objetivo]||1)*(ed>=65?0.85:ed>=50?0.95:1)*({musculo:1,fuerza:0.9,salud:0.65}[s.enfoque]||1);
+  return VOL_TARGET[s.nivel]*goalVol(p)*(ed>=65?0.85:ed>=50?0.95:1)*({musculo:1,fuerza:0.9,salud:0.65}[enf(p)]||1);
 }
 function buildGymPlan(p){
   const g=G(p);const s=g.setup;const n=Math.max(1,Math.min(6,s.dias.length));
   const keys=SPLITS[n];const vf=volFactor(p);const used={};
-  const budget=(s.duracion||60)*0.92;const maxSets=s.nivel==="principiante"?3:4;
+  const budget=(s.duracion||60)*0.88;const maxSets=s.nivel==="principiante"?3:4;
   const sessions=keys.map(k=>{
     const [name,slots]=TEMPLATES[k];
     let list=slots.map(sl=>{
       let sets=sl.sets*vf;
       const ex0=EX.find(e=>e.pat===sl.p);const mus=ex0?ex0.prim:"";
       if(s.prio.includes(mus))sets+=1;
-      if(s.enfoque==="fuerza"&&sl.main)sets+=1;
+      if(p.meta==="estetica"&&(AESTH[p.sexo]||AESTH.H).slice(0,3).includes(mus))sets+=1;
+      if(enf(p)==="fuerza"&&sl.main)sets+=1;
       return {...sl,sets:clamp(Math.round(sets),sl.p==="core"?1:2,maxSets+1)};
     });
     list=list.map(sl=>{const id=pickEx(p,sl,used);if(id)used[id]=(used[id]||0)+1;return {...sl,ex:id};}).filter(x=>x.ex);
     pairSupersets(list,s.nivel);
     /* Recortar si no cabe: primero series de aislamientos, luego ejercicios del final */
     let guard=0;
-    while(listMinutes(p,list)>budget&&guard++<60){
+    while(listMinutes(p,list)>budget&&guard++<80){
       const iso=list.slice().reverse().find(x=>!EXM[x.ex].C&&x.sets>2);
       if(iso){iso.sets--;continue;}
+      const big=list.slice().reverse().find(x=>!x.main&&x.sets>3);
+      if(big){big.sets--;continue;}
+      const mainBig=list.find(x=>x.main&&x.sets>3);
+      if(mainBig){mainBig.sets--;continue;}
       const last=list[list.length-1];
-      if(list.length>4&&!EXM[last.ex].C){const rm=list.pop();if(used[rm.ex])used[rm.ex]--;pairSupersets(list,s.nivel);continue;}
+      if(list.length>5&&!EXM[last.ex].C){const rm=list.pop();if(used[rm.ex])used[rm.ex]--;pairSupersets(list,s.nivel);continue;}
       const cmp=list.slice().reverse().find(x=>!x.main&&x.sets>2);
       if(cmp){cmp.sets--;continue;}
       if(list.length>3){const rm=list.pop();if(used[rm.ex])used[rm.ex]--;pairSupersets(list,s.nivel);continue;}
@@ -143,7 +153,7 @@ function buildGymPlan(p){
     const vol=plannedVolume(p);let added=false;
     sessions.forEach(ses=>{
       const cand=ses.slots.filter(sl=>sl.sets<(sl.main||EXM[sl.ex].C?maxSets:maxSets)&&EXM[sl.ex].pat!=="core")
-        .map(sl=>{const m=EXM[sl.ex].prim;const t=tgt*(["gemelo","abdomen","trapecio","aductores"].includes(m)?0.6:1);return {sl,r:(vol[m]||0)/t};}).filter(x=>x.r<1.05).sort((a,b)=>a.r-b.r);
+        .map(sl=>{const m=EXM[sl.ex].prim;const t=tgt*(["gemelo","abdomen","trapecio","aductores"].includes(m)?0.6:1)*(p.meta==="estetica"&&(AESTH[p.sexo]||AESTH.H).includes(m)?1.25:1);return {sl,r:(vol[m]||0)/t};}).filter(x=>x.r<1.05).sort((a,b)=>a.r-b.r);
       for(const c of cand){
         c.sl.sets++;
         if(listMinutes(p,ses.slots)<=budget){added=true;break;}
@@ -167,22 +177,22 @@ function mesoWeek(p){
 function isDeload(p){return mesoWeek(p)===4;}
 function rirTarget(p,ex,week){
   const s=G(p).setup;
-  const base=(s.nivel==="principiante"?[3,3,2,2,4]:[3,2,2,1,4])[week];
+  const base=(RIR_LVL[s.nivel]||RIR_LVL.intermedio)[week];
   let r=base;
-  if(!ex.C&&week>=2&&week<=3)r=Math.max(0,r-1);
-  if(s.enfoque==="salud")r=Math.max(2,r);
+  if(!ex.C&&(week>=2&&week<=3||s.nivel==="avanzado"&&week<4))r=Math.max(0,r-1);
+  if(enf(p)==="salud")r=Math.max(2,r);
   if(edadDe(p)>=60&&ex.C)r=Math.max(2,r);
   return r;
 }
 function repRange(p,ex,slot){
   const s=G(p).setup;let code=ex.rep;
-  if(code==="f"&&(s.nivel==="principiante"||s.enfoque==="salud"))code="h";
-  if(s.enfoque==="fuerza"&&slot&&slot.main&&ex.C&&(code==="f"||code==="h"))return [4,6];
+  if(code==="f"&&(s.nivel==="principiante"||enf(p)==="salud"))code="h";
+  if(enf(p)==="fuerza"&&slot&&slot.main&&ex.C&&(code==="f"||code==="h"))return [4,6];
   if(code==="f"&&edadDe(p)>=60)code="h";
   return REPS[code];
 }
 function restFor(p,ex,slot){
-  const s=G(p).setup;if(s.enfoque==="fuerza"&&slot&&slot.main&&ex.C)return 180;
+  const s=G(p).setup;if(enf(p)==="fuerza"&&slot&&slot.main&&ex.C)return 180;
   return REST[ex.rep]||90;
 }
 
@@ -258,10 +268,14 @@ function sessionPreview(p,idx,wellness){
   const g=G(p);const ses=g.plan.sessions[idx];const wk=mesoWeek(p);
   return ses.slots.map((sl,si)=>{
     const ex=EXM[sl.ex];const range=repRange(p,ex,sl);let rir=rirTarget(p,ex,wk);
-    let sets=Math.max(1,Math.round(sl.sets*WEEK_SET_MULT[wk]));
+    const lv=(g.setup&&g.setup.nivel)||"intermedio";
+    const mult=sl.main&&wk<4?1:(WEEK_MULT_LVL[lv]||WEEK_SET_MULT)[wk];
+    let sets=Math.max(1,Math.round(sl.sets*mult));
+    const firstOfMuscle=ses.slots.findIndex(z=>EXM[z.ex].prim===ex.prim)===si;
+    if(firstOfMuscle&&wk<4)sets=clamp(sets+((g.adj||{})[ex.prim]||0),1,6);
     if(wellness==="cansado")rir+=1;
     if(wellness==="muy")(rir+=1,sets=Math.max(1,sets-1));
-    return {si,ex:sl.ex,sets,lo:range[0],hi:range[1],rir,rest:restFor(p,ex,sl),main:!!sl.main,ss:sl.ss||""};
+    return {si,ex:sl.ex,sets,lo:range[0],hi:range[1],rir,rest:restFor(p,ex,sl),main:!!sl.main,ss:sl.ss||"",tech:wellness==="muy"?null:techFor(p,ex,sl,wk)};
   });
 }
 function sessionMinutes(p,idx){
@@ -358,4 +372,37 @@ function whyEx(p,ex,slot){
   if(ex.B&&G(p).setup.nivel==="principiante")w.push("Es fácil de aprender, ideal mientras dominas la técnica.");
   const pn=exPain(p,ex);if(pn===0&&Object.values(G(p).setup.dolor||{}).some(Boolean))w.push("Elegido porque no carga las zonas donde marcaste molestias.");
   return w;
+}
+
+/* ---- Técnicas de intensidad ---- */
+const TECHS={
+  topset:["Serie top y de bajada","La primera serie con el peso más alto a RIR 1; las demás con un 10 % menos."],
+  restpause:["Rest-pause en la última","Al llegar al RIR objetivo, descansa 15 s y saca 2-3 repeticiones más. Repite una vez."],
+  descendente:["Descendente en la última","Al terminar la última serie, baja el peso un 25 % y sigue sin descanso hasta RIR 1."],
+  parciales:["Parciales al final","Al terminar la última serie, añade 4-6 repeticiones de medio recorrido en la parte estirada."]
+};
+function techFor(p,ex,sl,wk){
+  const s=G(p).setup;if(!s||!s.tecnicas||wk===4||s.nivel==="principiante")return null;
+  if(sl.main&&ex.C&&s.nivel==="avanzado"&&ex.req.some(r=>["barra","smith","prensa","hack","pendulo"].includes(r)))return "topset";
+  if(ex.C||ex.rep==="s")return null;
+  const mach=ex.req.includes("poleas")||ex.req.some(r=>GYM_ITEM[r]&&GYM_ITEM[r].k==="maquina");
+  if(!mach)return ex.S?"parciales":null;
+  const h=[...ex.id].reduce((a,c)=>a+c.charCodeAt(0),0);
+  return ["restpause","descendente","parciales"][h%3];
+}
+/* ---- Ajuste tras cada sesión ---- */
+function applyFeedback(p,entry,fb){
+  const g=G(p);g.adj=g.adj||{};entry.fb=fb;
+  const mus=[...new Set(entry.exs.map(x=>EXM[x.ex]&&EXM[x.ex].prim).filter(Boolean))];
+  const d=fb==="mas"?1:fb==="menos"?-1:0;
+  if(d)mus.forEach(m=>{g.adj[m]=clamp((g.adj[m]||0)+d,-2,2);});
+}
+function levelUpSuggest(p){
+  const g=G(p);const s=g.setup;if(!s||s.nivel==="avanzado")return null;
+  const last=g.log.filter(l=>l.fb).slice(-3);
+  if(last.length<3||!last.every(l=>l.fb==="mas"))return null;
+  if(g.lvlAsked===last[last.length-1].id)return null;
+  const ap=autoPerf(p,weekStart(today()))||autoPerf(p,addDays(weekStart(today()),-7));
+  if(ap&&ap.v==="BAJA")return null;
+  return s.nivel==="principiante"?"intermedio":"avanzado";
 }

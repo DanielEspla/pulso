@@ -83,7 +83,14 @@ const RITMOS={
   mantener:{suave:[-0.25,0.25,0],normal:[-0.25,0.25,0],rapido:[-0.25,0.25,0]}
 };
 const RITMO_TXT={suave:"Suave",normal:"Normal",rapido:"Rápido"};
-function banda(p){return (RITMOS[p.objetivo]||RITMOS.perder)[p.ritmo]||RITMOS.perder.normal;}
+function banda(p){
+  if(p.meta&&typeof goalCfg==="function"){
+    const c=goalCfg(p);const m={suave:0.75,normal:1,rapido:1.2}[p.ritmo]||1;
+    if(c.obj==="mantener")return [-0.25,0.25,0];
+    return c.band.map(x=>Math.round(x*m*100)/100);
+  }
+  return (RITMOS[p.objetivo]||RITMOS.perder)[p.ritmo]||RITMOS.perder.normal;
+}
 function kcalFloor(p,peso){return Math.max(p.sexo==="H"?1500:1200,r25(bmr(p,peso)));}
 
 /* Peso y cintura actuales: última media semanal con datos y última cintura registrada */
@@ -112,18 +119,27 @@ function computeTargets(p,opts={}){
   else if(p.objetivo==="perder"){const def=Math.min(band[2]/100*peso*7700/7,0.22*tdee);kcal=tdee-def;}
   else if(p.objetivo==="ganar"){const sur=clamp(band[2]/100*peso*7700/7,150,0.15*tdee);kcal=tdee+sur;}
   const floor=kcalFloor(p,peso);
+  const GC=p.meta&&typeof goalCfg==="function"?goalCfg(p):null;
+  if(GC&&GC.kcalAdj&&!p.embarazo)kcal*=GC.kcalAdj;
   if(p.objetivo!=="ganar") kcal=Math.max(kcal,Math.min(floor,tdee));
   kcal=r25(kcal);
-  const D=dep(p);const pf=D.pt[p.objetivo==="perder"?0:p.objetivo==="mantener"?1:2];
-  let P=r5(clamp(pf*lbm,1.2*adj,2.4*adj));
+  const D=dep(p);let pf=D.pt[p.objetivo==="perder"?0:p.objetivo==="mantener"?1:2];
+  if(GC){pf=GC.prot-(["resistencia","suave"].includes((SPORT[p.deporte]||{}).tipo)?0.2:0);}
+  let P=r5(clamp(pf*lbm,1.2*adj,2.6*adj));
   const fMin=0.6*adj;
   let F=(D.fat+(p.sexo==="M"?0.1:0))*adj;
   F=clamp(F,Math.max(fMin,0.22*kcal/9),0.35*kcal/9);
   let C=(kcal-4*P-9*F)/4;
   if(C<60){F=Math.max(fMin,F-(60-C)*4/9);C=(kcal-4*P-9*F)/4;}
-  const CM=carbMin(p);
-  if(CM&&C<CM*adj){const need=(CM*adj-C)*4/9;const take=Math.min(need,Math.max(0,F-fMin));F-=take;C=(kcal-4*P-9*F)/4;}
-  C=Math.max(C,40);
+  const est=p.dietaEstilo||"equilibrada";
+  if(est==="bajahc"){C=Math.min(C,Math.max(60,1.2*adj));F=Math.max(fMin,(kcal-4*P-4*C)/9);}
+  else if(est==="keto"){C=40;F=Math.max(fMin,(kcal-4*P-4*C)/9);}
+  else if(est==="altahc"){F=fMin;C=(kcal-4*P-9*F)/4;}
+  if(est==="equilibrada"||est==="altahc"){
+    const CM=carbMin(p);
+    if(CM&&C<CM*adj){const need=(CM*adj-C)*4/9;const take=Math.min(need,Math.max(0,F-fMin));F-=take;C=(kcal-4*P-9*F)/4;}
+  }
+  C=Math.max(C,est==="keto"?20:40);
   F=r5(F);C=r5(C);
   return {kcal:4*P+9*F+4*C,p:P,f:F,c:C,tdee:Math.round(tdee),bmr:Math.round(B),bf,lbm:r1(lbm),floor,peso:r1(peso)};
 }
@@ -369,9 +385,22 @@ function dayCorrect(day){
   }
 }
 
+function mealSplit(p,T,set){
+  const ts=mealTargets(T,set);
+  if(p.reparto==="peri"&&T.train&&p.dietaEstilo!=="keto"){
+    const {pre,post}=periIdx(p,set);const peri=[pre,post].filter(i=>i>=0&&i<ts.length);
+    if(peri.length&&peri.length<ts.length){
+      const others=ts.map((_,i)=>i).filter(i=>!peri.includes(i));
+      const move=others.reduce((a,i)=>a+ts[i].c*0.4,0);
+      others.forEach(i=>{const dc=ts[i].c*0.4;ts[i].c-=dc;ts[i].f+=dc*4/9;});
+      const fBack=move*4/9;peri.forEach(i=>{ts[i].c+=move/peri.length;ts[i].f=Math.max(ts[i].f*0.4,ts[i].f-fBack/peri.length);});
+    }
+  }
+  return ts;
+}
 function buildDay(p,T,ctx,prevDay){
   const set=MEAL_SETS[p.comidas]||MEAL_SETS["4"];
-  const ts=mealTargets(T,set);
+  const ts=mealSplit(p,T,set);
   const day={meals:[]};let lunchP=null;
   set.forEach(([name,type],i)=>{
     const avoidP=[];if(lunchP)avoidP.push(lunchP);
@@ -388,13 +417,42 @@ function buildDay(p,T,ctx,prevDay){
 }
 /* Reparto de hidratos según el deporte de cada día: misma cantidad semanal */
 function dayWeights(p){return Array.from({length:7},(_,i)=>{const s=SPORT[(p.plan||[])[i]];return s?TIPOS[s.tipo].cw*s.i:0;});}
+function refeedDays(p){
+  const n=+p.recarga||0;if(!n)return [];
+  const w=dayWeights(p);const order=[5,2,6,0,3,4,1].sort((a,b)=>w[b]-w[a]||0);
+  const first=order[0];if(n===1)return [first];
+  const second=order.find(d=>Math.abs(d-first)>=3&&Math.abs(d-first)<=4)??order[1];
+  return [first,second];
+}
 function dayTargets(p,T,di){
   const s=SPORT[(p.plan||[])[di]]||null;
-  const base={...T,train:!!s,sport:s?s.id:""};
+  let out={...T,train:!!s,sport:s?s.id:""};
   const w=dayWeights(p);const avg=w.reduce((a,b)=>a+b,0)/7;
-  if(!p.ciclado||!s&&avg===0||w.every(x=>x===w[0]))return base;
-  const c=r5(clamp(T.c*(1+0.35*(w[di]-avg)),T.c*0.65,T.c*1.45));
-  return {...base,c,kcal:4*T.p+9*T.f+4*c};
+  const keto=p.dietaEstilo==="keto";
+  if(!keto&&p.ciclado&&!(!s&&avg===0)&&!w.every(x=>x===w[0])){
+    const c=r5(clamp(T.c*(1+0.35*(w[di]-avg)),T.c*0.65,T.c*1.45));
+    out={...out,c,kcal:4*T.p+9*T.f+4*c};
+  }
+  const rd=refeedDays(p);
+  if(rd.length){
+    const maint=Math.max(T.kcal,p.tdeeRef||T.kcal);const dk=Math.max(150,maint-T.kcal);
+    if(rd.includes(di)){
+      const fCut=keto?Math.round(out.f*0.45):0;
+      const c=r5(out.c+(dk+fCut*9)/4);const f=out.f-fCut;
+      out={...out,c,f,kcal:4*out.p+9*f+4*c,refeed:true};
+    }else{
+      const per=dk*rd.length/(7-rd.length);
+      if(keto){const f=Math.max(Math.round(T.f*0.6),r5(out.f-per/9));out={...out,f,kcal:4*out.p+9*f+4*out.c};}
+      else{const c=Math.max(40,r5(out.c-per/4));out={...out,c,kcal:4*out.p+9*out.f+4*c};}
+    }
+  }
+  return out;
+}
+/* Comidas de antes y después de entrenar según la hora */
+function periIdx(p,set){
+  const h=(p.gym&&p.gym.setup&&p.gym.setup.hora)||"tarde";const names=set.map(x=>x[0]);
+  let post=h==="manana"?1:h==="mediodia"?names.indexOf("Comida"):names.indexOf("Cena");
+  if(post<0)post=names.length-1;return {pre:post-1,post};
 }
 function buildWeek(p,ws){
   const T={...p.targets};const ctx={use:{},avoidP:[]};const days=[];
@@ -409,7 +467,7 @@ function buildWeek(p,ws){
     }
     ctx.use=bestUse;days.push(best);
   }
-  return {week:ws,targets:T,comidas:p.comidas,ciclado:!!p.ciclado,days,created:today()};
+  return {week:ws,targets:T,comidas:p.comidas,ciclado:!!p.ciclado,cfg:typeof menuCfg==="function"?menuCfg(p):"",days,created:today()};
 }
 function regenMeal(p,menu,di,mi){
   const day=menu.days[di];const m=day.meals[mi];
@@ -440,8 +498,8 @@ function rebalanceDay(menu,di){
   return factor;
 }
 function retargetMenu(p,menu){
-  const set=MEAL_SETS[menu.comidas];menu.targets={...p.targets};menu.ciclado=!!p.ciclado;
-  menu.days.forEach((day,di)=>{day.T=dayTargets(p,menu.targets,di);const ts=mealTargets(day.T,set);day.meals.forEach((m,i)=>{m.base=ts[i];m.t=ts[i];});rebalanceDay(menu,di);});
+  const set=MEAL_SETS[menu.comidas];menu.targets={...p.targets};menu.ciclado=!!p.ciclado;menu.cfg=typeof menuCfg==="function"?menuCfg(p):"";
+  menu.days.forEach((day,di)=>{day.T=dayTargets(p,menu.targets,di);const ts=mealSplit(p,day.T,set);day.meals.forEach((m,i)=>{m.base=ts[i];m.t=ts[i];});rebalanceDay(menu,di);});
 }
 function dayTotals(day){
   const s=sumItems(day.meals.filter(m=>!m.fuera).flatMap(m=>m.items));

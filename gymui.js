@@ -12,6 +12,7 @@ function viewEntreno(p){
   if(!g.setup||UI.gs)return viewGymSetup(p);
   if(UI.gsum)return viewGymSummary(p);
   if(g.draft)return viewRunner(p);
+  if(!g.setup.hasOwnProperty("tecnicas"))g.setup.tecnicas=g.setup.nivel==="avanzado";
   const tabs=[["hoy","Hoy"],["plan","Plan"],["progreso","Progreso"],["ejercicios","Ejercicios"]];
   const t=UI.gtab||"hoy";
   const body={hoy:gymHoy,plan:gymPlan,progreso:gymProgreso,ejercicios:gymEjercicios}[t](p);
@@ -26,9 +27,10 @@ function viewGymSetup(p){
   const {step,d}=UI.gs;const N=4;
   const seg=(k,opts)=>`<div class="seg">${opts.map(([v,t])=>`<button type="button" class="${String(d[k])===String(v)?"on":""}" data-a="gsSet" data-k="${k}" data-v="${v}">${t}</button>`).join("")}</div>`;
   let h="";
-  if(step===0)h=`<h2>Tu punto de partida</h2><p class="muted" style="margin:6px 0 18px">Con esto se decide el volumen, los rangos de repeticiones y cuánto te acercas al fallo.</p>
-    <div class="stack"><div class="field"><span>Experiencia en el gimnasio</span>${seg("nivel",Object.entries(NIVELES).map(([k,v])=>[k,v.split(" (")[0]]))}<span class="hint">${NIVELES[d.nivel]}. Si dudas, elige el nivel inferior.</span></div>
-    <div class="field"><span>Qué buscas</span><div class="deps">${Object.entries(ENFOQUES).map(([k,[t,ds]])=>`<button type="button" class="${d.enfoque===k?"on":""}" data-a="gsSet" data-k="enfoque" data-v="${k}"><b>${t}</b><span>${ds}</span></button>`).join("")}</div></div></div>`;
+  if(step===0){const gc=goalCfg(p);h=`<h2>Tu punto de partida</h2><p class="muted" style="margin:6px 0 18px">Con esto se decide el volumen, los rangos de repeticiones y cuánto te acercas al fallo.</p>
+    <div class="stack"><div class="field"><span>Experiencia en el gimnasio ${infoBtn("nivel","nivel")}</span>${seg("nivel",Object.entries(NIVELES).map(([k,v])=>[k,v.split(" (")[0]]))}<span class="hint">${NIVELES[d.nivel]}. ${d.nivel==="avanzado"?"Empiezas directamente a RIR 1-2: la primera sesión de cada ejercicio sirve para calibrar el peso.":"Si dudas, elige el nivel inferior: la app te propondrá subir cuando lo notes fácil."}</span></div>
+    <div class="card flat"><span class="lbl">Tu objetivo</span><p style="margin-top:4px"><b>${gc.t}</b> ${infoBtn("g_"+gc.id,gc.t)}${gc.fase?` <span class="muted small">· ${gc.fase}</span>`:""}</p><p class="small muted">El entreno se adapta a él. Puedes cambiarlo cuando quieras en Objetivos.</p></div>
+    ${d.nivel!=="principiante"?`<label class="chk"><input type="checkbox" data-c="gsTec" id="gs_tec" ${d.tecnicas?"checked":""}><span>Técnicas de intensidad ${infoBtn("tecnicas","técnicas de intensidad")}<br><span class="hint">Rest-pause, descendentes, parciales y series top en la última serie. Más estímulo sin alargar la sesión.</span></span></label>`:""}</div>`;}
   if(step===1)h=`<h2>Cuándo entrenas</h2><p class="muted" style="margin:6px 0 18px">Los días que marques serán días de gimnasio en tu semana tipo y en tu dieta.</p>
     <div class="stack"><div class="field"><span>Días de gimnasio</span><div class="dchips">${DIAS.map((x,i)=>`<button type="button" class="dch ${d.dias.includes(i)?"on":""}" data-a="gsDay" data-i="${i}">${i===2?"X":x[0]}</button>`).join("")}</div><span class="hint">${d.dias.length} día${d.dias.length===1?"":"s"}: ${d.dias.length?SPLIT_TXT[Math.min(6,d.dias.length)]:"elige al menos uno"}. Deja al menos un día entre sesiones cuando puedas.</span></div>
     <div class="field"><span>Tiempo por sesión</span>${seg("duracion",DURACIONES.map(m=>[m,m+" min"]))}</div>
@@ -63,7 +65,9 @@ function gymHoy(p){
   const well=UI.well||"normal";const prev=sessionPreview(p,idx,well);
   const dl=deloadSuggest(p);const pa=painAlert(p);
   const last=g.log.slice().reverse().find(l=>l.date===today());
+  const lu=levelUpSuggest(p);
   return `<div class="stack">
+  ${lu?`<div class="alert ok"><span class="dot"></span><div><b>Te está sabiendo a poco</b>Tres sesiones seguidas pidiendo más y tu fuerza no cae. ¿Subimos a nivel ${lu}? Más series, más cerca del fallo${lu==="avanzado"?" y técnicas de intensidad":""}.<div class="row" style="margin-top:8px"><button class="btn sm pri" data-a="lvlUp" data-k="${lu}">Subir a ${lu}</button><button class="btn sm ghost" data-a="lvlNo">Todavía no</button></div></div></div>`:""}
   ${pa?`<div class="alert bad"><span class="dot"></span><div><b>Molestias repetidas en ${JOINTS[pa.joint].toLowerCase()}</b>Las has marcado ${pa.n} veces en dos semanas. Cambiar ejercicios no basta: consulta con un fisioterapeuta antes de seguir cargando esa zona.</div></div>`:""}
   ${dl?`<div class="alert warn"><span class="dot"></span><div><b>Quizá te toque descargar</b>${esc(dl)} Una semana suave ahora te deja rendir más después.<div style="margin-top:8px"><button class="btn sm" data-a="deloadNow">Hacer la descarga esta semana</button></div></div></div>`:""}
   ${last?`<div class="alert ok"><span class="dot"></span><div><b>Sesión hecha hoy: ${esc(last.name)}</b>${sessionStats(p,last).sets} series en ${last.min} minutos. Buen trabajo.</div></div>`:""}
@@ -97,7 +101,8 @@ function viewRunner(p){
   ${it.ss?(()=>{const j=d.exs.findIndex((x,k)=>k!==d.cur&&x.ss===it.ss);return j>=0?`<p class="small acc-t"><b>Superserie ${it.ss}</b> con ${esc(EXM[d.exs[j].ex].name)}: haces una serie de cada uno y descansas al terminar la pareja.</p>`:"";})():""}
   <div class="row" style="gap:6px"><button class="btn sm" data-a="ficha" data-id="${ex.id}">${ic("info",'width="16"')} Técnica y porqué</button><button class="btn sm" data-a="swapOpen" data-i="${d.cur}">${ic("swap",'width="16"')} Cambiar</button></div>
   <div class="card stack">
-    <p class="acc-t"><b>Objetivo: ${it.sets} series · ${repTxt(it)} · RIR ${it.rir}</b> <span class="muted small">· descanso ${restTxt(it.rest)}</span></p>
+    <p class="acc-t"><b>Objetivo: ${it.sets} series · ${repTxt(it)} · RIR ${it.rir}</b> ${infoBtn("rir","RIR")} <span class="muted small">· descanso ${restTxt(it.rest)}</span></p>
+    ${it.tech?`<p class="tech"><b>${TECHS[it.tech][0]}</b> ${infoBtn("tecnicas","técnicas")}<br><span class="small">${TECHS[it.tech][1]}</span></p>`:""}
     ${sg.last?`<p class="small muted">${esc(sg.last)}</p>`:""}
     <p class="sug ${sg.act||""}">${esc(sg.txt)}</p>
     ${it.sets_.length?`<div class="sets">${it.sets_.map((s,i)=>`<div class="setrow ${s.warm?"warm":""}"><span>${s.warm?"Aprox.":"Serie "+(it.sets_.slice(0,i+1).filter(x=>!x.warm).length)}</span><b class="num">${s.w?kg(s.w)+" × ":""}${s.r}${ex.rep==="s"?" s":""}</b><span class="muted small">${s.warm?"":"RIR "+(s.rir>=3?"3+":s.rir)}</span><button class="btn ghost sm" data-a="delSet" data-i="${i}" aria-label="Borrar serie">${ic("x",'width="15"')}</button></div>`).join("")}</div>`:""}
@@ -127,6 +132,9 @@ function viewGymSummary(p){
   return `<div class="stack"><div class="hero"><span class="lbl acc">Sesión terminada</span><h2 class="disp">${esc(e.name)}</h2>
   <div class="grid3"><div><span class="lbl">Series</span><div class="v2">${st.sets}</div></div><div><span class="lbl">Minutos</span><div class="v2">${e.min}</div></div><div><span class="lbl">Kilos movidos</span><div class="v2">${nf(st.vol,0)}</div></div></div>
   ${st.prs.length?`<div class="alert ok"><span class="dot"></span><div><b>Mejoras de rendimiento</b>${st.prs.map(x=>`${esc(EXM[x.ex].name)}: fuerza estimada ${nf(x.pb,0)} → ${nf(x.b,0)} kg`).join("<br>")}</div></div>`:`<p class="small muted">Sin récords hoy. No pasa nada: el progreso se mide en semanas, no en sesiones.</p>`}
+  <div class="field"><span>¿Cómo te ha sabido la sesión?</span>
+    <div class="fb3">${[["mas","Puedo más","Una serie más la próxima vez"],["justo","Justa","Seguimos igual"],["menos","Demasiado","Una serie menos"]].map(([k,t,d])=>`<button class="${e.fb===k?"on":""}" data-a="fbSes" data-k="${k}"><b>${t}</b><span>${d}</span></button>`).join("")}</div>
+    ${e.fb?`<span class="hint">${e.fb==="mas"?"Anotado: los músculos de hoy tendrán una serie más en su próxima sesión.":e.fb==="menos"?"Anotado: una serie menos para esos músculos. Recuperar también es entrenar.":"Perfecto, seguimos con el plan."}</span>`:""}</div>
   <p class="small muted">Para recuperar: proteína en las próximas horas y dormir bien esta noche. Es cuando el músculo se reconstruye.</p>
   <button class="btn pri wide" data-a="closeSum">Hecho</button></div></div>`;
 }
@@ -201,7 +209,7 @@ function gymPlan(p){
     <p class="small">${wk===4?"Semana de descarga: la mitad de series y lejos del fallo. La fatiga se va y el músculo consolida lo ganado.":`Cada semana te acercas un poco más al fallo y en las semanas 3 y 4 sube el número de series. Después toca una semana de descarga.`}</p>
     ${wk<4?`<button class="btn sm" data-a="deloadNow">Adelantar la descarga a esta semana</button>`:""}</div>
   ${g.plan.sessions.map((ses,si)=>`<div class="card stack"><div class="row between"><h3>${esc(ses.name)}</h3><span class="small muted">${sessionMinutes(p,si)} min</span></div>
-    <div class="items">${sessionPreview(p,si).map((x,i)=>`<div class="item plan-it"><button class="nm linklike" data-a="ficha" data-id="${x.ex}" data-s="${si}" data-si="${i}"><span>${esc(EXM[x.ex].name)}</span><span class="small muted num">${x.ss?`<span class="tag" style="margin:0 4px 0 0">Superserie ${x.ss}</span>`:""}${x.sets} × ${repTxt(x)} · RIR ${x.rir} · ${MUSCLES[EXM[x.ex].prim]}</span></button><button class="btn ghost sm" data-a="swapPlan" data-s="${si}" data-si="${i}" aria-label="Cambiar ejercicio">${ic("swap",'width="16"')}</button></div>`).join("")}</div></div>`).join("")}
+    <div class="items">${sessionPreview(p,si).map((x,i)=>`<div class="item plan-it"><button class="nm linklike" data-a="ficha" data-id="${x.ex}" data-s="${si}" data-si="${i}"><span>${esc(EXM[x.ex].name)}</span><span class="small muted num">${x.ss?`<span class="tag" style="margin:0 4px 0 0">Superserie ${x.ss}</span>`:""}${x.tech?`<span class="tag" style="margin:0 4px 0 0">${TECHS[x.tech][0]}</span>`:""}${x.sets} × ${repTxt(x)} · RIR ${x.rir} · ${MUSCLES[EXM[x.ex].prim]}</span></button><button class="btn ghost sm" data-a="swapPlan" data-s="${si}" data-si="${i}" aria-label="Cambiar ejercicio">${ic("swap",'width="16"')}</button></div>`).join("")}</div></div>`).join("")}
   <div class="card stack"><span class="lbl">Series por músculo a la semana</span>
     <div class="vol">${order.map(m=>`<div><span>${MUSCLES[m]}</span><div class="vbar"><i style="width:${Math.min(100,vol[m]/22*100)}%"></i><em style="left:${10/22*100}%"></em><em style="left:${20/22*100}%"></em></div><b class="num">${nf(vol[m],vol[m]%1?1:0)}</b></div>`).join("")}</div>
     ${(()=>{const low=["pecho","dorsal","espalda_media","cuadriceps","isquios","gluteo"].filter(m=>(vol[m]||0)<10);return low.length?`<p class="small">Con ${s.dias.length} día${s.dias.length>1?"s":""} de ${s.duracion} minutos, descansando lo que pide la ciencia, no caben 10 series semanales en ${low.map(m=>MUSCLES[m].toLowerCase()).join(", ")}. Sigue siendo un estímulo eficaz, sobre todo en déficit, donde el objetivo es conservar. Si quieres más volumen, sube a ${s.duracion<90?s.duracion+15+" minutos":"más días"} en «Cambiar ajustes de entreno»: la app rellena el tiempo extra con series para los músculos que van más cortos.</p>`:"";})()}
@@ -308,6 +316,9 @@ Object.assign(A,{
   restSkip:()=>{UI.rest=null;render();},
   finishSes:()=>{const p=P();const e=finishSession(p);UI.confirm=null;UI.rest=null;UI.gsum=e&&e.exs.length?e:null;if(!UI.gsum)toast("Sesión cerrada sin series registradas");commit();window.scrollTo(0,0);},
   discardSes:()=>{G(P()).draft=null;UI.confirm=null;UI.rest=null;commit();},
+  fbSes:el=>{const p=P();const e=UI.gsum;const real=G(p).log.find(l=>l.id===e.id);applyFeedback(p,real||e,el.dataset.k);UI.gsum=real||e;commit();},
+  lvlUp:el=>{const p=P();const g=G(p);g.setup.nivel=el.dataset.k;if(el.dataset.k!=="principiante")g.setup.tecnicas=true;g.adj={};buildGymPlan(p);commit();toast("Nivel subido. Plan rehecho.");},
+  lvlNo:()=>{const g=G(P());const l=g.log.filter(x=>x.fb).slice(-1)[0];g.lvlAsked=l&&l.id;commit();},
   closeSum:()=>{UI.gsum=null;UI.gtab="hoy";render();},
   skipEx:()=>{const d=G(P()).draft;d.exs[d.cur].done=true;d.exs[d.cur].skipped=true;UI.sheet=null;UI.sw=null;if(d.cur<d.exs.length-1)d.cur++;commit();},
   swapOpen:el=>{const p=P();const d=G(p).draft;const i=+el.dataset.i;UI.sw={};const ctx={mode:"ses",i,ex:d.exs[i].ex};UI.sheet=()=>sheetSwapEx(P(),ctx);UI.swCtx=ctx;render();},
@@ -324,6 +335,7 @@ Object.assign(A,{
 });
 Object.assign(CHG,{
   gsItem:el=>{UI.gs.d.items[el.dataset.id]=el.checked;},
+  gsTec:el=>{UI.gs.d.tecnicas=el.checked;},
   rnWarm:el=>{UI.rnWarm=el.checked;render();},
   swPerm:el=>{UI.sw.perm=el.checked;},
   esearch:el=>{UI.eq=el.value;render();const s=document.getElementById("esearch");if(s){s.focus();s.setSelectionRange(s.value.length,s.value.length);}}
