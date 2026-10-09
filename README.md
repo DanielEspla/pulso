@@ -32,4 +32,5 @@ Genera:
 - `app.js` pantallas de nutrición, perfil y copias
 - `gymui.js` pantallas de entreno
 - `shop.js` lista de la compra (formatos, merma, despensa, una o dos compras)
+- pulso.js: importa el historial de entrenos de la app PULSO anterior (copiar o archivo JSON).
 - `main.js` arranque

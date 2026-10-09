@@ -1,6 +1,6 @@
 // Construye Afina: afina.html (artifact) y dist/ (web instalable para Cloudflare Pages)
 const fs=require('fs');const path=require('path');
-const SRC=['foods.js','engine.js','goals.js','exercises.js','gym.js','learn.js','app.js','gymui.js','shop.js','main.js'];
+const SRC=['foods.js','engine.js','goals.js','exercises.js','gym.js','learn.js','app.js','gymui.js','shop.js','pulso.js','main.js'];
 const js=SRC.map(f=>`/* ${f} */\n`+fs.readFileSync(path.join(__dirname,f),'utf8')).join('\n');
 const css=fs.readFileSync(path.join(__dirname,'style.css'),'utf8');
 const fonts='<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap">';

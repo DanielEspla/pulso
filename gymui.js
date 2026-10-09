@@ -67,6 +67,7 @@ function gymHoy(p){
   const last=g.log.slice().reverse().find(l=>l.date===today());
   const lu=levelUpSuggest(p);
   return `<div class="stack">
+  ${!g.log.length?`<div class="alert"><span class="dot"></span><div><b>¿Vienes de PULSO?</b>Trae tus entrenos para que la progresión arranque con tus pesos reales.<div style="margin-top:8px"><button class="btn sm" data-a="go" data-v="copias">Importar de PULSO</button></div></div></div>`:""}
   ${lu?`<div class="alert ok"><span class="dot"></span><div><b>Te está sabiendo a poco</b>Tres sesiones seguidas pidiendo más y tu fuerza no cae. ¿Subimos a nivel ${lu}? Más series, más cerca del fallo${lu==="avanzado"?" y técnicas de intensidad":""}.<div class="row" style="margin-top:8px"><button class="btn sm pri" data-a="lvlUp" data-k="${lu}">Subir a ${lu}</button><button class="btn sm ghost" data-a="lvlNo">Todavía no</button></div></div></div>`:""}
   ${pa?`<div class="alert bad"><span class="dot"></span><div><b>Molestias repetidas en ${JOINTS[pa.joint].toLowerCase()}</b>Las has marcado ${pa.n} veces en dos semanas. Cambiar ejercicios no basta: consulta con un fisioterapeuta antes de seguir cargando esa zona.</div></div>`:""}
   ${dl?`<div class="alert warn"><span class="dot"></span><div><b>Quizá te toque descargar</b>${esc(dl)} Una semana suave ahora te deja rendir más después.<div style="margin-top:8px"><button class="btn sm" data-a="deloadNow">Hacer la descarga esta semana</button></div></div></div>`:""}
@@ -188,8 +189,8 @@ function sheetFicha(p,id,slot){
   <div class="stack">
   <p><b>${MUSCLES[ex.prim]}</b>${ex.sec.length?` <span class="muted">· también ${ex.sec.map(m=>MUSCLES[m]?MUSCLES[m].toLowerCase():"").filter(Boolean).join(", ")}</span>`:""}</p>
   <div><span class="lbl">Por qué está en tu plan</span><ul class="tight">${whyEx(p,ex,slot).map(w=>`<li>${esc(w)}</li>`).join("")}</ul></div>
-  <div><span class="lbl">Técnica</span><ol class="tight">${ex.cues.map(c=>`<li>${esc(c)}</li>`).join("")}</ol></div>
-  <div class="alert"><span class="dot"></span><div><b>Error típico</b>${esc(ex.err)}</div></div>
+  ${ex.cues.length?`<div><span class="lbl">Técnica</span><ol class="tight">${ex.cues.map(c=>`<li>${esc(c)}</li>`).join("")}</ol></div>`:`<p class="small muted">Ejercicio importado de PULSO. Si lo cambias por uno de la biblioteca de Afina tendrás técnica, explicación y alternativas.</p>`}
+  ${ex.err?`<div class="alert"><span class="dot"></span><div><b>Error típico</b>${esc(ex.err)}</div></div>`:""}
   <div class="grid2"><div><span class="lbl">Rango</span><p class="num">${range[0]}-${range[1]} ${ex.rep==="s"?"segundos":"repeticiones"}</p></div><div><span class="lbl">Descanso</span><p>${restTxt(rest)}</p></div>
   <div><span class="lbl">Material</span><p class="small">${ex.req.filter(Boolean).map(r=>GYM_ITEM[r].t).join(", ")||"Peso corporal"}</p></div><div><span class="lbl">Exige a</span><p class="small">${sts.join(", ")||"Articulaciones sin carga especial"}</p></div></div>
   ${h.length?`<div><span class="lbl">Tus últimas veces</span>${h.map(x=>`<p class="small num">${fdate(x.date)}: ${x.sets.map(s=>(s.w?nf(s.w,s.w%1?1:0)+"×":"")+s.r).join(", ")} <span class="muted">· fuerza est. ${nf(bestE1(x.sets),0)} kg</span></p>`).join("")}</div>`:""}

@@ -490,6 +490,7 @@ function viewCopias(){
   <div class="card stack"><h2>Guardar copia</h2><p class="muted small">Copia el texto y pégalo en una nota, un correo a ti mismo o un archivo de Drive. Contiene todos los perfiles de este dispositivo.</p>
     <textarea class="inp" id="bk_out" readonly>${esc(json)}</textarea>
     <div class="row"><button class="btn pri" data-a="copyBackup">Copiar copia de seguridad</button><span class="small muted">${Math.round(json.length/1024)} KB</span></div></div>
+  ${pulsoCard()}
   <div class="card stack"><h2>Restaurar</h2><p class="muted small">Pega aquí una copia o elige el archivo donde la guardaste.</p>
     <input type="file" accept=".txt,.json,text/plain,application/json" id="bk_file" data-c="bkFile" class="inp">
     <textarea class="inp" id="bk_in" placeholder="Pega aquí la copia">${esc(UI.bkIn||"")}</textarea>
@@ -598,7 +599,7 @@ const A={
   checkImport:()=>{const t=document.getElementById("bk_in").value.trim();UI.bkIn=t;UI.err=null;
     try{const d=JSON.parse(t);if(!d||!["afina","definicion20"].includes(d.app)||!d.profiles)throw 0;UI.pending=d;UI.confirm="import";}catch(e){UI.err="Ese texto no es una copia válida de esta app. Copia el bloque completo.";}
     render();},
-  doImport:el=>{const d=UI.pending;if(!d)return;if(el.dataset.mode==="replace")S.profiles={};Object.values(d.profiles).forEach(x=>{migrateSport(x);syncGoal(x);});Object.assign(S.profiles,d.profiles);
+  doImport:el=>{const d=UI.pending;if(!d)return;if(el.dataset.mode==="replace")S.profiles={};Object.values(d.profiles).forEach(x=>{migrateSport(x);syncGoal(x);if(x.gym)registerImported(x.gym.customEx);});Object.assign(S.profiles,d.profiles);
     if(!S.profiles[S.active])S.active=Object.keys(S.profiles)[0];UI.pending=null;UI.bkIn="";UI.confirm=null;UI.view="inicio";commit();toast("Copia restaurada");},
   closeSheet:(el,e)=>{if(e&&e.target.closest("[data-stop]")&&!e.target.closest('[data-a="closeSheet"]'))return;UI.sheet=null;render();}
 };

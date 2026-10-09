@@ -80,7 +80,7 @@ function scoreEx(p,ex,slot,usedInWeek){
   return sc;
 }
 function pickEx(p,slot,usedInWeek){
-  let c=EX.filter(e=>e.pat===slot.p&&!exBlocked(p,e));
+  let c=EX.filter(e=>!e.imported&&e.pat===slot.p&&!exBlocked(p,e));
   if(!c.length)return null;
   c=c.map(e=>({e,sc:scoreEx(p,e,slot,usedInWeek)})).sort((a,b)=>b.sc-a.sc);
   return c[0].e.id;
@@ -235,7 +235,7 @@ function suggest(p,ex,range,rir){
 /* ---- Alternativas ---- */
 function alternativesFor(p,exId,reason,joint){
   const ex=EXM[exId];const g=G(p);
-  return EX.filter(e=>e.id!==exId&&exAvailable(p,e)&&!(g.noHay||[]).includes(e.id)&&(e.pat===ex.pat||(e.prim===ex.prim&&e.pat!=="core")))
+  return EX.filter(e=>!e.imported&&e.id!==exId&&exAvailable(p,e)&&!(g.noHay||[]).includes(e.id)&&(e.pat===ex.pat||(e.prim===ex.prim&&e.pat!=="core")))
     .map(e=>{
       let sc=0;const why=[];
       if(e.pat===ex.pat)sc+=4;else sc+=1;
