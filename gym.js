@@ -56,7 +56,6 @@ function volFactor(p){
   const ag=ed>=65?0.85:ed>=50?0.95:1;
   return lv*ob*en*ag;
 }
-const SET_BUDGET={45:11,60:15,75:19,90:23};
 
 /* ---- Selección de ejercicio para cada hueco ---- */
 function scoreEx(p,ex,slot,usedInWeek){
@@ -81,9 +80,37 @@ function pickEx(p,slot,usedInWeek){
   c=c.map(e=>({e,sc:scoreEx(p,e,slot,usedInWeek)})).sort((a,b)=>b.sc-a.sc);
   return c[0].e.id;
 }
+/* ---- Tiempo real de una sesión ----
+   Serie de trabajo ≈ 45 s. Descanso según ejercicio. Calentamiento específico: 4 min el principal,
+   2 min otros compuestos, 30 s aislamientos. En superserie, los dos ejercicios comparten el descanso. */
+function slotMinutes(p,ex,sl,sets,inSS){
+  const warm=sl.main?4:ex.C?2:0.5;const rest=restFor(p,ex,sl)/60;
+  return warm+sets*(0.75+(inSS?rest*(ex.C?0.6:0.5)+0.4:rest));
+}
+function listMinutes(p,list){return 5+list.reduce((a,sl)=>a+slotMinutes(p,EXM[sl.ex],sl,sl.sets,!!sl.ss),0);}
+/* Superseries: emparejar aislamientos consecutivos de músculos distintos */
+const PUSH=["empuje_h","empuje_v"],PULL=["tiron_h","tiron_v"];
+function pairSupersets(list,lvl){
+  list.forEach(x=>delete x.ss);let tag=0;
+  for(let i=0;i<list.length-1;i++){
+    if(list[i].ss||list[i].main||list[i+1].main)continue;
+    const a=EXM[list[i].ex],b=EXM[list[i+1].ex];
+    if(a.rep==="s"||b.rep==="s")continue;
+    const sameMachine=a.req[0]&&a.req.join()===b.req.join()&&GYM_ITEM[a.req[0]]&&GYM_ITEM[a.req[0]].k==="maquina";
+    const iso=!a.C&&!b.C&&a.prim!==b.prim&&!sameMachine;
+    const antag=lvl!=="principiante"&&a.C&&b.C&&((PUSH.includes(a.pat)&&PULL.includes(b.pat))||(PULL.includes(a.pat)&&PUSH.includes(b.pat)));
+    if(iso||antag){const id="ABCD"[tag++];list[i].ss=id;list[i+1].ss=id;i++;}
+  }
+}
+const VOL_TARGET={principiante:10,intermedio:14,avanzado:18};
+function volTarget(p){
+  const s=G(p).setup;const ed=edadDe(p);
+  return VOL_TARGET[s.nivel]*({perder:0.9,mantener:1,ganar:1.1}[p.objetivo]||1)*(ed>=65?0.85:ed>=50?0.95:1)*({musculo:1,fuerza:0.9,salud:0.65}[s.enfoque]||1);
+}
 function buildGymPlan(p){
   const g=G(p);const s=g.setup;const n=Math.max(1,Math.min(6,s.dias.length));
-  const keys=SPLITS[n];const vf=volFactor(p);const used={};const budget=SET_BUDGET[s.duracion]||18;
+  const keys=SPLITS[n];const vf=volFactor(p);const used={};
+  const budget=(s.duracion||60)*0.92;const maxSets=s.nivel==="principiante"?3:4;
   const sessions=keys.map(k=>{
     const [name,slots]=TEMPLATES[k];
     let list=slots.map(sl=>{
@@ -91,19 +118,40 @@ function buildGymPlan(p){
       const ex0=EX.find(e=>e.pat===sl.p);const mus=ex0?ex0.prim:"";
       if(s.prio.includes(mus))sets+=1;
       if(s.enfoque==="fuerza"&&sl.main)sets+=1;
-      return {...sl,sets:clamp(Math.round(sets),1,5)};
+      return {...sl,sets:clamp(Math.round(sets),sl.p==="core"?1:2,maxSets+1)};
     });
-    let tot=list.reduce((a,b)=>a+b.sets,0);
-    while(tot>budget&&list.length>4){
-      const last=list[list.length-1];
-      if(last.sets>2){last.sets--;}else{list.pop();}
-      tot=list.reduce((a,b)=>a+b.sets,0);
-    }
-    if(tot>budget)list.forEach(x=>{if(tot>budget&&x.sets>2&&!x.main){x.sets--;tot--;}});
     list=list.map(sl=>{const id=pickEx(p,sl,used);if(id)used[id]=(used[id]||0)+1;return {...sl,ex:id};}).filter(x=>x.ex);
+    pairSupersets(list,s.nivel);
+    /* Recortar si no cabe: primero series de aislamientos, luego ejercicios del final */
+    let guard=0;
+    while(listMinutes(p,list)>budget&&guard++<60){
+      const iso=list.slice().reverse().find(x=>!EXM[x.ex].C&&x.sets>2);
+      if(iso){iso.sets--;continue;}
+      const last=list[list.length-1];
+      if(list.length>4&&!EXM[last.ex].C){const rm=list.pop();if(used[rm.ex])used[rm.ex]--;pairSupersets(list,s.nivel);continue;}
+      const cmp=list.slice().reverse().find(x=>!x.main&&x.sets>2);
+      if(cmp){cmp.sets--;continue;}
+      if(list.length>3){const rm=list.pop();if(used[rm.ex])used[rm.ex]--;pairSupersets(list,s.nivel);continue;}
+      break;
+    }
     return {key:k,name,slots:list};
   });
   g.plan={created:today(),n,sessions};
+  /* Rellenar: si sobra tiempo, añadir series a los músculos más lejos de su objetivo semanal */
+  const tgt=volTarget(p);
+  for(let pass=0;pass<40;pass++){
+    const vol=plannedVolume(p);let added=false;
+    sessions.forEach(ses=>{
+      const cand=ses.slots.filter(sl=>sl.sets<(sl.main||EXM[sl.ex].C?maxSets:maxSets)&&EXM[sl.ex].pat!=="core")
+        .map(sl=>{const m=EXM[sl.ex].prim;const t=tgt*(["gemelo","abdomen","trapecio","aductores"].includes(m)?0.6:1);return {sl,r:(vol[m]||0)/t};}).filter(x=>x.r<1.05).sort((a,b)=>a.r-b.r);
+      for(const c of cand){
+        c.sl.sets++;
+        if(listMinutes(p,ses.slots)<=budget){added=true;break;}
+        c.sl.sets--;
+      }
+    });
+    if(!added)break;
+  }
   if(!g.meso)g.meso={start:weekStart(today())};
   g.next=0;
   return g.plan;
@@ -213,11 +261,12 @@ function sessionPreview(p,idx,wellness){
     let sets=Math.max(1,Math.round(sl.sets*WEEK_SET_MULT[wk]));
     if(wellness==="cansado")rir+=1;
     if(wellness==="muy")(rir+=1,sets=Math.max(1,sets-1));
-    return {si,ex:sl.ex,sets,lo:range[0],hi:range[1],rir,rest:restFor(p,ex,sl),main:!!sl.main};
+    return {si,ex:sl.ex,sets,lo:range[0],hi:range[1],rir,rest:restFor(p,ex,sl),main:!!sl.main,ss:sl.ss||""};
   });
 }
 function sessionMinutes(p,idx){
-  return Math.round(sessionPreview(p,idx).reduce((a,x)=>a+x.sets*(x.rest/60+0.7)+(x.main?3:1.5),0)+6);
+  const ses=G(p).plan.sessions[idx];
+  return Math.round(5+sessionPreview(p,idx).reduce((a,x)=>a+slotMinutes(p,EXM[x.ex],ses.slots[x.si]||{},x.sets,!!x.ss),0));
 }
 function startSession(p,idx,wellness){
   const g=G(p);

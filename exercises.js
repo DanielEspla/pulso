@@ -12,7 +12,7 @@ const PATTERNS={
 };
 const JOINTS={h:"Hombro",c:"Codo",m:"Muñeca",l:"Lumbar",r:"Rodilla",k:"Cadera"};
 const REPS={f:[6,10],h:[8,12],a:[10,15],r:[12,20],s:[30,60]};
-const REST={f:150,h:120,a:90,r:75,s:60};
+const REST={f:150,h:120,a:75,r:60,s:60};
 
 /* Material del gimnasio. kind: base (general) o maquina */
 const GYM_ITEMS=[

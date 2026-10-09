@@ -72,7 +72,7 @@ function gymHoy(p){
     <h2 class="disp">${esc(ses.name)}</h2>
     <p class="muted">${sessionMinutes(p,idx)} min aprox. · ${WEEK_NAMES[wk].split(" · ")[1]} · RIR ${prev.length?Math.min(...prev.map(x=>x.rir)):"-"}-${prev.length?Math.max(...prev.map(x=>x.rir)):"-"}</p>
     ${!td.isDay&&!last?`<p class="small muted">Hoy no es día de gimnasio en tu semana tipo. Puedes entrenar igualmente.</p>`:""}
-    <div class="items" style="margin:6px 0 4px">${prev.map(x=>`<button class="item" data-a="ficha" data-id="${x.ex}" data-s="${idx}" data-si="${x.si}"><span class="nm">${esc(EXM[x.ex].name)}</span><span class="q small">${x.sets} × ${repTxt(x)} · RIR ${x.rir}</span></button>`).join("")}</div>
+    <div class="items" style="margin:6px 0 4px">${prev.map(x=>`<button class="item" data-a="ficha" data-id="${x.ex}" data-s="${idx}" data-si="${x.si}"><span class="nm">${x.ss?`<span class="tag" style="margin:0 6px 0 0">${x.ss}</span>`:""}${esc(EXM[x.ex].name)}</span><span class="q small">${x.sets} × ${repTxt(x)} · RIR ${x.rir}</span></button>`).join("")}</div>
     <div class="field"><span>¿Cómo te encuentras hoy?</span><div class="seg">${[["energia","Con energía"],["normal","Normal"],["cansado","Cansado"],["muy","Muy cansado"]].map(([k,t])=>`<button class="${well===k?"on":""}" data-a="well" data-k="${k}">${t}</button>`).join("")}</div>
     ${well==="cansado"?`<span class="hint">Hoy dejas una repetición más en reserva. Es mejor entrenar algo más suave que no entrenar.</span>`:well==="muy"?`<span class="hint">Hoy una serie menos por ejercicio y una repetición más en reserva. Mantienes el estímulo sin cavar más fatiga.</span>`:""}</div>
     <button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Comenzar sesión</button>
@@ -94,6 +94,7 @@ function viewRunner(p){
   <div class="segbar">${d.exs.map((x,i)=>`<i class="${i<d.cur||x.done?"done":""} ${i===d.cur?"cur":""}" data-a="rnGo" data-i="${i}"></i>`).join("")}</div>
   ${restLeft>0?`<div class="restbar" id="restbar"><div><span class="lbl">Descanso</span><b class="num" id="rest_n">${Math.floor(restLeft/60)}:${pad(restLeft%60)}</b></div><div class="row"><button class="btn sm" data-a="restAdd" data-v="-15">−15 s</button><button class="btn sm" data-a="restAdd" data-v="15">+15 s</button><button class="btn sm" data-a="restSkip">Saltar</button></div><i style="width:${Math.min(100,restLeft/UI.rest.total*100)}%" id="rest_i"></i></div>`:""}
   <h1 class="disp ex-title">${esc(ex.name)}</h1>
+  ${it.ss?(()=>{const j=d.exs.findIndex((x,k)=>k!==d.cur&&x.ss===it.ss);return j>=0?`<p class="small acc-t"><b>Superserie ${it.ss}</b> con ${esc(EXM[d.exs[j].ex].name)}: haces una serie de cada uno y descansas al terminar la pareja.</p>`:"";})():""}
   <div class="row" style="gap:6px"><button class="btn sm" data-a="ficha" data-id="${ex.id}">${ic("info",'width="16"')} Técnica y porqué</button><button class="btn sm" data-a="swapOpen" data-i="${d.cur}">${ic("swap",'width="16"')} Cambiar</button></div>
   <div class="card stack">
     <p class="acc-t"><b>Objetivo: ${it.sets} series · ${repTxt(it)} · RIR ${it.rir}</b> <span class="muted small">· descanso ${restTxt(it.rest)}</span></p>
@@ -200,10 +201,10 @@ function gymPlan(p){
     <p class="small">${wk===4?"Semana de descarga: la mitad de series y lejos del fallo. La fatiga se va y el músculo consolida lo ganado.":`Cada semana te acercas un poco más al fallo y en las semanas 3 y 4 sube el número de series. Después toca una semana de descarga.`}</p>
     ${wk<4?`<button class="btn sm" data-a="deloadNow">Adelantar la descarga a esta semana</button>`:""}</div>
   ${g.plan.sessions.map((ses,si)=>`<div class="card stack"><div class="row between"><h3>${esc(ses.name)}</h3><span class="small muted">${sessionMinutes(p,si)} min</span></div>
-    <div class="items">${sessionPreview(p,si).map((x,i)=>`<div class="item plan-it"><button class="nm linklike" data-a="ficha" data-id="${x.ex}" data-s="${si}" data-si="${i}"><span>${esc(EXM[x.ex].name)}</span><span class="small muted num">${x.sets} × ${repTxt(x)} · RIR ${x.rir} · ${MUSCLES[EXM[x.ex].prim]}</span></button><button class="btn ghost sm" data-a="swapPlan" data-s="${si}" data-si="${i}" aria-label="Cambiar ejercicio">${ic("swap",'width="16"')}</button></div>`).join("")}</div></div>`).join("")}
+    <div class="items">${sessionPreview(p,si).map((x,i)=>`<div class="item plan-it"><button class="nm linklike" data-a="ficha" data-id="${x.ex}" data-s="${si}" data-si="${i}"><span>${esc(EXM[x.ex].name)}</span><span class="small muted num">${x.ss?`<span class="tag" style="margin:0 4px 0 0">Superserie ${x.ss}</span>`:""}${x.sets} × ${repTxt(x)} · RIR ${x.rir} · ${MUSCLES[EXM[x.ex].prim]}</span></button><button class="btn ghost sm" data-a="swapPlan" data-s="${si}" data-si="${i}" aria-label="Cambiar ejercicio">${ic("swap",'width="16"')}</button></div>`).join("")}</div></div>`).join("")}
   <div class="card stack"><span class="lbl">Series por músculo a la semana</span>
     <div class="vol">${order.map(m=>`<div><span>${MUSCLES[m]}</span><div class="vbar"><i style="width:${Math.min(100,vol[m]/22*100)}%"></i><em style="left:${10/22*100}%"></em><em style="left:${20/22*100}%"></em></div><b class="num">${nf(vol[m],vol[m]%1?1:0)}</b></div>`).join("")}</div>
-    ${(()=>{const low=["pecho","dorsal","espalda_media","cuadriceps","isquios","gluteo"].filter(m=>(vol[m]||0)<10);return low.length?`<p class="small">Con ${s.dias.length} día${s.dias.length>1?"s":""} de ${s.duracion} minutos no caben 10 series en todos los músculos grandes (${low.map(m=>MUSCLES[m].toLowerCase()).join(", ")}). Aun así es un estímulo eficaz, sobre todo si llevas poco tiempo o estás en déficit. Para más volumen, añade un día o 15 minutos por sesión.</p>`:"";})()}
+    ${(()=>{const low=["pecho","dorsal","espalda_media","cuadriceps","isquios","gluteo"].filter(m=>(vol[m]||0)<10);return low.length?`<p class="small">Con ${s.dias.length} día${s.dias.length>1?"s":""} de ${s.duracion} minutos, descansando lo que pide la ciencia, no caben 10 series semanales en ${low.map(m=>MUSCLES[m].toLowerCase()).join(", ")}. Sigue siendo un estímulo eficaz, sobre todo en déficit, donde el objetivo es conservar. Si quieres más volumen, sube a ${s.duracion<90?s.duracion+15+" minutos":"más días"} en «Cambiar ajustes de entreno»: la app rellena el tiempo extra con series para los músculos que van más cortos.</p>`:"";})()}
     <p class="small muted">Las marcas señalan 10 y 20 series: la zona donde la mayoría de la gente crece. Los secundarios cuentan como media serie.</p></div>
   <details class="card"><summary><b>Tu plan explicado</b><span class="small muted"> · por qué está montado así</span></summary><div class="stack learn" style="margin-top:12px">
     <p><b>Reparto.</b> ${SPLIT_WHY[Math.min(6,g.plan.sessions.length)]}</p>
@@ -211,7 +212,8 @@ function gymPlan(p){
     <p><b>Esfuerzo (RIR).</b> RIR son las repeticiones que te quedan en reserva al terminar una serie. Las series que crecen son las que acaban cerca del fallo, pero ir siempre al fallo genera mucha fatiga. Por eso empiezas a RIR 3 y bajas semana a semana. En máquinas y aislamientos puedes apurar más; en los básicos con barra, nunca al fallo${ed>=60?", y a tu edad los básicos se quedan a RIR 2 como mínimo":""}.</p>
     <p><b>Repeticiones.</b> Para ganar músculo valen rangos amplios (de 5 a 30) si llegas cerca del fallo. Los ejercicios grandes van en rangos más bajos porque se cargan mejor con peso; los pequeños, en rangos más altos porque con poco peso se trabajan sin estresar las articulaciones.</p>
     <p><b>Progresión doble.</b> Primero sumas repeticiones dentro del rango. Cuando llegas arriba en todas las series con margen, subes peso y vuelves a la parte baja. Es la forma más fiable de progresar sin estancarte.</p>
-    <p><b>Descansos.</b> Entre 2 y 3 minutos en los ejercicios grandes y 1-2 minutos en los pequeños. Descansar poco no quema más grasa: solo te hace levantar menos peso.</p>
+    <p><b>Tiempo y superseries.</b> Cada sesión se monta para caber en los ${s.duracion} minutos que elegiste, contando calentamiento, series y descansos reales. Para meter más trabajo sin acortar descansos, algunos ejercicios van en superserie: haces una serie de uno, pasas al otro y descansas al terminar la pareja. Solo se emparejan ejercicios que no compiten entre sí (empuje con tirón, o dos músculos pequeños distintos), así que no pierdes rendimiento. Los ejercicios principales van siempre solos.</p>
+    <p><b>Descansos.</b> Entre 2 y 3 minutos en los ejercicios grandes y alrededor de 1 minuto en los pequeños. Por debajo de un minuto se levanta menos y se crece algo menos; por encima de 2-3 minutos apenas se gana más. Descansar poco no quema más grasa: solo te hace levantar menos peso.</p>
     <p><b>Descarga.</b> Cada 5 semanas, una semana suave. Se va la fatiga acumulada y aparece lo ganado. Si el rendimiento cae antes, la app te propone adelantarla.</p>
     <p><b>Selección de ejercicios.</b> Se priorizan los que cargan el músculo en estiramiento, los estables (máquinas y poleas) para poder acercarte al fallo con seguridad y, si marcaste molestias, los que menos cargan esa zona.</p>
   </div></details>
@@ -291,7 +293,13 @@ Object.assign(A,{
     if(incFor(ex)&&!(w>=0&&w<1000)){toast("Indica el peso");return;}
     it.sets_.push({w:isNaN(w)?0:w,r,rir:UI.rnWarm?null:UI.rnRir,warm:!!UI.rnWarm});
     UI.rnW=isNaN(w)?"":w;UI.rnR="";
-    if(!UI.rnWarm){const nWork=it.sets_.filter(s=>!s.warm).length;if(nWork>=it.sets)it.done=true;UI.rest={until:Date.now()+it.rest*1000,total:it.rest};}
+    if(!UI.rnWarm){
+      const nWork=it.sets_.filter(s=>!s.warm).length;if(nWork>=it.sets)it.done=true;
+      const j=it.ss?d.exs.findIndex((x,k)=>k!==d.cur&&x.ss===it.ss&&!x.done&&!x.skipped):-1;
+      const nj=j>=0?d.exs[j].sets_.filter(s=>!s.warm).length:0;
+      if(j>=0&&nj<nWork){UI.rest={until:Date.now()+20000,total:20};d.cur=j;toast(`Superserie: ahora ${EXM[d.exs[j].ex].name}`);}
+      else{UI.rest={until:Date.now()+it.rest*1000,total:it.rest};if(j>=0&&j<d.cur&&d.exs[j].sets_.filter(s=>!s.warm).length<d.exs[j].sets)d.cur=j;}
+    }
     commit();},
   delSet:el=>{const d=G(P()).draft;d.exs[d.cur].sets_.splice(+el.dataset.i,1);commit();},
   rnGo:el=>{const d=G(P()).draft;d.cur=+el.dataset.i;UI.confirm=null;commit();window.scrollTo(0,0);},
