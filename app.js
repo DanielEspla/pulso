@@ -87,7 +87,7 @@ function viewOnboarding(){
     ${["recomp","definicion","volumen","estetica"].includes(d.meta)?`<div class="field"><span>Ritmo</span>${seg("ritmo",[["suave","Suave"],["normal","Normal"],["rapido","Rápido"]])}<span class="hint">${ritmoHint(d)}</span></div>`:""}
     ${num("grasaObj","Grasa corporal objetivo (%)",`Si lo dejas vacío: ${d.sexo==="H"?15:23} %. Con ella se calcula tu peso objetivo.`)}
     <h3 style="margin-top:8px">Cómo quieres comer</h3>
-    <div class="field"><span>Estilo de dieta ${infoBtn("estilo","estilo de dieta")}</span>${choiceCards(DIET_STYLES,d.estilo,"obSet","estilo","e_")}</div>
+    <div class="field"><span>Estilo de dieta ${infoBtn("estilo","estilo de dieta")}</span>${choiceCards(DIET_STYLES,d.estilo,"obSet","estilo","e_",recStyle(d.meta,d.deporte))}</div>
     ${d.estilo!=="keto"?`<div class="field"><span>Reparto de hidratos ${infoBtn("reparto","reparto")}</span>${seg("reparto",Object.entries(REPARTOS).map(([k,v])=>[k,v[0]]))}<span class="hint">${REPARTOS[d.reparto][1]}</span></div>`:""}
     <div class="field"><span>Días de recarga a la semana ${infoBtn("recarga","recarga")}</span>${seg("recarga",[["0","Ninguno"],["1","Uno"],["2","Dos"]])}${d.estilo==="keto"&&d.recarga==="0"?`<span class="hint">En keto se recomienda al menos un día de recarga si entrenas fuerte.</span>`:""}</div>
     <label class="chk"><input type="checkbox" name="ayunoOn" id="ob_ayunoOn" ${d.ayunoOn?"checked":""} data-c="obRe"><span>Ayuno intermitente ${infoBtn("ayuno","ayuno intermitente")}</span></label>
@@ -117,8 +117,8 @@ function viewOnboarding(){
 function goalCards(sel,act,k="meta"){
   return `<div class="gcards">${GOAL_ORDER.map(id=>{const g=GOALS[id];return `<div class="gcard ${sel===id?"on":""}"><button type="button" class="gsel" data-a="${act}" data-k="${k}" data-val="${id}"><b>${g.t}</b><span>${g.d}</span></button>${infoBtn("g_"+id,g.t)}</div>`;}).join("")}</div>`;
 }
-function choiceCards(dict,sel,act,k,pre){
-  return `<div class="gcards">${Object.entries(dict).map(([id,v])=>`<div class="gcard ${sel===id?"on":""}"><button type="button" class="gsel" data-a="${act}" data-k="${k}" data-val="${id}"><b>${v[0]}</b><span>${v[1]}</span></button>${infoBtn(pre+id,v[0])}</div>`).join("")}</div>`;
+function choiceCards(dict,sel,act,k,pre,rec){
+  return `<div class="gcards">${Object.entries(dict).map(([id,v])=>`<div class="gcard ${sel===id?"on":""}"><button type="button" class="gsel" data-a="${act}" data-k="${k}" data-val="${id}"><b>${v[0]}${rec===id?' <span class="rec">Recomendada</span>':""}</b><span>${v[1]}</span></button>${infoBtn(pre+id,v[0])}</div>`).join("")}</div>`;
 }
 function ritmoHint(d){
   const g=GOALS[d.meta];if(g&&Array.isArray(g.band)&&g.obj!=="mantener"){const m={suave:0.75,normal:1,rapido:1.2}[d.ritmo]||1;const b=g.band.map(x=>x*m);
@@ -326,6 +326,7 @@ function viewDieta(p){
   <div class="stack">
   ${needNew?`<div class="alert warn"><span class="dot"></span><div><b>Has cambiado el número de comidas</b>Este menú es de ${MEAL_TXT[menu.comidas]}. Rehazlo para aplicar los cambios.<div style="margin-top:8px"><button class="btn sm pri" data-a="genWeek">Rehacer el menú</button></div></div></div>`:""}
   ${changed?`<div class="alert warn"><span class="dot"></span><div><b>Tu objetivo o tu forma de comer han cambiado</b>El menú está hecho con la configuración anterior. <div style="margin-top:8px"><button class="btn sm pri" data-a="retarget">Ajustar cantidades a ${p.targets.kcal} kcal</button></div></div></div>`:""}
+  ${medCard(p,menu)}
   <div class="tabs">${menu.days.map((_,i)=>{const d=addDays(ws,i);return `<button class="${i===di?"on":""} ${d===today()?"today":""}" data-a="dia" data-i="${i}"><b>${DIAS[i][0]==="M"&&i===2?"X":DIAS[i][0]}</b><span>${parseD(d).getDate()}${menu.days[i].T&&menu.days[i].T.train?" ·E":""}</span></button>`;}).join("")}</div>
   <div class="card stack"><div class="row between"><div><h2>${DIAS[di]} ${parseD(date).getDate()}</h2>${T.refeed?`<span class="tag" style="margin:0 6px 0 0">Día de recarga</span>`:""}${T.train!==undefined&&(p.plan||[]).some(Boolean)?`<span class="small ${T.train?"good":"muted"}">${T.train&&SPORT[T.sport]?SPORT[T.sport].t:"Descanso"}${menu.ciclado&&T.c!==menu.targets.c?` · ${sgn(T.c-menu.targets.c,0)} g de hidratos`:""}</span>`:""}</div><span class="num"><b>${Math.round(tot.kcal)}</b> <span class="muted">/ ${T.kcal} kcal</span></span></div>
     <div class="grid3">${[["Proteína","p"],["Grasas","f"],["Hidratos","c"]].map(([n,k])=>`<div><div class="macro-line"><span class="small">${n}</span><span class="num small muted">${Math.round(tot[k])}/${T[k]}</span></div><div class="bar"><i class="${k}" style="width:${clamp(tot[k]/T[k]*100,2,100)}%"></i></div></div>`).join("")}</div>
@@ -425,7 +426,7 @@ function viewObjetivos(p){
     ${goalCards(p.meta,"goalAsk")}
     ${showR?`<div class="field"><span>Ritmo</span><div class="seg">${[["suave","Suave"],["normal","Normal"],["rapido","Rápido"]].map(([k,t])=>`<button class="${p.ritmo===k?"on":""}" data-a="cfgSet" data-k="ritmo" data-val="${k}">${t}</button>`).join("")}</div><span class="hint">${ritmoHint({meta:p.meta,ritmo:p.ritmo})}</span></div>`:""}</div>
   <div class="card stack"><span class="lbl">Cómo comes</span>
-    <div class="field"><span>Estilo de dieta ${infoBtn("estilo","estilo de dieta")}</span>${choiceCards(DIET_STYLES,p.dietaEstilo,"cfgSet","dietaEstilo","e_")}</div>
+    <div class="field"><span>Estilo de dieta ${infoBtn("estilo","estilo de dieta")}</span>${choiceCards(DIET_STYLES,p.dietaEstilo,"cfgSet","dietaEstilo","e_",recStyle(p.meta,p.deporte))}</div>
     ${p.dietaEstilo!=="keto"?`<div class="field"><span>Reparto de hidratos ${infoBtn("reparto","reparto")}</span><div class="seg">${Object.entries(REPARTOS).map(([k,v])=>`<button class="${p.reparto===k?"on":""}" data-a="cfgSet" data-k="reparto" data-val="${k}">${v[0]}</button>`).join("")}</div><span class="hint">${REPARTOS[p.reparto][1]}</span></div>`:""}
     <div class="field"><span>Días de recarga ${infoBtn("recarga","recarga")}</span><div class="seg">${[["0","Ninguno"],["1","Uno"],["2","Dos"]].map(([k,t])=>`<button class="${String(p.recarga)===k?"on":""}" data-a="cfgSet" data-k="recarga" data-val="${k}">${t}</button>`).join("")}</div>${refeedDays(p).length?`<span class="hint">Recarga: ${refeedDays(p).map(i=>DIAS[i]).join(" y ")}.</span>`:""}</div>
     <label class="chk"><input type="checkbox" data-c="cfgAyuno" id="cf_ayuno" ${p.ayuno&&p.ayuno.on?"checked":""}><span>Ayuno intermitente ${infoBtn("ayuno","ayuno")}${p.ayuno&&p.ayuno.on?`<br><span class="hint">${ayunoTxt(p)}</span>`:""}</span></label>
@@ -535,7 +536,7 @@ function logTargets(p,t,motivo,tipo){if(t.tdee)p.tdeeRef=t.tdee;if(tipo==="recal
 const A={
   go:el=>{UI.view=el.dataset.v;UI.confirm=null;UI.err=null;UI.sheet=null;render();window.scrollTo(0,0);},
   goReg:el=>{UI.regWeek=el.dataset.w;UI.view="registro";render();window.scrollTo(0,0);},
-  obSet:el=>{readOb();UI.ob.d[el.dataset.k]=el.dataset.val;if(el.dataset.k==="estilo"&&el.dataset.val==="keto"){UI.ob.d.reparto="igual";if(UI.ob.d.recarga==="0")UI.ob.d.recarga="1";}if(el.dataset.k==="objetivo"&&el.dataset.val==="ganar"&&UI.ob.d.ritmo==="rapido")UI.ob.d.ritmo="normal";render();},
+  obSet:el=>{readOb();UI.ob.d[el.dataset.k]=el.dataset.val;if(el.dataset.k==="estilo")UI.ob.d.estiloTouched=true;if(el.dataset.k==="meta"&&!UI.ob.d.estiloTouched){UI.ob.d.estilo=recStyle(el.dataset.val,UI.ob.d.deporte);if(UI.ob.d.estilo!=="keto"&&UI.ob.d.estilo!=="bajahc"&&UI.ob.d.recarga==="1"&&!UI.ob.d.recTouched)UI.ob.d.recarga="0";}if(el.dataset.k==="recarga")UI.ob.d.recTouched=true;if(el.dataset.k==="estilo"&&el.dataset.val==="keto"){UI.ob.d.reparto="igual";if(UI.ob.d.recarga==="0")UI.ob.d.recarga="1";}if(el.dataset.k==="objetivo"&&el.dataset.val==="ganar"&&UI.ob.d.ritmo==="rapido")UI.ob.d.ritmo="normal";render();},
   obBack:()=>{readOb();UI.err=null;UI.ob.step--;render();},
   obCancel:()=>{UI.ob=null;UI.err=null;render();},
   spMain:el=>{const ns=el.dataset.ns;const d=spTarget(ns);const old=d.deporte;const id=el.dataset.id;
@@ -584,6 +585,7 @@ const A={
   copyShop:()=>{copy(shopText(P().menus[UI.menuWeek]),"Lista copiada");},
   clearShop:()=>{delete P().shop[UI.menuWeek];commit();},
   cat:el=>{UI.cat=el.dataset.k;render();},
+  medToggle:()=>{UI.medOpen=!UI.medOpen;render();},
   pref:el=>{const p=P();const v=+el.dataset.v;if(v===0)delete p.prefs[el.dataset.id];else p.prefs[el.dataset.id]=v;commit();},
   prefAll:el=>{const p=P();const v=+el.dataset.v;const ban=banned(p);FOODS.filter(f=>f.cat===UI.cat&&!f.t.some(t=>ban.has(t))).forEach(f=>{if(v===0)delete p.prefs[f.id];else p.prefs[f.id]=v;});commit();},
   editT:()=>{UI.sheet=sheetEditT;render();},
@@ -651,6 +653,7 @@ function sheetGoal(p,id){
   ${row("Calorías",a.kcal,b.kcal," kcal")}${row("Proteína",a.p,b.p," g")}${row("Hidratos",a.c,b.c," g")}${row("Grasas",a.f,b.f," g")}</tbody></table></div>
   <p class="small">Entreno: ${ent}${g.train.vol>1?", con más volumen":g.train.vol<0.95?", con algo menos de volumen":""}${g.train.estetica?" y series extra en los músculos que marcan la silueta":""}. ${p.gym&&p.gym.setup?"El plan de gimnasio se rehace; tu historial se mantiene.":""}</p>
   ${id==="volumen"&&bodyFat(p,currentWeight(p),currentWaist(p))>(p.sexo==="H"?18:26)?`<div class="alert warn"><span class="dot"></span><div><b>Con tu grasa actual no es lo ideal</b>Con un ${nf(bodyFat(p,currentWeight(p),currentWaist(p)))} % de grasa, comer de más suma sobre todo grasa. Recomposición o Estética te darán mejor resultado ahora; Volumen limpio funciona mejor por debajo de un ${p.sexo==="H"?15:23} %.</div></div>`:""}
+  ${recStyle(id,p.deporte)!==(p.dietaEstilo||"equilibrada")?`<p class="small muted">Para este objetivo se recomienda el estilo ${DIET_STYLES[recStyle(id,p.deporte)][0]}. Ahora tienes ${DIET_STYLES[p.dietaEstilo||"equilibrada"][0]}; lo puedes cambiar en «Cómo comes». No es obligatorio.</p>`:""}
   ${days<28?`<div class="alert warn"><span class="dot"></span><div><b>Cambiaste de objetivo hace ${days} días</b>Para saber si algo funciona hacen falta unas 4 semanas. Puedes cambiar igualmente.</div></div>`:""}
   <button class="btn pri wide" data-a="goalDo" data-k="${id}">Cambiar a ${g.t}</button>
   <button class="btn ghost wide" data-a="info" data-k="g_${id}">Qué es ${g.t}</button></div>`;

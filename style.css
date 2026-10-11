@@ -293,3 +293,11 @@ a{color:var(--accent)}
 .fb3 button{display:flex;flex-direction:column;gap:2px;align-items:center;text-align:center;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 6px;cursor:pointer;color:var(--ink)}
 .fb3 button span{font-size:.7rem;color:var(--muted)}
 .fb3 button.on{border-color:var(--accent);background:var(--accent-soft)}
+.gcard .rec{display:inline-block;font-size:.66rem;font-weight:600;letter-spacing:.02em;color:var(--accent);border:1px solid var(--accent);border-radius:99px;padding:1px 7px;margin-left:4px;vertical-align:middle}
+.medq{display:flex;flex-direction:column;gap:8px}
+.medq .mq{display:flex;gap:10px;align-items:flex-start}
+.medq .mq>div{display:flex;flex-direction:column;gap:2px}
+.medq .mk{width:20px;height:20px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:.75rem;background:var(--line);color:var(--muted)}
+.medq .ok .mk{background:var(--accent-soft);color:var(--accent)}
+.medq .no>div>span:first-child{color:var(--muted)}
+.warnc{color:var(--warn,#d9a441)}

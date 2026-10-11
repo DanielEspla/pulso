@@ -283,7 +283,8 @@ function pick(p,list,ctx,avoid=[]){
   const ws=L.map(f=>{
     const use=(ctx&&ctx.use[f.id])||0;
     const rep=ROLE_REUSE[f.r]?(1+use*1.5):1/(1+use*1.2);
-    return ((p.prefs||{})[f.id]===1?4:1)*rep*(f.id==="aove"?3:1)*(f.r==="P"&&f.f>12?0.35:1)*(f.r==="D"?(f.p>=8?2.5:0.6):1);
+    const mw=typeof medWeight==="function"?medWeight(p,f,ctx,ctx&&ctx.slot):1;
+    return ((p.prefs||{})[f.id]===1?4:1)*rep*(f.id==="aove"?3:1)*(f.r==="P"&&f.f>12?0.35:1)*(f.r==="D"?(f.p>=8?2.5:0.6):1)*mw;
   });
   let r=Math.random()*ws.reduce((a,b)=>a+b,0);
   for(let i=0;i<L.length;i++){r-=ws[i];if(r<=0)return L[i];}
@@ -321,7 +322,7 @@ function solveMeal(items,T){
 function mealTargets(day,set,shares){return set.map(([,,sh])=>({kcal:day.kcal*sh,p:day.p*sh,f:day.f*sh,c:day.c*sh}));}
 
 function templateMeal(p,type,ctx,avoid=[],T={kcal:600}){
-  const K=T.kcal;
+  const K=T.kcal;if(ctx)ctx.slot=type;
   const it=[];const add=f=>{if(f)it.push({id:f.id,q:0});return f;};
   if(type==="p"){
     if(p.favs&&p.favs.length&&Math.random()<0.2){
@@ -412,6 +413,7 @@ function buildDay(p,T,ctx,prevDay){
     const pr=items.find(it=>FOOD[it.id].r==="P");if(type==="p"&&pr)lunchP=pr.id;
     day.meals.push({name,type,items,t:ts[i],base:ts[i]});
   });
+  if(typeof medDaily==="function")medDaily(p,day,ctx);
   dayCorrect(day);
   return day;
 }
@@ -455,12 +457,12 @@ function periIdx(p,set){
   if(post<0)post=names.length-1;return {pre:post-1,post};
 }
 function buildWeek(p,ws){
-  const T={...p.targets};const ctx={use:{},avoidP:[]};const days=[];
+  const T={...p.targets};const noFish=typeof fishOK==="function"&&!fishOK(p);const ctx={use:{},avoidP:[],noFish};const days=[];
   for(let d=0;d<7;d++){
     let best=null,bestErr=1e9,bestUse=null;
     for(let k=0;k<4;k++){
       const Td=dayTargets(p,T,d);
-      const c2={use:{...ctx.use},avoidP:[]};const day=buildDay(p,Td,c2,days[d-1]);day.T=Td;
+      const c2={use:{...ctx.use},avoidP:[],noFish};const day=buildDay(p,Td,c2,days[d-1]);day.T=Td;
       const err=Math.abs(dayTotals(day).kcal-Td.kcal)/Td.kcal+Math.abs(dayTotals(day).p-Td.p)/Td.p*0.5;
       if(err<bestErr){best=day;bestErr=err;bestUse=c2.use;}
       if(err<0.03)break;

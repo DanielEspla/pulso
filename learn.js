@@ -76,6 +76,19 @@ function viewAprende(){
     `<div class="split">${[["Fuerza","Gimnasio, calistenia. Más proteína (hasta 2,4 g por kg de masa magra perdiendo grasa) para construir y conservar músculo."],["Resistencia","Correr, bici, natación, paddle surf. Más hidratos, con un mínimo de 2,5 g por kg, para llenar el glucógeno. Algo menos de grasa."],["Híbridos","Triatlón, Hyrox, CrossFit. Lo más exigente de los dos mundos: proteína alta e hidratos de 3 g por kg o más."],["Mixtos y de equipo","Pádel, fútbol, artes marciales. Proteína alta e hidratos suficientes para sprints, saltos y partidos."]].map(([t,d])=>`<div><h3>${t}</h3><p class="small muted">${d}</p></div>`).join("")}</div>`+
     P_("Eliges un deporte principal, que marca tu base, y los que hagas además. Con tu semana tipo, cada día suma el gasto de lo que haces. Si activas el reparto, los días duros llevan más hidratos y los de descanso menos. Las calorías de la semana no cambian: solo se mueve la energía hacia cuando la necesitas."))}
 
+  <h2 style="margin-top:8px">La base: comer mediterráneo</h2>
+  ${card("Por qué la mediterránea es la base de todo",
+    P_("De todas las formas de comer estudiadas, la mediterránea es la que más pruebas tiene a favor de vivir más y mejor. En el estudio PREDIMED, hecho en España con más de 7.000 personas, la mediterránea con aceite de oliva virgen extra o frutos secos redujo cerca de un 30 % los infartos, ictus y muertes cardiovasculares frente a una dieta baja en grasa.")+
+    P_("No es un menú cerrado, es un patrón: aceite de oliva como grasa principal, verdura en comida y cena, fruta a diario, legumbre varias veces por semana, frutos secos, pescado, cereales integrales, más carne blanca que roja y poco procesado.")+
+    P_("Por eso los cuatro estilos de Afina comparten esa base. Lo que cambia entre ellos es cuántos hidratos y cuánta grasa comes, no la calidad."))}
+  ${card("Los cuatro estilos, sin marketing",
+    P_("Con las mismas calorías y la misma proteína, los cuatro hacen perder la misma grasa. La diferencia está en lo fácil que te resulte cumplirlo y en cómo rindes entrenando.")+
+    `<div class="split">${[["Mediterránea","Para casi todo","Salud, longevidad y recomposición. La más fácil de mantener años."],["Baja en hidratos","Para definir","Menos pan, arroz y pasta. Útil si las harinas te abren el apetito."],["Deportiva","Para rendir","Más hidratos para volumen, fuerza y deportes de resistencia."],["Cetogénica","Avanzada","Quita el hambre a algunas personas. Peor para ganar músculo y puede subir el colesterol LDL."]].map(([a,b,c])=>`<div><b>${a}</b><span class="small muted">${b}</span><p class="small">${c}</p></div>`).join("")}</div>`+
+    P_("Afina te marca la recomendada para tu objetivo, pero eliges tú. Y tus gustos mandan: lo que marcas «No» nunca aparece en el menú."))}
+  ${card("Tu nota mediterránea",
+    P_("Cada semana, la pantalla de Dieta puntúa tu menú con las preguntas del cuestionario MEDAS del PREDIMED: aceite, verdura, fruta, legumbre, pescado, frutos secos, carne roja, dulces y sofrito. Te dice qué te falta para subir.")+
+    P_("Si no comes pescado, esa pregunta no cuenta. Sin pescado pierdes la principal fuente de omega 3, así que la app mete nueces y semillas de lino o chía más a menudo."))}
+
   <h2 style="margin-top:8px">Cómo crece el músculo</h2>
   ${card("El estímulo: tensión cerca del fallo",
     P_("El músculo crece cuando sus fibras trabajan contra una carga alta durante varias repeticiones. Las últimas repeticiones de una serie dura son las que más estímulo dan, porque ahí trabajan todas las fibras a la vez.")+
