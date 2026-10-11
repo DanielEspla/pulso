@@ -327,3 +327,5 @@ a{color:var(--accent)}
 .lgchecks.big{justify-content:flex-start;margin:10px 0 4px}
 .lgchecks.big span{font-size:.8rem;padding:5px 10px}
 .lgchecks i{font-style:normal;opacity:.8;margin-left:4px}
+.sci{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px}
+.sci li{line-height:1.5}
