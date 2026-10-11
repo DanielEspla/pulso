@@ -36,5 +36,6 @@ Genera:
 - `logros.js` racha semanal, medallas, récords y resumen de la semana
 - `entrenoplus.js` series de aproximación, aviso de estancamiento por ejercicio y cardio
 - `salud.js` movilidad y equilibrio (más de 50 años o Longevidad) y registro opcional del ciclo menstrual
+- `vida.js` cocinar para la familia, hora de entreno por día, tarjeta de la mañana, salidas fijas, suplementos y comparación con la serie anterior
 - pulso.js: importa el historial de entrenos de la app PULSO anterior (copiar o archivo JSON).
 - `main.js` arranque

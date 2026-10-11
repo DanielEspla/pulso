@@ -118,6 +118,7 @@ function viewCompra(p){
     ${r.pantry?`<button class="btn sm" data-a="pantry" data-id="${r.id}">Lo tengo en casa</button>`:""}</div></details></li>`;};
   return `<div class="head"><div><h1>Compra</h1><p class="sub">${n} de ${total} productos${inPantry.length?` · ${inPantry.length} en tu despensa`:""}</p></div>${weekNav(ws,"menuW")}</div>
   <div class="stack">
+  ${familiaCard(p)}
   <div class="row"><div class="seg" style="flex:1;min-width:240px"><button class="${mode==="una"?"on":""}" data-a="shopMode" data-k="una">Una compra</button><button class="${mode==="dos"?"on":""}" data-a="shopMode" data-k="dos">Dos compras</button></div>
   ${isCur?`<label class="chk sm-chk"><input type="checkbox" data-c="shopFrom" id="shop_from" ${UI.shopFrom?"checked":""}> Solo desde hoy</label>`:""}</div>
   ${mode==="dos"?`<p class="small muted">Útil si no haces batch cooking: la carne, el pescado y la verdura llegan frescos al final de la semana. Si cocinas todo el domingo, con una compra basta.</p>`:""}

@@ -247,6 +247,7 @@ function viewInicio(p){
   return `<div class="head"><div><h1>Hola, ${esc(p.nombre)}</h1><p class="sub">${fdateL(today())}</p><button class="goalchip" data-a="go" data-v="objetivos">${gc.t}${gc.fase?" · "+gc.fase.replace("en fase de ",""):""} <span>Cambiar</span></button></div>
     <button class="btn pri" data-a="go" data-v="registro">Registrar</button></div>
   <div class="stack">
+  ${morningCard(p)}
   ${p.pausa?`<div class="alert ok"><span class="dot"></span><div><b>Pausa de dieta en curso</b>Comes en mantenimiento desde el ${fdate(p.pausa.desde)}. <button class="btn sm" data-a="go" data-v="objetivos" style="margin-top:8px">Gestionar</button></div></div>`:""}
   <form class="card row between" data-s="quickWeight"><div><span class="lbl">Peso de hoy</span><p class="small muted">${p.weights[today()]?"Registrado. Puedes corregirlo.":"Aún sin registrar"}</p></div>
     <div class="row"><input class="inp num" style="width:110px" type="number" step="0.1" inputmode="decimal" id="qw" name="qw" value="${p.weights[today()]??""}" placeholder="kg"><button class="btn pri">Guardar</button></div></form>
@@ -332,6 +333,7 @@ function viewDieta(p){
   ${needNew?`<div class="alert warn"><span class="dot"></span><div><b>Has cambiado el número de comidas</b>Este menú es de ${MEAL_TXT[menu.comidas]}. Rehazlo para aplicar los cambios.<div style="margin-top:8px"><button class="btn sm pri" data-a="genWeek">Rehacer el menú</button></div></div></div>`:""}
   ${changed?`<div class="alert warn"><span class="dot"></span><div><b>Tu objetivo o tu forma de comer han cambiado</b>El menú está hecho con la configuración anterior. <div style="margin-top:8px"><button class="btn sm pri" data-a="retarget">Ajustar cantidades a ${p.targets.kcal} kcal</button></div></div></div>`:""}
   ${medCard(p,menu)}
+  ${salidasCard(p)}
   <div class="tabs">${menu.days.map((_,i)=>{const d=addDays(ws,i);return `<button class="${i===di?"on":""} ${d===today()?"today":""}" data-a="dia" data-i="${i}"><b>${DIAS[i][0]==="M"&&i===2?"X":DIAS[i][0]}</b><span>${parseD(d).getDate()}${menu.days[i].T&&menu.days[i].T.train?" ·E":""}</span></button>`;}).join("")}</div>
   <div class="card stack"><div class="row between"><div><h2>${DIAS[di]} ${parseD(date).getDate()}</h2>${T.refeed?`<span class="tag" style="margin:0 6px 0 0">Día de recarga</span>`:""}${T.train!==undefined&&(p.plan||[]).some(Boolean)?`<span class="small ${T.train?"good":"muted"}">${T.train&&SPORT[T.sport]?SPORT[T.sport].t:"Descanso"}${menu.ciclado&&T.c!==menu.targets.c?` · ${sgn(T.c-menu.targets.c,0)} g de hidratos`:""}</span>`:""}</div><span class="num"><b>${Math.round(tot.kcal)}</b> <span class="muted">/ ${T.kcal} kcal</span></span></div>
     <div class="grid3">${[["Proteína","p"],["Grasas","f"],["Hidratos","c"]].map(([n,k])=>`<div><div class="macro-line"><span class="small">${n}</span><span class="num small muted">${Math.round(tot[k])}/${T[k]}</span></div><div class="bar"><i class="${k}" style="width:${clamp(tot[k]/T[k]*100,2,100)}%"></i></div></div>`).join("")}</div>
@@ -367,6 +369,7 @@ function sheetFuera(mi){
 function sheetRecipe(mi){
   const menu=P().menus[UI.menuWeek];const m=menu.days[UI.diaIdx].meals[mi];
   return `<div class="sheet-h"><div><span class="lbl">${esc(m.name)}</span><h2>Cómo prepararlo</h2></div><button class="btn ghost sm" data-a="closeSheet">${ic("x",'width="18"')}</button></div>
+  ${famRecipeNote(P(),m)}
   <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:9px">${recipe(m).map(s=>`<li>${esc(s)}</li>`).join("")}</ol>
   <p class="hint" style="margin-top:14px">Pesa siempre el aceite. Los cereales, la pasta y el arroz se pesan en crudo.</p>`;
 }
@@ -528,7 +531,7 @@ function spTarget(ns){if(ns==="ob"){readOb();return UI.ob.d;}return P();}
 function spDone(ns){const d=spTarget(ns);d.entrenos=(d.plan||[]).filter(Boolean).length;if(ns==="pf"){UI.pfDirty=true;commit();}else render();}
 function periTag(p,day,mi){
   const g=p.gym;if(!day.T||!day.T.train||!(g&&g.setup&&day.T.sport==="gimnasio"||p.reparto==="peri"))return "";
-  const {pre,post}=periIdx(p,MEAL_SETS[p.comidas]||day.meals.map(m=>[m.name]));
+  const {pre,post}=periIdx(p,MEAL_SETS[p.comidas]||day.meals.map(m=>[m.name]),day.T.di);
   return mi===pre?"Antes de entrenar":mi===post?"Después de entrenar":"";
 }
 function viewMas(){

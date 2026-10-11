@@ -94,3 +94,38 @@ Object.assign(A,{
   cdOff:()=>{G(P()).cardioOff=true;commit();},
   cdOn:()=>{G(P()).cardioOff=false;commit();}
 });
+
+/* ---- Rutinas: elegir sesión anterior o siguiente, y volver a un plan anterior ---- */
+const _buildGymPlanBase=buildGymPlan;
+buildGymPlan=function(p){
+  const g=G(p);
+  if(g.plan&&g.plan.sessions&&!(g.planHist&&g.planHist[0]&&JSON.stringify(g.planHist[0].plan)===JSON.stringify(g.plan))){g.planHist=g.planHist||[];g.planHist.unshift({date:today(),plan:JSON.parse(JSON.stringify(g.plan)),nivel:(g.setup||{}).nivel,dias:((g.setup||{}).dias||[]).length,meta:p.meta});g.planHist=g.planHist.slice(0,5);}
+  return _buildGymPlanBase(p);
+};
+function planLabel(pl){return pl.sessions.map(s=>s.name).join(" · ");}
+function planHistCard(p){
+  const H=G(p).planHist||[];if(!H.length)return "";
+  return `<details class="card"><summary><b>Planes anteriores</b><span class="small muted"> · ${H.length}</span></summary><div class="stack" style="margin-top:10px">
+  <p class="small muted">Cada vez que el plan se rehace (por cambiar días, nivel u objetivo) se guarda el anterior. Puedes volver a él; tu historial de pesos no se toca.</p>
+  ${H.map((h,i)=>`<div class="row between"><div><b>${fdate(h.date)}</b><span class="small muted"> · ${h.plan.sessions.length} sesiones · ${esc(NIVELES[h.nivel]?NIVELES[h.nivel].split(" (")[0]:"")}</span><br><span class="small">${esc(planLabel(h.plan))}</span></div><button class="btn sm" data-a="planBack" data-i="${i}">Volver a este</button></div>`).join("")}</div></details>`;
+}
+/* Sesiones hechas esta semana, para marcarlas en la selección */
+function sessionsDoneThisWeek(p){const ws=weekStart(today());const o={};G(p).log.filter(l=>l.date>=ws).forEach(l=>{o[l.sIdx]=(o[l.sIdx]||0)+1;});return o;}
+function sessionPicker(p,idx){
+  const g=G(p);const n=g.plan.sessions.length;if(n<2)return "";const done=sessionsDoneThisWeek(p);const nx=g.next%n;
+  return `<p class="small muted" style="text-align:center;margin:0">Sesión ${idx+1} de ${n}${idx!==nx?" · no es la que toca":" · la que toca"}</p><div class="row" style="gap:8px;flex-wrap:nowrap"><button class="btn sm" style="flex:1" data-a="gsel" data-i="${(idx-1+n)%n}" aria-label="Sesión anterior">← Anterior</button><button class="btn sm" style="flex:1" data-a="gsel" data-i="${(idx+1)%n}" aria-label="Sesión siguiente">Siguiente →</button></div>
+  <div class="chips wrap" style="justify-content:center">${g.plan.sessions.map((s,i)=>`<button class="${i===idx?"on":""}" data-a="gsel" data-i="${i}">${done[i]?"✓ ":""}${esc(s.name)}${i===nx?" · toca":""}</button>`).join("")}</div>
+  ${idx!==nx?`<button class="btn ghost sm" style="align-self:center" data-a="gNext" data-i="${idx}">Poner esta como la que toca</button>`:""}`;
+}
+function allSetsDone(d){return d.exs.every(x=>x.skipped||x.sets_.filter(s=>!s.warm).length>=x.sets);}
+function finishBanner(p){
+  const d=G(p).draft;if(!d)return "";const done=d.exs.filter(x=>x.skipped||x.sets_.filter(s=>!s.warm).length>=x.sets).length;
+  if(allSetsDone(d))return `<div class="alert ok finish"><span class="dot"></span><div><b>Has hecho todas las series</b>La sesión no queda guardada hasta que pulses terminar.<div style="margin-top:8px"><button class="btn pri" data-a="finishSes">Terminar y guardar la sesión</button></div></div></div>`;
+  return `<p class="small muted" style="margin:0">${done} de ${d.exs.length} ejercicios completos. La sesión se guarda al pulsar «Terminar sesión».</p>`;
+}
+Object.assign(A,{
+  planBack:el=>{const p=P();const g=G(p);const i=+el.dataset.i;const h=g.planHist[i];if(!h)return;
+    const cur={date:today(),plan:JSON.parse(JSON.stringify(g.plan)),nivel:g.setup.nivel,dias:g.setup.dias.length,meta:p.meta};
+    g.planHist.splice(i,1);g.planHist.unshift(cur);g.planHist=g.planHist.slice(0,5);g.plan=h.plan;g.next=g.next%g.plan.sessions.length;commit();toast("Has vuelto al plan del "+fdate(h.date)+".");},
+  gNext:el=>{const g=G(P());g.next=+el.dataset.i;UI.gsel=null;commit();toast("Hecho: esta es ahora la sesión que toca.");}
+});

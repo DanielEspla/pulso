@@ -389,7 +389,7 @@ function dayCorrect(day){
 function mealSplit(p,T,set){
   const ts=mealTargets(T,set);
   if(p.reparto==="peri"&&T.train&&p.dietaEstilo!=="keto"){
-    const {pre,post}=periIdx(p,set);const peri=[pre,post].filter(i=>i>=0&&i<ts.length);
+    const {pre,post}=periIdx(p,set,T.di);const peri=[pre,post].filter(i=>i>=0&&i<ts.length);
     if(peri.length&&peri.length<ts.length){
       const others=ts.map((_,i)=>i).filter(i=>!peri.includes(i));
       const move=others.reduce((a,i)=>a+ts[i].c*0.4,0);
@@ -428,7 +428,7 @@ function refeedDays(p){
 }
 function dayTargets(p,T,di){
   const s=SPORT[(p.plan||[])[di]]||null;
-  let out={...T,train:!!s,sport:s?s.id:""};
+  let out={...T,train:!!s,sport:s?s.id:"",di};
   const w=dayWeights(p);const avg=w.reduce((a,b)=>a+b,0)/7;
   const keto=p.dietaEstilo==="keto";
   if(!keto&&p.ciclado&&!(!s&&avg===0)&&!w.every(x=>x===w[0])){
@@ -451,8 +451,8 @@ function dayTargets(p,T,di){
   return out;
 }
 /* Comidas de antes y después de entrenar según la hora */
-function periIdx(p,set){
-  const h=(p.gym&&p.gym.setup&&p.gym.setup.hora)||"tarde";const names=set.map(x=>x[0]);
+function periIdx(p,set,di){
+  const h=typeof gymHourOf==="function"&&di!=null?gymHourOf(p,di):(p.gym&&p.gym.setup&&p.gym.setup.hora)||"tarde";const names=set.map(x=>x[0]);
   let post=h==="manana"?1:h==="mediodia"?names.indexOf("Comida"):names.indexOf("Cena");
   if(post<0)post=names.length-1;return {pre:post-1,post};
 }

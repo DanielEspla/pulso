@@ -34,7 +34,7 @@ function viewGymSetup(p){
   if(step===1)h=`<h2>Cuándo entrenas</h2><p class="muted" style="margin:6px 0 18px">Los días que marques serán días de gimnasio en tu semana tipo y en tu dieta.</p>
     <div class="stack"><div class="field"><span>Días de gimnasio</span><div class="dchips">${DIAS.map((x,i)=>`<button type="button" class="dch ${d.dias.includes(i)?"on":""}" data-a="gsDay" data-i="${i}">${i===2?"X":x[0]}</button>`).join("")}</div><span class="hint">${d.dias.length} día${d.dias.length===1?"":"s"}: ${d.dias.length?SPLIT_TXT[Math.min(6,d.dias.length)]:"elige al menos uno"}. Deja al menos un día entre sesiones cuando puedas.</span></div>
     <div class="field"><span>Tiempo por sesión</span>${seg("duracion",DURACIONES.map(m=>[m,m+" min"]))}</div>
-    <div class="field"><span>Hora a la que sueles entrenar</span>${seg("hora",Object.entries(HORAS).map(([k,v])=>[k,v.replace("Por la ","").replace("A ","")]))}<span class="hint">Sirve para colocar la comida de antes y de después del entreno.</span></div></div>`;
+    <div class="field"><span>A qué hora entrenas cada día</span>${d.dias.length?`<div class="stack" style="gap:6px">${d.dias.map(i=>`<div class="row between"><span style="min-width:80px">${DIAS[i]}</span><div class="seg" style="flex:1">${Object.entries(HORAS).map(([k,v])=>`<button type="button" class="${((d.horas||{})[i]||d.hora)===k?"on":""}" data-a="gsHora" data-i="${i}" data-k="${k}">${v.replace("Por la ","").replace("A ","").replace("mañana","Mañana").replace("mediodía","Mediodía").replace("tarde","Tarde").replace("noche","Noche")}</button>`).join("")}</div></div>`).join("")}</div>`:`<span class="hint">Elige primero los días.</span>`}<span class="hint">Sirve para poner más hidratos en la comida de antes y la de después de entrenar cada día.</span></div></div>`;
   if(step===2){
     const grp=(k,t)=>`<div class="field"><span>${t}</span><div class="grid2">${GYM_ITEMS.filter(x=>x[2]===k).map(([id,n])=>`<label class="chk"><input type="checkbox" data-c="gsItem" data-id="${id}" id="gi_${id}" ${d.items[id]?"checked":""}> ${n}</label>`).join("")}</div></div>`;
     h=`<h2>Tu gimnasio</h2><p class="muted" style="margin:6px 0 18px">Desmarca lo que no haya. El plan solo usará lo que tengas y, si algo falla un día, lo cambias en un toque.</p>
@@ -71,7 +71,7 @@ function gymHoy(p){
   ${lu?`<div class="alert ok"><span class="dot"></span><div><b>Te está sabiendo a poco</b>Tres sesiones seguidas pidiendo más y tu fuerza no cae. ¿Subimos a nivel ${lu}? Más series, más cerca del fallo${lu==="avanzado"?" y técnicas de intensidad":""}.<div class="row" style="margin-top:8px"><button class="btn sm pri" data-a="lvlUp" data-k="${lu}">Subir a ${lu}</button><button class="btn sm ghost" data-a="lvlNo">Todavía no</button></div></div></div>`:""}
   ${pa?`<div class="alert bad"><span class="dot"></span><div><b>Molestias repetidas en ${JOINTS[pa.joint].toLowerCase()}</b>Las has marcado ${pa.n} veces en dos semanas. Cambiar ejercicios no basta: consulta con un fisioterapeuta antes de seguir cargando esa zona.</div></div>`:""}
   ${dl?`<div class="alert warn"><span class="dot"></span><div><b>Quizá te toque descargar</b>${esc(dl)} Una semana suave ahora te deja rendir más después.<div style="margin-top:8px"><button class="btn sm" data-a="deloadNow">Hacer la descarga esta semana</button></div></div></div>`:""}
-  ${last?`<div class="alert ok"><span class="dot"></span><div><b>Sesión hecha hoy: ${esc(last.name)}</b>${sessionStats(p,last).sets} series en ${last.min} minutos. Buen trabajo.</div></div>`:""}
+  ${last?`<div class="alert ok done-today"><span class="dot"></span><div><b>✓ Sesión de hoy terminada y guardada: ${esc(last.name)}</b>${sessionStats(p,last).sets} series en ${last.min} minutos. Buen trabajo. La siguiente es ${esc(g.plan.sessions[g.next%g.plan.sessions.length].name)}.</div></div>`:""}
   <div class="hero">
     <span class="lbl acc">${td.isDay&&!last?"Entrenamiento de hoy":"Siguiente sesión"}</span>
     <h2 class="disp">${esc(ses.name)}</h2>
@@ -81,7 +81,7 @@ function gymHoy(p){
     <div class="field"><span>¿Cómo te encuentras hoy?</span><div class="seg">${[["energia","Con energía"],["normal","Normal"],["cansado","Cansado"],["muy","Muy cansado"]].map(([k,t])=>`<button class="${well===k?"on":""}" data-a="well" data-k="${k}">${t}</button>`).join("")}</div>
     ${well==="cansado"?`<span class="hint">Hoy dejas una repetición más en reserva. Es mejor entrenar algo más suave que no entrenar.</span>`:well==="muy"?`<span class="hint">Hoy una serie menos por ejercicio y una repetición más en reserva. Mantienes el estímulo sin cavar más fatiga.</span>`:""}</div>
     <button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Comenzar sesión</button>
-    ${g.plan.sessions.length>1?`<div class="chips wrap" style="justify-content:center">${g.plan.sessions.map((s,i)=>`<button class="${i===idx?"on":""}" data-a="gsel" data-i="${i}">${esc(s.name)}</button>`).join("")}</div>`:""}
+    ${sessionPicker(p,idx)}
   </div>
   ${cardioCard(p)}
   ${mobCard(p)}</div>`;
@@ -98,6 +98,7 @@ function viewRunner(p){
   return `<div class="runner">
   <div class="row between"><span class="lbl">${esc(d.name)} · Ejercicio ${d.cur+1} de ${d.exs.length}</span><button class="btn ghost sm" data-a="askConfirm" data-k="quitSes">Salir</button></div>
   ${UI.confirm==="quitSes"?`<div class="alert warn" style="margin-top:8px"><span class="dot"></span><div><b>¿Salir de la sesión?</b>Puedes guardar lo hecho hasta ahora o descartarlo.<div class="row" style="margin-top:8px"><button class="btn sm pri" data-a="finishSes">Guardar y terminar</button><button class="btn sm danger" data-a="discardSes">Descartar</button><button class="btn sm ghost" data-a="cancelConfirm">Seguir entrenando</button></div></div></div>`:""}
+  ${finishBanner(p)}
   <div class="segbar">${d.exs.map((x,i)=>`<i class="${i<d.cur||x.done?"done":""} ${i===d.cur?"cur":""}" data-a="rnGo" data-i="${i}"></i>`).join("")}</div>
   ${restLeft>0?`<div class="restbar" id="restbar"><div><span class="lbl">Descanso</span><b class="num" id="rest_n">${Math.floor(restLeft/60)}:${pad(restLeft%60)}</b></div><div class="row"><button class="btn sm" data-a="restAdd" data-v="-15">−15 s</button><button class="btn sm" data-a="restAdd" data-v="15">+15 s</button><button class="btn sm" data-a="restSkip">Saltar</button></div><i style="width:${Math.min(100,restLeft/UI.rest.total*100)}%" id="rest_i"></i></div>`:""}
   <h1 class="disp ex-title">${esc(ex.name)}</h1>
@@ -111,6 +112,7 @@ function viewRunner(p){
     <p class="sug ${sg.act||""}">${esc(sg.txt)}</p>
     ${warmupBox(p,it,sg)}
     ${it.sets_.length?`<div class="sets">${it.sets_.map((s,i)=>`<div class="setrow ${s.warm?"warm":""}"><span>${s.warm?"Aprox.":"Serie "+(it.sets_.slice(0,i+1).filter(x=>!x.warm).length)}</span><b class="num">${s.w?kg(s.w)+" × ":""}${s.r}${ex.rep==="s"?" s":""}</b><span class="muted small">${s.warm?"":"RIR "+(s.rir>=3?"3+":s.rir)}</span><button class="btn ghost sm" data-a="delSet" data-i="${i}" aria-label="Borrar serie">${ic("x",'width="15"')}</button></div>`).join("")}</div>`:""}
+    ${prevSetHint(p,it)}
     <div class="entry">
       <label class="field"><span>Peso (kg)</span><input class="inp num big-inp" type="number" step="0.5" inputmode="decimal" id="rn_w" data-i="rnW" value="${UI.rnW??""}" placeholder="${sg.w??"kg"}"></label>
       <label class="field"><span>${ex.rep==="s"?"Segundos":"Repeticiones"}</span><input class="inp num big-inp" type="number" inputmode="numeric" id="rn_r" data-i="rnR" value="${UI.rnR??""}" placeholder="${it.lo}-${it.hi}"></label>
@@ -134,7 +136,7 @@ function tickRest(){
 }
 function viewGymSummary(p){
   const e=UI.gsum;const st=sessionStats(p,e);
-  return `<div class="stack"><div class="hero"><span class="lbl acc">Sesión terminada</span><h2 class="disp">${esc(e.name)}</h2>
+  return `<div class="stack"><div class="hero"><span class="lbl acc">✓ Sesión terminada y guardada</span><h2 class="disp">${esc(e.name)}</h2>
   <div class="grid3"><div><span class="lbl">Series</span><div class="v2">${st.sets}</div></div><div><span class="lbl">Minutos</span><div class="v2">${e.min}</div></div><div><span class="lbl">Kilos movidos</span><div class="v2">${nf(st.vol,0)}</div></div></div>
   ${st.prs.length?`<div class="alert ok"><span class="dot"></span><div><b>${st.prs.length>1?st.prs.length+" récords nuevos":"Récord nuevo"}</b>${st.prs.map(x=>`${esc(EXM[x.ex].name)}: ${nf(x.b,1)} kg de fuerza estimada (${sgn(x.b-x.pb,1)} kg)`).join("<br>")}</div></div>`:`<p class="small muted">Sin récords hoy. No pasa nada: el progreso se mide en semanas, no en sesiones.</p>`}
   <div class="field"><span>¿Cómo te ha sabido la sesión?</span>
@@ -210,6 +212,7 @@ function gymPlan(p){
   const order=Object.keys(MUSCLES).filter(m=>vol[m]);
   const ed=edadDe(p);
   return `<div class="stack">
+  ${planHistCard(p)}
   <div class="card stack"><div class="row between"><span class="lbl">Bloque actual</span><span class="small muted">5 semanas</span></div>
     <div class="weeks">${WEEK_NAMES.map((w,i)=>`<div class="${i===wk?"on":""} ${i===4?"dl":""}"><b>S${i+1}</b><span>${i===4?"Descarga":"RIR "+(s.nivel==="principiante"?[3,3,2,2][i]:[3,2,2,1][i])}</span></div>`).join("")}</div>
     <p class="small">${wk===4?"Semana de descarga: la mitad de series y lejos del fallo. La fatiga se va y el músculo consolida lo ganado.":`Cada semana te acercas un poco más al fallo y en las semanas 3 y 4 sube el número de series. Después toca una semana de descarga.`}</p>
