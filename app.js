@@ -291,6 +291,7 @@ function viewRegistro(p){
   <div class="card stack"><div class="row between"><span class="lbl">Pesos diarios (kg)</span><span class="num small">${w&&w.n?`Media ${nf(w.avg)} kg · ${w.n}/7`:"Sin pesadas"}</span></div>
     <div class="daygrid">${days.map((d,i)=>`<label>${DIAS[i].slice(0,3)} ${parseD(d).getDate()}<input class="inp num" type="number" step="0.1" inputmode="decimal" data-c="dayW" data-d="${d}" id="w_${d}" value="${p.weights[d]??""}" ${d>today()?"disabled":""}></label>`).join("")}</div>
     <p class="hint">Se guardan al salir de cada casilla. Con 3 o más pesadas la semana cuenta para la decisión.</p></div>
+  ${cicloCard(p)}
   <form class="card stack" data-s="checkin"><span class="lbl">Revisión semanal</span>
     <div class="grid2">
       <label class="field"><span>Cintura (cm)</span><input class="inp num" type="number" step="0.1" inputmode="decimal" name="cintura" id="ci_cintura" value="${ci.cintura??""}"></label>

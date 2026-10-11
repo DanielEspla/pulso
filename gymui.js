@@ -83,7 +83,8 @@ function gymHoy(p){
     <button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Comenzar sesión</button>
     ${g.plan.sessions.length>1?`<div class="chips wrap" style="justify-content:center">${g.plan.sessions.map((s,i)=>`<button class="${i===idx?"on":""}" data-a="gsel" data-i="${i}">${esc(s.name)}</button>`).join("")}</div>`:""}
   </div>
-  ${cardioCard(p)}</div>`;
+  ${cardioCard(p)}
+  ${mobCard(p)}</div>`;
 }
 
 /* ---- Sesión en curso ---- */
@@ -140,6 +141,7 @@ function viewGymSummary(p){
     <div class="fb3">${[["mas","Puedo más","Una serie más la próxima vez"],["justo","Justa","Seguimos igual"],["menos","Demasiado","Una serie menos"]].map(([k,t,d])=>`<button class="${e.fb===k?"on":""}" data-a="fbSes" data-k="${k}"><b>${t}</b><span>${d}</span></button>`).join("")}</div>
     ${e.fb?`<span class="hint">${e.fb==="mas"?"Anotado: los músculos de hoy tendrán una serie más en su próxima sesión.":e.fb==="menos"?"Anotado: una serie menos para esos músculos. Recuperar también es entrenar.":"Perfecto, seguimos con el plan."}</span>`:""}</div>
   <p class="small muted">Para recuperar: proteína en las próximas horas y dormir bien esta noche. Es cuando el músculo se reconstruye.</p>
+  ${mobOn(p)&&mobWeek(p)<2&&!(G(p).mobLog||[]).includes(today())?`<button class="btn wide" data-a="mobOpen">Rematar con 5 minutos de movilidad</button>`:""}
   <button class="btn pri wide" data-a="closeSum">Hecho</button></div></div>`;
 }
 

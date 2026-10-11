@@ -35,5 +35,6 @@ Genera:
 - `mediterranea.js` calidad mediterránea común a los cuatro estilos de dieta y nota semanal MEDAS
 - `logros.js` racha semanal, medallas, récords y resumen de la semana
 - `entrenoplus.js` series de aproximación, aviso de estancamiento por ejercicio y cardio
+- `salud.js` movilidad y equilibrio (más de 50 años o Longevidad) y registro opcional del ciclo menstrual
 - pulso.js: importa el historial de entrenos de la app PULSO anterior (copiar o archivo JSON).
 - `main.js` arranque

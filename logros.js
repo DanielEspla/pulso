@@ -84,6 +84,7 @@ function lgMedals(p){
     p.objetivo!=="ganar"?{id:"cintura",fam:"cuerpo",t:"Cintura",d:"Centímetros de cintura perdidos desde el inicio.",v:lgWaistLoss(p),th:[3,5,10,15],u:"cm",fmt:x=>nf(x,1)}:null,
     p.objetivo!=="ganar"?{id:"grasaobj",fam:"cuerpo",t:"Objetivo de grasa",d:`Llegar a tu objetivo de ${nf(p.grasaObj,0)} % de grasa estimada.`,v:bf<=p.grasaObj?1:0,th:[1],u:"",one:true,bin:true}:null,
     {id:"cardio",fam:"cuerpo",t:"Cardio",d:"Sesiones de cardio apuntadas.",v:((p.gym&&p.gym.cardioLog)||[]).length,th:[10,50,100,250],u:"sesiones"},
+    {id:"movilidad",fam:"cuerpo",t:"Movilidad y equilibrio",d:"Rutinas de movilidad hechas.",v:((p.gym&&p.gym.mobLog)||[]).length,th:[10,50,100,250],u:"sesiones"},
     {id:"racha",fam:"cuerpo",t:"Racha semanal",d:"Tu mejor racha de semanas cumplidas.",v:S_.best,th:[4,12,26,52],u:"semanas"}
   ].filter(Boolean);
   M.forEach(m=>{m.tier=m.th.filter(x=>m.v>=x).length;m.next=m.th[m.tier];m.pct=m.next?Math.min(1,m.v/m.next):1;});
