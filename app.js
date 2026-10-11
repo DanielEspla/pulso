@@ -9,7 +9,7 @@ function load(){
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));memoryOnly=false;}catch(e){memoryOnly=true;}}
 const P=()=>S.profiles[S.active];
-function commit(){save();render();}
+function commit(){if(typeof checkLogros==="function")try{checkLogros();}catch(e){}save();render();}
 function toast(t){
   let el=document.getElementById("toast");
   if(!el){el=document.createElement("div");el.id="toast";el.className="toast";el.setAttribute("role","status");document.body.appendChild(el);}
@@ -32,6 +32,7 @@ const I={
   pot:'<path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M2 10h20"/><path d="M9 6c0-1 1-1 1-2M14 6c0-1 1-1 1-2"/>',
   leaf:'<path d="M5 19c0-8 5-14 15-15-1 10-7 15-15 15z"/><path d="M5 19 13 11"/>',
   target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  medal:'<path d="M8 3h3l2 5H10zM16 3h-3l-2 5h3z"/><circle cx="12" cy="15" r="6"/><circle cx="12" cy="15" r="2.5"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   save:'<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/>',
   x:'<path d="M6 6l12 12M18 6 6 18"/>',
@@ -47,13 +48,14 @@ function render(){
   _rendering=true;try{_render();}finally{_rendering=false;}
 }
 function _render(){
+  if(UI.lgNew&&!UI.sheet&&!UI.gsum&&!UI.ob&&P()){UI.lgShow=UI.lgNew;UI.lgNew=null;UI.sheet=sheetLogro;}
   const root=document.getElementById("app");
   const p=P();
   let body;
   if(!p&&UI.learn)body=`<main class="main">${viewAprende()}</main>`;
   else if(!p||UI.ob)body=`<main class="main">${viewOnboarding()}</main>`;
   else{
-    const v={inicio:viewInicio,registro:viewRegistro,dieta:viewDieta,compra:viewCompra,cocina:viewCocina,alimentos:viewAlimentos,objetivos:viewObjetivos,perfil:viewPerfil,copias:viewCopias,mas:viewMas,aprende:viewAprende,entreno:viewEntreno}[UI.view]||viewInicio;
+    const v={inicio:viewInicio,registro:viewRegistro,dieta:viewDieta,compra:viewCompra,cocina:viewCocina,alimentos:viewAlimentos,objetivos:viewObjetivos,perfil:viewPerfil,copias:viewCopias,mas:viewMas,logros:viewLogros,aprende:viewAprende,entreno:viewEntreno}[UI.view]||viewInicio;
     body=`<aside class="side"><div class="brand"><b>Afina</b><span class="muted small">${SLOGAN}</span></div>
       ${NAV.map(([k,t,i])=>`<button class="navi ${UI.view===k?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}
       <div class="who"><span class="lbl">Perfil</span><div>${esc(p.nombre)}</div></div></aside>
@@ -248,6 +250,8 @@ function viewInicio(p){
   ${p.pausa?`<div class="alert ok"><span class="dot"></span><div><b>Pausa de dieta en curso</b>Comes en mantenimiento desde el ${fdate(p.pausa.desde)}. <button class="btn sm" data-a="go" data-v="objetivos" style="margin-top:8px">Gestionar</button></div></div>`:""}
   <form class="card row between" data-s="quickWeight"><div><span class="lbl">Peso de hoy</span><p class="small muted">${p.weights[today()]?"Registrado. Puedes corregirlo.":"Aún sin registrar"}</p></div>
     <div class="row"><input class="inp num" style="width:110px" type="number" step="0.1" inputmode="decimal" id="qw" name="qw" value="${p.weights[today()]??""}" placeholder="kg"><button class="btn pri">Guardar</button></div></form>
+  ${weeklySummaryCard(p)}
+  ${logrosHomeCard(p)}
   ${gymHomeCard(p)}
   ${ev?`<div class="card stack"><div class="row between"><div><span class="lbl">Decisión de la semana del ${fdate(dk)}</span></div>${pill(ev.d)}</div>
     <p>${esc(ev.why)}</p>${ev.det?`<p class="small muted">${esc(ev.det)}</p>`:""}
@@ -527,7 +531,7 @@ function periTag(p,day,mi){
   return mi===pre?"Antes de entrenar":mi===post?"Después de entrenar":"";
 }
 function viewMas(){
-  const it=[["compra","Compra","Lista de la semana","cart"],["cocina","Batch cooking","Qué cocinar y cómo conservarlo","pot"],["alimentos","Alimentos","Gustos y restricciones","leaf"],["objetivos","Objetivos","Calorías, macros y pausas","target"],["perfil","Perfil","Datos, perfiles y borrado","user"],["copias","Copia de seguridad","Guardar y restaurar","save"],["aprende","Por qué Afina","Cómo funciona tu cuerpo y qué buscamos","book"]];
+  const it=[["logros","Logros","Medallas, racha y récords","medal"],["compra","Compra","Lista de la semana","cart"],["cocina","Batch cooking","Qué cocinar y cómo conservarlo","pot"],["alimentos","Alimentos","Gustos y restricciones","leaf"],["objetivos","Objetivos","Calorías, macros y pausas","target"],["perfil","Perfil","Datos, perfiles y borrado","user"],["copias","Copia de seguridad","Guardar y restaurar","save"],["aprende","Por qué Afina","Cómo funciona tu cuerpo y qué buscamos","book"]];
   return `<div class="head"><h1>Más</h1></div><div class="mas">${it.map(([k,t,d,i])=>`<button data-a="go" data-v="${k}">${ic(i)}<b>${t}</b><span>${d}</span></button>`).join("")}</div>`;
 }
 
@@ -585,6 +589,9 @@ const A={
   copyShop:()=>{copy(shopText(P().menus[UI.menuWeek]),"Lista copiada");},
   clearShop:()=>{delete P().shop[UI.menuWeek];commit();},
   cat:el=>{UI.cat=el.dataset.k;render();},
+  lgClose:()=>{UI.sheet=null;UI.lgShow=null;render();},
+  lgGo:()=>{UI.sheet=null;UI.lgShow=null;UI.view="logros";render();window.scrollTo(0,0);},
+  lgSumClose:()=>{const p=P();p.logros=p.logros||{seen:{}};p.logros.sumClosed=addDays(weekStart(today()),-7);commit();},
   medToggle:()=>{UI.medOpen=!UI.medOpen;render();},
   pref:el=>{const p=P();const v=+el.dataset.v;if(v===0)delete p.prefs[el.dataset.id];else p.prefs[el.dataset.id]=v;commit();},
   prefAll:el=>{const p=P();const v=+el.dataset.v;const ban=banned(p);FOODS.filter(f=>f.cat===UI.cat&&!f.t.some(t=>ban.has(t))).forEach(f=>{if(v===0)delete p.prefs[f.id];else p.prefs[f.id]=v;});commit();},

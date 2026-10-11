@@ -301,3 +301,29 @@ a{color:var(--accent)}
 .medq .ok .mk{background:var(--accent-soft);color:var(--accent)}
 .medq .no>div>span:first-child{color:var(--muted)}
 .warnc{color:var(--warn,#d9a441)}
+/* Logros */
+.medal{width:40px;height:48px;flex:none}
+.medal .rib{fill:var(--line)}
+.medal .disc{fill:var(--sunk);stroke:var(--line);stroke-width:1.5}
+.medal .inner{fill:none;stroke:var(--line);stroke-width:1}
+.medal.bronce .disc{fill:#a8703f;stroke:#c98d57}.medal.bronce .rib{fill:#7a4f2c}
+.medal.plata .disc{fill:#9ea4ad;stroke:#c9ced6}.medal.plata .rib{fill:#6d737c}
+.medal.oro .disc{fill:#c99a2e;stroke:#e8c25a}.medal.oro .rib{fill:#C17352}
+.medal.platino .disc{fill:#8fc9c4;stroke:#c5ece8}.medal.platino .rib{fill:#4f8f8a}
+.medal:not(.off) .inner{stroke:rgba(255,255,255,.45)}
+.medal.off{opacity:.55}
+.lggrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px}
+.lgm{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:12px}
+.lgm.on{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.lgt{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.lgt .acc{color:var(--accent)}
+.bar.sm{height:5px}
+.lgrow{display:flex;gap:12px;align-items:center}
+.lgrow>div{display:flex;flex-direction:column;gap:2px}
+.lgcard{display:block;width:100%;text-align:left;cursor:pointer;color:var(--ink);font:inherit}
+.lgchecks{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.lgchecks span{font-size:.72rem;padding:3px 8px;border-radius:99px;background:var(--sunk);color:var(--muted)}
+.lgchecks span.ok{background:var(--accent-soft);color:var(--accent)}
+.lgchecks.big{justify-content:flex-start;margin:10px 0 4px}
+.lgchecks.big span{font-size:.8rem;padding:5px 10px}
+.lgchecks i{font-style:normal;opacity:.8;margin-left:4px}

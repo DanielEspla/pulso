@@ -132,7 +132,7 @@ function viewGymSummary(p){
   const e=UI.gsum;const st=sessionStats(p,e);
   return `<div class="stack"><div class="hero"><span class="lbl acc">Sesión terminada</span><h2 class="disp">${esc(e.name)}</h2>
   <div class="grid3"><div><span class="lbl">Series</span><div class="v2">${st.sets}</div></div><div><span class="lbl">Minutos</span><div class="v2">${e.min}</div></div><div><span class="lbl">Kilos movidos</span><div class="v2">${nf(st.vol,0)}</div></div></div>
-  ${st.prs.length?`<div class="alert ok"><span class="dot"></span><div><b>Mejoras de rendimiento</b>${st.prs.map(x=>`${esc(EXM[x.ex].name)}: fuerza estimada ${nf(x.pb,0)} → ${nf(x.b,0)} kg`).join("<br>")}</div></div>`:`<p class="small muted">Sin récords hoy. No pasa nada: el progreso se mide en semanas, no en sesiones.</p>`}
+  ${st.prs.length?`<div class="alert ok"><span class="dot"></span><div><b>${st.prs.length>1?st.prs.length+" récords nuevos":"Récord nuevo"}</b>${st.prs.map(x=>`${esc(EXM[x.ex].name)}: ${nf(x.b,1)} kg de fuerza estimada (${sgn(x.b-x.pb,1)} kg)`).join("<br>")}</div></div>`:`<p class="small muted">Sin récords hoy. No pasa nada: el progreso se mide en semanas, no en sesiones.</p>`}
   <div class="field"><span>¿Cómo te ha sabido la sesión?</span>
     <div class="fb3">${[["mas","Puedo más","Una serie más la próxima vez"],["justo","Justa","Seguimos igual"],["menos","Demasiado","Una serie menos"]].map(([k,t,d])=>`<button class="${e.fb===k?"on":""}" data-a="fbSes" data-k="${k}"><b>${t}</b><span>${d}</span></button>`).join("")}</div>
     ${e.fb?`<span class="hint">${e.fb==="mas"?"Anotado: los músculos de hoy tendrán una serie más en su próxima sesión.":e.fb==="menos"?"Anotado: una serie menos para esos músculos. Recuperar también es entrenar.":"Perfecto, seguimos con el plan."}</span>`:""}</div>
@@ -318,7 +318,7 @@ Object.assign(A,{
   finishSes:()=>{const p=P();const e=finishSession(p);UI.confirm=null;UI.rest=null;UI.gsum=e&&e.exs.length?e:null;if(!UI.gsum)toast("Sesión cerrada sin series registradas");commit();window.scrollTo(0,0);},
   discardSes:()=>{G(P()).draft=null;UI.confirm=null;UI.rest=null;commit();},
   fbSes:el=>{const p=P();const e=UI.gsum;const real=G(p).log.find(l=>l.id===e.id);applyFeedback(p,real||e,el.dataset.k);UI.gsum=real||e;commit();},
-  lvlUp:el=>{const p=P();const g=G(p);g.setup.nivel=el.dataset.k;if(el.dataset.k!=="principiante")g.setup.tecnicas=true;g.adj={};buildGymPlan(p);commit();toast("Nivel subido. Plan rehecho.");},
+  lvlUp:el=>{const p=P();const g=G(p);g.setup.nivel=el.dataset.k;(g.lvlUps=g.lvlUps||[]).push({date:today(),nivel:el.dataset.k});if(el.dataset.k!=="principiante")g.setup.tecnicas=true;g.adj={};buildGymPlan(p);commit();toast("Nivel subido. Plan rehecho.");},
   lvlNo:()=>{const g=G(P());const l=g.log.filter(x=>x.fb).slice(-1)[0];g.lvlAsked=l&&l.id;commit();},
   closeSum:()=>{UI.gsum=null;UI.gtab="hoy";render();},
   skipEx:()=>{const d=G(P()).draft;d.exs[d.cur].done=true;d.exs[d.cur].skipped=true;UI.sheet=null;UI.sw=null;if(d.cur<d.exs.length-1)d.cur++;commit();},
