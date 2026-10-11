@@ -82,7 +82,8 @@ function gymHoy(p){
     ${well==="cansado"?`<span class="hint">Hoy dejas una repetición más en reserva. Es mejor entrenar algo más suave que no entrenar.</span>`:well==="muy"?`<span class="hint">Hoy una serie menos por ejercicio y una repetición más en reserva. Mantienes el estímulo sin cavar más fatiga.</span>`:""}</div>
     <button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Comenzar sesión</button>
     ${g.plan.sessions.length>1?`<div class="chips wrap" style="justify-content:center">${g.plan.sessions.map((s,i)=>`<button class="${i===idx?"on":""}" data-a="gsel" data-i="${i}">${esc(s.name)}</button>`).join("")}</div>`:""}
-  </div></div>`;
+  </div>
+  ${cardioCard(p)}</div>`;
 }
 
 /* ---- Sesión en curso ---- */
@@ -105,7 +106,9 @@ function viewRunner(p){
     <p class="acc-t"><b>Objetivo: ${it.sets} series · ${repTxt(it)} · RIR ${it.rir}</b> ${infoBtn("rir","RIR")} <span class="muted small">· descanso ${restTxt(it.rest)}</span></p>
     ${it.tech?`<p class="tech"><b>${TECHS[it.tech][0]}</b> ${infoBtn("tecnicas","técnicas")}<br><span class="small">${TECHS[it.tech][1]}</span></p>`:""}
     ${sg.last?`<p class="small muted">${esc(sg.last)}</p>`:""}
+    ${plateauBox(p,it)}
     <p class="sug ${sg.act||""}">${esc(sg.txt)}</p>
+    ${warmupBox(p,it,sg)}
     ${it.sets_.length?`<div class="sets">${it.sets_.map((s,i)=>`<div class="setrow ${s.warm?"warm":""}"><span>${s.warm?"Aprox.":"Serie "+(it.sets_.slice(0,i+1).filter(x=>!x.warm).length)}</span><b class="num">${s.w?kg(s.w)+" × ":""}${s.r}${ex.rep==="s"?" s":""}</b><span class="muted small">${s.warm?"":"RIR "+(s.rir>=3?"3+":s.rir)}</span><button class="btn ghost sm" data-a="delSet" data-i="${i}" aria-label="Borrar serie">${ic("x",'width="15"')}</button></div>`).join("")}</div>`:""}
     <div class="entry">
       <label class="field"><span>Peso (kg)</span><input class="inp num big-inp" type="number" step="0.5" inputmode="decimal" id="rn_w" data-i="rnW" value="${UI.rnW??""}" placeholder="${sg.w??"kg"}"></label>
@@ -246,6 +249,7 @@ function gymProgreso(p){
   <div class="grid3"><div class="stat"><span class="lbl">Sesiones</span><div class="v">${ses}<small>/ ${g.setup.dias.length}</small></div><div class="d">esta semana</div></div>
   <div class="stat"><span class="lbl">Rendimiento</span><div class="v ${ap?(ap.v==="MEJORA"?"good":ap.v==="BAJA"?"bad":""):""}" style="font-size:1.1rem">${ap?{MEJORA:"Mejora",ESTABLE:"Estable",BAJA:"Baja"}[ap.v]:"—"}</div><div class="d">${ap?sgn(ap.med,1)+" % fuerza est.":"Faltan datos"}</div></div>
   <div class="stat"><span class="lbl">Sesiones totales</span><div class="v">${g.log.length}</div><div class="d">${g.log.length?"desde "+fdate(g.log[0].date):"empieza hoy"}</div></div></div>
+  ${(()=>{const st=stalledList(p);return st.length?`<div class="alert warn"><span class="dot"></span><div><b>Ejercicios estancados</b>${st.map(x=>`${esc(EXM[x.id].name)}: ${x.pl.tipo==="cae"?"la fuerza baja":"tres sesiones sin mejorar"}`).join("<br>")}<br><span class="small">Cuando te toquen, la app te propone cómo salir del estancamiento.</span></div></div>`:"";})()}
   ${ap?`<p class="small muted">Este dato pasa solo a tu revisión semanal de la dieta: si en déficit tu fuerza cae, la app sube hidratos.</p>`:""}
   <div class="card stack"><span class="lbl">Series hechas esta semana</span><div class="vol">${Object.keys(MUSCLES).filter(m=>plan[m]).map(m=>`<div><span>${MUSCLES[m]}</span><div class="vbar"><i style="width:${Math.min(100,(done[m]||0)/Math.max(plan[m],1)*100)}%"></i></div><b class="num">${nf(done[m]||0,(done[m]||0)%1?1:0)}/${nf(plan[m],plan[m]%1?1:0)}</b></div>`).join("")}</div></div>
   <div class="card"><span class="lbl">Fuerza estimada por ejercicio</span>
