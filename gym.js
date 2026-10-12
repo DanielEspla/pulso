@@ -112,6 +112,9 @@ function volTarget(p){
   const s=G(p).setup;const ed=edadDe(p);
   return VOL_TARGET[s.nivel]*goalVol(p)*(ed>=65?0.85:ed>=50?0.95:1)*({musculo:1,fuerza:0.9,salud:0.65}[enf(p)]||1);
 }
+/* Series mínimas por ejercicio según nivel */
+const MIN_SETS={principiante:{main:3,C:2,I:2},intermedio:{main:3,C:3,I:2},avanzado:{main:4,C:3,I:3}};
+function minSets(nivel,sl){const m=MIN_SETS[nivel]||MIN_SETS.intermedio;const ex=sl.ex&&EXM[sl.ex];return sl.main?m.main:ex?(ex.C?m.C:m.I):(["elev_lateral","biceps","triceps","gemelo","aperturas","deltoide_post","trapecio","ext_rodilla","flex_rodilla","pullover","core"].includes(sl.p)?m.I:m.C);}
 function buildGymPlan(p){
   const g=G(p);const s=g.setup;const n=Math.max(1,Math.min(6,s.dias.length));
   const keys=SPLITS[n];const vf=volFactor(p);const used={};
@@ -124,22 +127,22 @@ function buildGymPlan(p){
       if(s.prio.includes(mus))sets+=1;
       if(p.meta==="estetica"&&(AESTH[p.sexo]||AESTH.H).slice(0,3).includes(mus))sets+=1;
       if(enf(p)==="fuerza"&&sl.main)sets+=1;
-      return {...sl,sets:clamp(Math.round(sets),sl.p==="core"?1:2,maxSets+1)};
+      return {...sl,sets:clamp(Math.round(sets),sl.p==="core"?1:minSets(s.nivel,sl),maxSets+1)};
     });
     list=list.map(sl=>{const id=pickEx(p,sl,used);if(id)used[id]=(used[id]||0)+1;return {...sl,ex:id};}).filter(x=>x.ex);
     pairSupersets(list,s.nivel);
     /* Recortar si no cabe: primero series de aislamientos, luego ejercicios del final */
-    let guard=0;
+    /* Si no cabe: primero se quitan ejercicios del final, nunca se baja de las series mínimas por nivel.
+       Mejor menos ejercicios bien hechos que muchos con dos series. */
+    let guard=0;const fl=x=>EXM[x.ex].pat==="core"?1:minSets(s.nivel,x);
     while(listMinutes(p,list)>budget&&guard++<80){
-      const iso=list.slice().reverse().find(x=>!EXM[x.ex].C&&x.sets>2);
+      const iso=list.slice().reverse().find(x=>!EXM[x.ex].C&&x.sets>fl(x)+1);
       if(iso){iso.sets--;continue;}
-      const big=list.slice().reverse().find(x=>!x.main&&x.sets>3);
+      const big=list.slice().reverse().find(x=>!x.main&&x.sets>Math.max(4,fl(x)));
       if(big){big.sets--;continue;}
-      const mainBig=list.find(x=>x.main&&x.sets>3);
-      if(mainBig){mainBig.sets--;continue;}
-      const last=list[list.length-1];
-      if(list.length>5&&!EXM[last.ex].C){const rm=list.pop();if(used[rm.ex])used[rm.ex]--;pairSupersets(list,s.nivel);continue;}
-      const cmp=list.slice().reverse().find(x=>!x.main&&x.sets>2);
+      const last=list.slice().reverse().find(x=>!x.main);
+      if(list.length>4&&last){list.splice(list.lastIndexOf(last),1);if(used[last.ex])used[last.ex]--;pairSupersets(list,s.nivel);continue;}
+      const cmp=list.slice().reverse().find(x=>x.sets>fl(x));
       if(cmp){cmp.sets--;continue;}
       if(list.length>3){const rm=list.pop();if(used[rm.ex])used[rm.ex]--;pairSupersets(list,s.nivel);continue;}
       break;

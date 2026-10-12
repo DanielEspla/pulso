@@ -382,3 +382,5 @@ details.catinfo summary{cursor:pointer;color:var(--accent-t)}
 .frow.ban{opacity:.45;padding:11px 12px;border:1px dashed var(--line);border-radius:12px;align-items:center}
 .genbar{position:sticky;bottom:calc(72px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 @media (min-width:960px){.genbar{bottom:16px}}
+
+.frow.nb .fsel{opacity:.6}

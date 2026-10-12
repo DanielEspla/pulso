@@ -423,11 +423,13 @@ function viewAlimentos(p){
   const cat=CATS.find(c=>c[0]===UI.cat);const g=groupOfCat(UI.cat);
   const row=f=>{const b=f.t.some(t=>ban.has(t));const v=p.prefs[f.id]??0;
     if(b)return `<div class="frow ban"><span class="fck"></span><div class="fnm"><b>${esc(f.name)}</b><span class="small muted">Excluido por tus restricciones</span></div></div>`;
-    return `<div class="frow ${v===1?"like":v===-1?"no":""}"><button class="fsel" data-a="pref" data-id="${f.id}" data-v="${v===1?0:1}" aria-pressed="${v===1}"><span class="fck">${v===1?"✓":""}</span><span class="fnm"><b>${esc(f.name)}</b><span class="small muted num">${f.kcal} kcal · P ${f.p} · G ${f.f} · HC ${f.c}${f.u?` · 1 ${f.un} ≈ ${f.u} g`:""}</span></span></button>
+    const nb=!basicoOK(p,f)&&v!==-1;
+    return `<div class="frow ${v===1?"like":v===-1?"no":""} ${nb?"nb":""}"><button class="fsel" data-a="pref" data-id="${f.id}" data-v="${v===1?0:1}" aria-pressed="${v===1}"><span class="fck">${v===1?"✓":""}</span><span class="fnm"><b>${esc(f.name)}</b><span class="small muted num">${nb?"No es básico: no sale salvo que lo marques · ":""}${f.kcal} kcal · P ${f.p} · G ${f.f} · HC ${f.c}${f.u?` · 1 ${f.un} ≈ ${f.u} g`:""}</span></span></button>
     <button class="fno ${v===-1?"on":""}" data-a="pref" data-id="${f.id}" data-v="${v===-1?0:-1}" aria-label="${v===-1?"Volver a permitir":"No quiero"} ${esc(f.name)}">${v===-1?"No ✕":"✕"}</button></div>`;};
   return `<div class="head"><div><h1>Alimentos</h1><p class="sub">${cnt(1)} te gustan · ${cnt(-1)} descartados · ${FOODS.length} en total</p></div></div>
   <div class="stack">
   <div class="card stack how"><p><b>Cómo funciona.</b> Toca un alimento para marcarlo como que te gusta: puedes marcar todos los que quieras de cada grupo. La ✕ lo descarta y no saldrá nunca.</p>
+    <label class="chk"><input type="checkbox" data-c="basico" id="basico" ${p.basico!==false?"checked":""}><span><b>Solo alimentos de siempre</b><br><span class="hint">${p.basico!==false?"Fuera del menú: seitán, tofu, tempeh, quinoa, cuscús, kéfir, skyr, semillas y otros poco habituales. Si alguno te gusta, márcalo y vuelve a entrar.":"Cualquier alimento de la lista puede salir en el menú."}</span></span></label>
     <label class="chk"><input type="checkbox" data-c="soloGusta" id="solo_gusta" ${p.soloGusta?"checked":""}><span><b>Usar solo lo que marco</b><br><span class="hint">${p.soloGusta?"El menú solo usa lo marcado. Si en algún grupo no marcas nada, usa lo más habitual de ese grupo.":"Ahora lo marcado sale mucho más, y lo no marcado puede salir de vez en cuando para dar variedad."}</span></span></label></div>
   <input class="inp" type="search" id="fsearch" placeholder="Buscar alimento" value="${esc(UI.q)}" data-c="search">
   ${q?"":`<div class="catbar" role="tablist">${GROUPS.map(gr=>gr.cats.map(k=>{const n=likedIn(k);return `<button role="tab" class="${UI.cat===k?"on":""}" style="--gc:${gr.col}" data-a="cat" data-k="${k}">${CATS.find(c=>c[0]===k)[1]}${n?` <span class="cnt">${n}</span>`:""}</button>`;}).join("")).join("")}</div>
@@ -699,6 +701,7 @@ const CHG={
   dayW:el=>{const p=P();const v=el.value===""?null:parseFloat(el.value.replace(",","."));
     if(v===null){delete p.weights[el.dataset.d];}else if(v>=30&&v<=350){p.weights[el.dataset.d]=r1(v);}else{toast("Revisa ese peso");return;}commit();},
   shop:el=>{const p=P();const s=p.shop[UI.menuWeek]=p.shop[UI.menuWeek]||{};s[el.dataset.id]=el.checked;commit();},
+  basico:el=>{const p=P();p.basico=el.checked;commit();},
   soloGusta:el=>{const p=P();p.soloGusta=el.checked;commit();},
   restr:el=>{const p=P();const k=el.dataset.k;p.restr=(p.restr||[]).filter(x=>x!==k);if(el.checked)p.restr.push(k);commit();},
   search:el=>{UI.q=el.value;render();const s=document.getElementById("fsearch");if(s){s.focus();s.setSelectionRange(s.value.length,s.value.length);}},

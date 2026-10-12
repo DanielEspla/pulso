@@ -265,7 +265,17 @@ const MEAL_TXT={"2":"2 comidas","3":"3 comidas","3a":"3 comidas sin desayuno","4
 const ROLE_Q={P:[60,280,10],C:[30,150,5],B:[20,140,10],D:[100,500,25],G:[0,30,5],N:[10,40,5]};
 
 function banned(p){const s=new Set();(p.restr||[]).forEach(r=>{const x=RESTRICTIONS.find(z=>z[0]===r);if(x)x[2].forEach(t=>s.add(t));});return s;}
-function allowed(p,f){const b=banned(p);return !f.t.some(t=>b.has(t))&&(p.prefs||{})[f.id]!==-1;}
+/* Alimentos «no básicos»: no salen salvo que los marques como que te gustan,
+   o que una restricción los haga necesarios (vegetariano, vegano, sin lactosa, sin gluten). */
+const NO_BASICO={tofu:"veg",tempeh:"veg",seitan:"veg",vegprot_heura:"veg",soja_texturizada:"veg",edamame:"veg",yogur_soja:"lac",bebida_soja:"lac",bebida_avena:"lac",
+  pan_sin_gluten:"glu",tortitas_maiz:"glu",tortitas_arroz:"glu",pasta_legumbre:"",quinoa:"",cuscus:"",kefir:"",skyr:"",whey:"",granola:"",crema_almendra:"",chia:"",lino:"",pipas_calabaza:"",papaya:"",surimi:""};
+function basicoOK(p,f){
+  if(p.basico===false||!(f.id in NO_BASICO))return true;
+  if((p.prefs||{})[f.id]===1)return true;
+  const r=p.restr||[];const k=NO_BASICO[f.id];
+  return (k==="veg"&&(r.includes("vegetariano")||r.includes("vegano")))||(k==="lac"&&(r.includes("sin_lactosa")||r.includes("vegano")))||(k==="glu"&&r.includes("sin_gluten"));
+}
+function allowed(p,f){const b=banned(p);return !f.t.some(t=>b.has(t))&&(p.prefs||{})[f.id]!==-1&&basicoOK(p,f);}
 function cands(p,role,slot,extra){
   const L=FOODS.filter(f=>f.r===role&&f.s.includes(slot)&&allowed(p,f)&&(!extra||extra(f)));
   /* «Usar solo lo que marco»: si en ese hueco hay algo marcado, solo eso; si no hay nada, lo de siempre */
