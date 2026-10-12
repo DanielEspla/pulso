@@ -1,7 +1,7 @@
 /* Layout: app de una columna centrada; barra inferior en móvil, barra lateral en escritorio */
 :root{
-  --bg:#121019; --surface:#1A1722; --sunk:#221E2B; --hero:#251E33; --ink:#F3EDE6; --muted:#9C95A6; --line:#2E2939;
-  --accent:#C17352; --accent-ink:#FFF6F0; --accent-soft:#3A2620;
+  --bg:#121019; --surface:#1B1823; --sunk:#25202E; --hero:#261F34; --ink:#FAF6F1; --muted:#C2BBCB; --line:#3A3446;
+  --accent:#C17352; --accent-t:#E8956F; --accent-ink:#FFF6F0; --accent-soft:#3F2921;
   --ok:#7DC59C; --ok-soft:#1C3227; --warn:#E3AA5A; --warn-soft:#382B19; --bad:#E7826E; --bad-soft:#3C201C;
   --prot:#E39A78; --fat:#E2B65C; --carb:#8EA9DD;
   --f-display:"Playfair Display",Georgia,"Times New Roman",serif;
@@ -10,7 +10,7 @@
 }
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--ink)}
-body{font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body{font-family:var(--f-body);font-size:var(--fs,16px);line-height:1.45;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums}
 h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-0.01em}
@@ -19,8 +19,8 @@ h2{font-size:1.15rem;font-weight:650}
 h3{font-size:1rem;font-weight:650}
 p{margin:0}
 .muted{color:var(--muted)}
-.small{font-size:.82rem}
-.lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.small{font-size:.86rem}
+.lbl{font-size:.74rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:650}
 
 .shell{display:flex;min-height:100%}
 .side{display:none}
@@ -344,3 +344,18 @@ ol.mob li span{display:block}
 .items .item.on{border-color:var(--accent);background:var(--accent-soft)}
 .alert.finish{border-color:var(--accent)}
 .done-today b{color:var(--accent)}
+
+/* ===== Tema claro y tamaño de letra ===== */
+:root[data-theme="light"]{
+  --bg:#F6F2EC; --surface:#FFFFFF; --sunk:#EFE8E0; --hero:#F7EAE1; --ink:#1C1820; --muted:#57505F; --line:#D9CFC4;
+  --accent:#A9532F; --accent-t:#9A4A29; --accent-ink:#FFFFFF; --accent-soft:#F7E2D7;
+  --ok:#2C7A4F; --ok-soft:#E0F1E6; --warn:#8F5A0C; --warn-soft:#FBEED6; --bad:#B23E2A; --bad-soft:#FBE3DD;
+  --prot:#C0613C; --fat:#A87B12; --carb:#4466A8; color-scheme:light;
+}
+:root[data-theme="light"] .tri button.on.l,:root[data-theme="light"] .tri button.on.x{color:#fff}
+:root[data-theme="light"] .seg button.on{box-shadow:0 1px 3px rgba(0,0,0,.12)}
+:root[data-theme="light"] .medal:not(.off) .inner{stroke:rgba(255,255,255,.7)}
+:root[data-size="big"]{--fs:18px}
+/* Texto en color de acento con más contraste sobre fondo oscuro */
+.acc-t,.lbl.acc,.gcard.on .gsel b,.navi.on{color:var(--accent-t)}
+input::placeholder{color:var(--muted);opacity:.85}

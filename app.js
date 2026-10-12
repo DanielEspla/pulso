@@ -47,7 +47,17 @@ function render(){
   if(_rendering){setTimeout(render,0);return;}
   _rendering=true;try{_render();}finally{_rendering=false;}
 }
+function applyDisplay(){
+  const u=S.ui||{};const t=u.theme||"oscuro";
+  const light=t==="claro"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches);
+  const r=document.documentElement;r.dataset.theme=light?"light":"dark";r.dataset.size=u.size==="grande"?"big":"normal";
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=light?"#F6F2EC":"#121019";
+}
+function displayCard(){const u=S.ui||{};const b=(k,v,t)=>`<button class="${(u[k]||(k==="theme"?"oscuro":"normal"))===v?"on":""}" data-a="uiSet" data-k="${k}" data-v="${v}">${t}</button>`;
+  return `<div class="card stack"><span class="lbl">Pantalla</span><div class="field"><span>Tema</span><div class="seg">${b("theme","oscuro","Oscuro")}${b("theme","claro","Claro")}${b("theme","auto","Como el móvil")}</div><span class="hint">El claro se lee mejor con sol o mucha luz, por ejemplo en el gimnasio.</span></div>
+  <div class="field"><span>Tamaño de letra</span><div class="seg">${b("size","normal","Normal")}${b("size","grande","Grande")}</div></div></div>`;}
 function _render(){
+  applyDisplay();
   if(UI.lgNew&&!UI.sheet&&!UI.gsum&&!UI.ob&&P()){UI.lgShow=UI.lgNew;UI.lgNew=null;UI.sheet=sheetLogro;}
   const root=document.getElementById("app");
   const p=P();
@@ -536,7 +546,7 @@ function periTag(p,day,mi){
 }
 function viewMas(){
   const it=[["logros","Logros","Medallas, racha y récords","medal"],["compra","Compra","Lista de la semana","cart"],["cocina","Batch cooking","Qué cocinar y cómo conservarlo","pot"],["alimentos","Alimentos","Gustos y restricciones","leaf"],["objetivos","Objetivos","Calorías, macros y pausas","target"],["perfil","Perfil","Datos, perfiles y borrado","user"],["copias","Copia de seguridad","Guardar y restaurar","save"],["aprende","Por qué Afina","Cómo funciona tu cuerpo y qué buscamos","book"]];
-  return `<div class="head"><h1>Más</h1></div><div class="mas">${it.map(([k,t,d,i])=>`<button data-a="go" data-v="${k}">${ic(i)}<b>${t}</b><span>${d}</span></button>`).join("")}</div>`;
+  return `<div class="head"><h1>Más</h1></div>${displayCard()}<div class="mas" style="margin-top:16px">${it.map(([k,t,d,i])=>`<button data-a="go" data-v="${k}">${ic(i)}<b>${t}</b><span>${d}</span></button>`).join("")}</div>`;
 }
 
 /* ===== Acciones ===== */
@@ -596,6 +606,7 @@ const A={
   lgClose:()=>{UI.sheet=null;UI.lgShow=null;render();},
   lgGo:()=>{UI.sheet=null;UI.lgShow=null;UI.view="logros";render();window.scrollTo(0,0);},
   lgSumClose:()=>{const p=P();p.logros=p.logros||{seen:{}};p.logros.sumClosed=addDays(weekStart(today()),-7);commit();},
+  uiSet:el=>{S.ui=S.ui||{};S.ui[el.dataset.k]=el.dataset.v;save();render();},
   medToggle:()=>{UI.medOpen=!UI.medOpen;render();},
   pref:el=>{const p=P();const v=+el.dataset.v;if(v===0)delete p.prefs[el.dataset.id];else p.prefs[el.dataset.id]=v;commit();},
   prefAll:el=>{const p=P();const v=+el.dataset.v;const ban=banned(p);FOODS.filter(f=>f.cat===UI.cat&&!f.t.some(t=>ban.has(t))).forEach(f=>{if(v===0)delete p.prefs[f.id];else p.prefs[f.id]=v;});commit();},
