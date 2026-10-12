@@ -266,7 +266,12 @@ const ROLE_Q={P:[60,280,10],C:[30,150,5],B:[20,140,10],D:[100,500,25],G:[0,30,5]
 
 function banned(p){const s=new Set();(p.restr||[]).forEach(r=>{const x=RESTRICTIONS.find(z=>z[0]===r);if(x)x[2].forEach(t=>s.add(t));});return s;}
 function allowed(p,f){const b=banned(p);return !f.t.some(t=>b.has(t))&&(p.prefs||{})[f.id]!==-1;}
-function cands(p,role,slot,extra){return FOODS.filter(f=>f.r===role&&f.s.includes(slot)&&allowed(p,f)&&(!extra||extra(f)));}
+function cands(p,role,slot,extra){
+  const L=FOODS.filter(f=>f.r===role&&f.s.includes(slot)&&allowed(p,f)&&(!extra||extra(f)));
+  /* «Usar solo lo que marco»: si en ese hueco hay algo marcado, solo eso; si no hay nada, lo de siempre */
+  if(p.soloGusta){const lk=L.filter(f=>(p.prefs||{})[f.id]===1);if(lk.length)return lk;}
+  return L;
+}
 /* Variedad con cabeza: proteínas e hidratos rotan; lácteos, grasas, panes, fruta y frutos secos
    se repiten para que la compra sea corta y no sobren diez productos abiertos. */
 const ROLE_CAP={P:5,C:4,V:6,F:4,D:2,B:3,N:2,G:2};

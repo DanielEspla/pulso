@@ -418,19 +418,27 @@ function viewAlimentos(p){
   const ban=banned(p);const q=UI.q.trim().toLowerCase();
   const list=q?FOODS.filter(f=>f.name.toLowerCase().includes(q)):FOODS.filter(f=>f.cat===UI.cat);
   const cnt=v=>Object.values(p.prefs).filter(x=>x===v).length;
-  const tri=f=>{const v=p.prefs[f.id]??0;return `<div class="tri" role="group" aria-label="${esc(f.name)}"><button class="l ${v===1?"on":""}" data-a="pref" data-id="${f.id}" data-v="1">Me gusta</button><button class="n ${v===0?"on":""}" data-a="pref" data-id="${f.id}" data-v="0">Igual</button><button class="x ${v===-1?"on":""}" data-a="pref" data-id="${f.id}" data-v="-1">No</button></div>`;};
-  return `<div class="head"><div><h1>Alimentos</h1><p class="sub">${FOODS.length} alimentos · ${cnt(1)} te gustan · ${cnt(-1)} descartados</p></div></div>
+  const likedIn=c=>FOODS.filter(f=>f.cat===c&&p.prefs[f.id]===1).length;
+  const nIn=c=>FOODS.filter(f=>f.cat===c&&!f.t.some(t=>ban.has(t))).length;
+  const cat=CATS.find(c=>c[0]===UI.cat);const g=groupOfCat(UI.cat);
+  const row=f=>{const b=f.t.some(t=>ban.has(t));const v=p.prefs[f.id]??0;
+    if(b)return `<div class="frow ban"><span class="fck"></span><div class="fnm"><b>${esc(f.name)}</b><span class="small muted">Excluido por tus restricciones</span></div></div>`;
+    return `<div class="frow ${v===1?"like":v===-1?"no":""}"><button class="fsel" data-a="pref" data-id="${f.id}" data-v="${v===1?0:1}" aria-pressed="${v===1}"><span class="fck">${v===1?"✓":""}</span><span class="fnm"><b>${esc(f.name)}</b><span class="small muted num">${f.kcal} kcal · P ${f.p} · G ${f.f} · HC ${f.c}${f.u?` · 1 ${f.un} ≈ ${f.u} g`:""}</span></span></button>
+    <button class="fno ${v===-1?"on":""}" data-a="pref" data-id="${f.id}" data-v="${v===-1?0:-1}" aria-label="${v===-1?"Volver a permitir":"No quiero"} ${esc(f.name)}">${v===-1?"No ✕":"✕"}</button></div>`;};
+  return `<div class="head"><div><h1>Alimentos</h1><p class="sub">${cnt(1)} te gustan · ${cnt(-1)} descartados · ${FOODS.length} en total</p></div></div>
   <div class="stack">
-  <div class="card stack"><span class="lbl">Restricciones</span><p class="small muted">Excluyen alimentos por completo, aunque los hayas marcado como que te gustan.</p>
-    <div class="grid2">${RESTRICTIONS.map(([k,t])=>`<label class="chk"><input type="checkbox" data-c="restr" data-k="${k}" id="rs_${k}" ${(p.restr||[]).includes(k)?"checked":""}> ${t}</label>`).join("")}</div></div>
-  <div class="card stack">
-    <input class="inp" type="search" id="fsearch" placeholder="Buscar alimento" value="${esc(UI.q)}" data-c="search">
-    ${q?"":`<div class="grps">${GROUPS.map(g=>`<div class="grp ${g.cats.includes(UI.cat)?"open":""}" style="--gc:${g.col}"><div class="grp-h"><b>${g.t}</b></div><div class="chips wrap">${g.cats.map(k=>`<button class="${UI.cat===k?"on":""}" data-a="cat" data-k="${k}">${CATS.find(c=>c[0]===k)[1]}</button>`).join("")}</div></div>`).join("")}</div>
-    <div class="catinfo" style="--gc:${groupOfCat(UI.cat).col}"><span class="lbl">${groupOfCat(UI.cat).t} · ${CATS.find(c=>c[0]===UI.cat)[1]}</span><p>${groupOfCat(UI.cat).d}</p><p class="small muted">${CAT_INFO[UI.cat]||""}</p></div>
-    <div class="row"><span class="small muted">Toda la categoría:</span><button class="btn sm" data-a="prefAll" data-v="1">Me gusta</button><button class="btn sm" data-a="prefAll" data-v="0">Igual</button><button class="btn sm" data-a="prefAll" data-v="-1">No</button></div>`}
-    <div>${list.map(f=>{const b=f.t.some(t=>ban.has(t));return `<div class="food ${b?"ban":""}"><div style="min-width:0"><div>${esc(f.name)}</div><div class="small muted num">${f.kcal} kcal · P ${f.p} · G ${f.f} · HC ${f.c}${f.u?` · 1 ${f.un} ≈ ${f.u} g`:""}${b?" · excluido por restricción":""}</div></div>${b?"":tri(f)}</div>`;}).join("")||`<p class="muted">Nada coincide con la búsqueda.</p>`}</div>
-  </div>
-  <div class="row end"><button class="btn pri" data-a="genFromPrefs">Generar menú con estos gustos</button></div></div>`;
+  <div class="card stack how"><p><b>Cómo funciona.</b> Toca un alimento para marcarlo como que te gusta: puedes marcar todos los que quieras de cada grupo. La ✕ lo descarta y no saldrá nunca.</p>
+    <label class="chk"><input type="checkbox" data-c="soloGusta" id="solo_gusta" ${p.soloGusta?"checked":""}><span><b>Usar solo lo que marco</b><br><span class="hint">${p.soloGusta?"El menú solo usa lo marcado. Si en algún grupo no marcas nada, usa lo más habitual de ese grupo.":"Ahora lo marcado sale mucho más, y lo no marcado puede salir de vez en cuando para dar variedad."}</span></span></label></div>
+  <input class="inp" type="search" id="fsearch" placeholder="Buscar alimento" value="${esc(UI.q)}" data-c="search">
+  ${q?"":`<div class="catbar" role="tablist">${GROUPS.map(gr=>gr.cats.map(k=>{const n=likedIn(k);return `<button role="tab" class="${UI.cat===k?"on":""}" style="--gc:${gr.col}" data-a="cat" data-k="${k}">${CATS.find(c=>c[0]===k)[1]}${n?` <span class="cnt">${n}</span>`:""}</button>`;}).join("")).join("")}</div>
+  <div class="row between"><div><h2 style="margin:0">${cat[1]}</h2><span class="small muted">${likedIn(UI.cat)} de ${nIn(UI.cat)} marcados</span></div>
+    <div class="row" style="gap:6px"><button class="btn sm" data-a="prefAll" data-v="1">Marcar todos</button><button class="btn sm ghost" data-a="prefAll" data-v="0">Quitar marcas</button></div></div>
+  <details class="catinfo" style="--gc:${g.col}"><summary class="small">Por qué ${esc(cat[1].toLowerCase())} y qué aporta</summary><p class="small">${g.d}</p><p class="small muted">${CAT_INFO[UI.cat]||""}</p></details>`}
+  <div class="flist">${list.map(row).join("")||`<p class="muted">Nada coincide con la búsqueda.</p>`}</div>
+  <details class="card"><summary><b>Restricciones</b><span class="small muted"> · ${(p.restr||[]).length?(p.restr||[]).map(k=>RESTRICTIONS.find(r=>r[0]===k)[1]).join(", "):"ninguna"}</span></summary>
+    <p class="small muted" style="margin:8px 0">Excluyen alimentos por completo, aunque los hayas marcado.</p>
+    <div class="grid2">${RESTRICTIONS.map(([k,t])=>`<label class="chk"><input type="checkbox" data-c="restr" data-k="${k}" id="rs_${k}" ${(p.restr||[]).includes(k)?"checked":""}> ${t}</label>`).join("")}</div></details>
+  <div class="genbar"><span class="small"><b>${cnt(1)}</b> marcados</span><button class="btn pri" data-a="genFromPrefs">Generar menú</button></div></div>`;
 }
 
 /* ===== Objetivos ===== */
@@ -691,6 +699,7 @@ const CHG={
   dayW:el=>{const p=P();const v=el.value===""?null:parseFloat(el.value.replace(",","."));
     if(v===null){delete p.weights[el.dataset.d];}else if(v>=30&&v<=350){p.weights[el.dataset.d]=r1(v);}else{toast("Revisa ese peso");return;}commit();},
   shop:el=>{const p=P();const s=p.shop[UI.menuWeek]=p.shop[UI.menuWeek]||{};s[el.dataset.id]=el.checked;commit();},
+  soloGusta:el=>{const p=P();p.soloGusta=el.checked;commit();},
   restr:el=>{const p=P();const k=el.dataset.k;p.restr=(p.restr||[]).filter(x=>x!==k);if(el.checked)p.restr.push(k);commit();},
   search:el=>{UI.q=el.value;render();const s=document.getElementById("fsearch");if(s){s.focus();s.setSelectionRange(s.value.length,s.value.length);}},
   bkFile:el=>{const f=el.files&&el.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{UI.bkIn=String(r.result);render();A.checkImport();};r.readAsText(f);}
