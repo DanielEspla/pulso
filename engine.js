@@ -275,6 +275,8 @@ function basicoOK(p,f){
   const r=p.restr||[];const k=NO_BASICO[f.id];
   return (k==="veg"&&(r.includes("vegetariano")||r.includes("vegano")))||(k==="lac"&&(r.includes("sin_lactosa")||r.includes("vegano")))||(k==="glu"&&r.includes("sin_gluten"));
 }
+/* Permitido sin contar los gustos (restricciones y alimentos básicos) */
+function allowedNoPref(p,f){const b=banned(p);return !f.t.some(t=>b.has(t))&&basicoOK({...p,prefs:{}},f);}
 function allowed(p,f){const b=banned(p);return !f.t.some(t=>b.has(t))&&(p.prefs||{})[f.id]!==-1&&basicoOK(p,f);}
 function cands(p,role,slot,extra){
   const L=FOODS.filter(f=>f.r===role&&f.s.includes(slot)&&allowed(p,f)&&(!extra||extra(f)));

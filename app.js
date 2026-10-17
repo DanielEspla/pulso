@@ -431,6 +431,9 @@ function viewAlimentos(p){
   <div class="card stack how"><p><b>Cómo funciona.</b> Toca un alimento para marcarlo como que te gusta: puedes marcar todos los que quieras de cada grupo. La ✕ lo descarta y no saldrá nunca.</p>
     <label class="chk"><input type="checkbox" data-c="basico" id="basico" ${p.basico!==false?"checked":""}><span><b>Solo alimentos de siempre</b><br><span class="hint">${p.basico!==false?"Fuera del menú: seitán, tofu, tempeh, quinoa, cuscús, kéfir, skyr, semillas y otros poco habituales. Si alguno te gusta, márcalo y vuelve a entrar.":"Cualquier alimento de la lista puede salir en el menú."}</span></span></label>
     <label class="chk"><input type="checkbox" data-c="soloGusta" id="solo_gusta" ${p.soloGusta?"checked":""}><span><b>Usar solo lo que marco</b><br><span class="hint">${p.soloGusta?"El menú solo usa lo marcado. Si en algún grupo no marcas nada, usa lo más habitual de ese grupo.":"Ahora lo marcado sale mucho más, y lo no marcado puede salir de vez en cuando para dar variedad."}</span></span></label></div>
+  ${(p.restr||[]).length?`<div class="alert warn"><span class="dot"></span><div><b>Restricciones activas: ${(p.restr||[]).map(k=>RESTRICTIONS.find(r=>r[0]===k)[1]).join(", ")}</b>Excluyen esos alimentos aunque los marques. ${(p.restr||[]).map(k=>`<button class="btn sm" style="margin:6px 6px 0 0" data-a="restrOff" data-k="${k}">Quitar «${RESTRICTIONS.find(r=>r[0]===k)[1]}»</button>`).join("")}</div></div>`:""}
+  <div class="card stack"><span class="lbl">Marcado rápido por tipo</span><p class="small muted">Toca un tipo para marcar todos sus alimentos de siempre. Luego, dentro de cada uno, quita los que no quieras.</p>
+    <div class="chips wrap">${CATS.map(([k,t])=>{const L=FOODS.filter(f=>f.cat===k&&allowedNoPref(p,f));if(!L.length)return "";const all=L.every(f=>p.prefs[f.id]===1);const some=L.some(f=>p.prefs[f.id]===1);return `<button class="${all?"on":some?"half":""}" data-a="catLike" data-k="${k}">${all?"✓ ":some?"◐ ":""}${t}</button>`;}).join("")}</div></div>
   <input class="inp" type="search" id="fsearch" placeholder="Buscar alimento" value="${esc(UI.q)}" data-c="search">
   ${q?"":`<div class="catbar" role="tablist">${GROUPS.map(gr=>gr.cats.map(k=>{const n=likedIn(k);return `<button role="tab" class="${UI.cat===k?"on":""}" style="--gc:${gr.col}" data-a="cat" data-k="${k}">${CATS.find(c=>c[0]===k)[1]}${n?` <span class="cnt">${n}</span>`:""}</button>`;}).join("")).join("")}</div>
   <div class="row between"><div><h2 style="margin:0">${cat[1]}</h2><span class="small muted">${likedIn(UI.cat)} de ${nIn(UI.cat)} marcados</span></div>
@@ -617,9 +620,11 @@ const A={
   lgGo:()=>{UI.sheet=null;UI.lgShow=null;UI.view="logros";render();window.scrollTo(0,0);},
   lgSumClose:()=>{const p=P();p.logros=p.logros||{seen:{}};p.logros.sumClosed=addDays(weekStart(today()),-7);commit();},
   uiSet:el=>{S.ui=S.ui||{};S.ui[el.dataset.k]=el.dataset.v;save();render();},
+  catLike:el=>{const p=P();const k=el.dataset.k;const L=FOODS.filter(f=>f.cat===k&&allowedNoPref(p,f));const all=L.every(f=>p.prefs[f.id]===1);L.forEach(f=>{if(all)delete p.prefs[f.id];else p.prefs[f.id]=1;});UI.cat=k;commit();},
+  restrOff:el=>{const p=P();p.restr=(p.restr||[]).filter(x=>x!==el.dataset.k);commit();toast("Restricción quitada.");},
   medToggle:()=>{UI.medOpen=!UI.medOpen;render();},
   pref:el=>{const p=P();const v=+el.dataset.v;if(v===0)delete p.prefs[el.dataset.id];else p.prefs[el.dataset.id]=v;commit();},
-  prefAll:el=>{const p=P();const v=+el.dataset.v;const ban=banned(p);FOODS.filter(f=>f.cat===UI.cat&&!f.t.some(t=>ban.has(t))).forEach(f=>{if(v===0)delete p.prefs[f.id];else p.prefs[f.id]=v;});commit();},
+  prefAll:el=>{const p=P();const v=+el.dataset.v;FOODS.filter(f=>f.cat===UI.cat&&(v!==1||allowedNoPref(p,f))).forEach(f=>{if(v===0)delete p.prefs[f.id];else p.prefs[f.id]=v;});commit();},
   editT:()=>{UI.sheet=sheetEditT;render();},
   recal:el=>{UI.pfDirty=false;P().recalcPending=false;const p=P();const ad=adaptiveTDEE(p);const t=computeTargets(p,el.dataset.src==="real"&&ad?{tdee:ad.tdee}:{});
     logTargets(p,t,el.dataset.src==="real"?`Recalibrado con gasto real (${ad.tdee} kcal)`:"Recalculado con la fórmula","recal");commit();toast(`Nuevo objetivo: ${p.targets.kcal} kcal`);},

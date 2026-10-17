@@ -384,3 +384,5 @@ details.catinfo summary{cursor:pointer;color:var(--accent-t)}
 @media (min-width:960px){.genbar{bottom:16px}}
 
 .frow.nb .fsel{opacity:.6}
+
+.chips button.half{border-color:var(--accent);color:var(--accent-t)}
