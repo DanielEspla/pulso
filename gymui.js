@@ -13,10 +13,12 @@ function viewEntreno(p){
   if(UI.gsum)return viewGymSummary(p);
   if(g.draft)return viewRunner(p);
   if(!g.setup.hasOwnProperty("tecnicas"))g.setup.tecnicas=g.setup.nivel==="avanzado";
+  if(!(S.ui&&S.ui.gfull))return gymSimple(p);
   const tabs=[["hoy","Hoy"],["plan","Plan"],["progreso","Progreso"],["ejercicios","Ejercicios"]];
   const t=UI.gtab||"hoy";
   const body={hoy:gymHoy,plan:gymPlan,progreso:gymProgreso,ejercicios:gymEjercicios}[t](p);
   return `<div class="head"><div><h1>Entreno</h1><p class="sub">${WEEK_NAMES[mesoWeek(p)]} · ${g.plan.sessions.length} sesiones por semana</p></div></div>
+  <button class="btn ghost sm" style="margin-bottom:10px" data-a="gFull" data-v="0">← Vista sencilla: solo lo de hoy</button>
   <div class="seg" style="margin-bottom:16px">${tabs.map(([k,l])=>`<button class="${t===k?"on":""}" data-a="gtab" data-k="${k}">${l}</button>`).join("")}</div>${body}`;
 }
 
@@ -357,3 +359,29 @@ document.addEventListener("input",e=>{
   const es=e.target.closest('[data-c="esearch"]');if(es)CHG.esearch(es);
 });
 
+
+/* ---- Vista sencilla: «hoy toca esto» ---- */
+function gymSimple(p){
+  const g=G(p);const td=todayGym(p);const n=g.plan.sessions.length;
+  const idx=UI.gsel!=null?UI.gsel:td.idx;const ses=g.plan.sessions[idx];const prev=sessionPreview(p,idx,"normal");
+  const last=g.log.slice().reverse().find(l=>l.date===today());
+  const nx=g.plan.sessions[g.next%n];
+  const lastW=id=>{const h=exHistory(p,id);if(!h.length)return "";const t=Math.max(...h[h.length-1].sets.map(s=>s.w||0));return t?` · última vez ${nf(t,t%1?1:0)} kg`:"";};
+  const series=prev.reduce((a,x)=>a+x.sets,0);
+  const more=`<button class="btn wide" data-a="gFull" data-v="1">Plan, progreso y más opciones</button>`;
+  if(last&&UI.gsel==null)return `<div class="head"><div><h1>Entreno</h1></div></div><div class="stack">
+    <div class="hero"><span class="lbl acc">✓ Hoy ya has entrenado</span><h2 class="disp">${esc(last.name)}</h2><p class="muted">${sessionStats(p,last).sets} series en ${last.min} minutos. Guardado.</p><p>La próxima vez toca: <b>${esc(nx.name)}</b>.</p></div>
+    ${typeof cardioCard==="function"?cardioCard(p):""}${more}</div>`;
+  return `<div class="head"><div><h1>Entreno</h1><p class="sub">${td.isDay||UI.gsel!=null?"":"Hoy es día de descanso en tu semana. Puedes entrenar igualmente."}</p></div></div>
+  <div class="stack">
+  ${typeof fixedHoyAlert==="function"?fixedHoyAlert(p):""}
+  <div class="hero"><span class="lbl acc">${idx===g.next%n?"Hoy toca":"Has elegido"}</span><h2 class="disp">${esc(ses.name)}</h2>
+    <p class="muted">${prev.length} ejercicios · ${series} series · unos ${sessionMinutes(p,idx)} minutos</p>
+    <ol class="simple-ex">${prev.map(x=>`<li><b>${esc(EXM[x.ex].name)}</b><span class="small muted">${x.sets} series de ${x.lo}-${x.hi}${EXM[x.ex].rep==="s"?" s":""}${lastW(x.ex)}</span></li>`).join("")}</ol>
+    <button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Empezar</button>
+    ${n>1?`<div class="row" style="gap:8px;flex-wrap:nowrap"><button class="btn sm" style="flex:1" data-a="gsel" data-i="${(idx-1+n)%n}">← Otra anterior</button><button class="btn sm" style="flex:1" data-a="gsel" data-i="${(idx+1)%n}">Otra siguiente →</button></div>`:""}
+    ${idx!==g.next%n?`<button class="btn ghost sm" style="align-self:center" data-a="gsel" data-i="${g.next%n}">Volver a la que toca</button>`:""}
+  </div>
+  ${more}</div>`;
+}
+Object.assign(A,{gFull:el=>{S.ui=S.ui||{};S.ui.gfull=el.dataset.v==="1";save();if(S.ui.gfull)UI.gtab="hoy";render();window.scrollTo(0,0);}});

@@ -386,3 +386,6 @@ details.catinfo summary{cursor:pointer;color:var(--accent-t)}
 .frow.nb .fsel{opacity:.6}
 
 .chips button.half{border-color:var(--accent);color:var(--accent-t)}
+
+ol.simple-ex{margin:6px 0 4px;padding-left:22px;display:flex;flex-direction:column;gap:10px}
+ol.simple-ex li span{display:block}
