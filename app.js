@@ -330,6 +330,7 @@ function viewDieta(p){
   const ws=UI.menuWeek;const menu=p.menus[ws];
   const prefsSet=Object.keys(p.prefs||{}).length;
   if(!menu)return `<div class="head"><div><h1>Dieta</h1><p class="sub">${MEAL_TXT[p.comidas]} · ${p.targets.kcal} kcal</p></div>${weekNav(ws,"menuW")}</div>
+    <button class="btn wide" style="margin-bottom:14px" data-a="dietaOpen">Elegir tipo de dieta y comidas</button>
     <div class="card empty"><h2>Sin menú para la semana del ${fdate(ws)}</h2><p class="muted">La app monta 7 días con tus calorías y macros, rotando los alimentos que te gustan y respetando tus restricciones.</p>
     ${!prefsSet?`<p class="small muted">Todavía no has marcado gustos: usará todos los alimentos permitidos.</p><div class="row" style="justify-content:center"><button class="btn" data-a="go" data-v="alimentos">Elegir alimentos primero</button><button class="btn pri" data-a="genWeek">Generar menú</button></div>`:`<button class="btn pri" data-a="genWeek">Generar menú de la semana</button>`}</div>`;
   const di=UI.diaIdx;const day=menu.days[di];const date=addDays(ws,di);
@@ -339,6 +340,7 @@ function viewDieta(p){
   const hrs=mealHours(p,day.meals.length);
   const confirmRegen=UI.confirm==="regenWeek";
   return `<div class="head"><div><h1>Dieta</h1><p class="sub">${DIET_STYLES[p.dietaEstilo||"equilibrada"][0]} · ${MEAL_TXT[menu.comidas]} · ${menu.targets.kcal} kcal de media${ayunoTxt(p)?" · "+ayunoTxt(p):""}</p></div>${weekNav(ws,"menuW")}</div>
+  <button class="btn pri wide" style="margin-bottom:14px" data-a="dietaOpen">Cambiar mi dieta</button>
   <div class="stack">
   ${needNew?`<div class="alert warn"><span class="dot"></span><div><b>Has cambiado el número de comidas</b>Este menú es de ${MEAL_TXT[menu.comidas]}. Rehazlo para aplicar los cambios.<div style="margin-top:8px"><button class="btn sm pri" data-a="genWeek">Rehacer el menú</button></div></div></div>`:""}
   ${changed?`<div class="alert warn"><span class="dot"></span><div><b>Tu objetivo o tu forma de comer han cambiado</b>El menú está hecho con la configuración anterior. <div style="margin-top:8px"><button class="btn sm pri" data-a="retarget">Ajustar cantidades a ${p.targets.kcal} kcal</button></div></div></div>`:""}
@@ -622,6 +624,13 @@ const A={
   uiSet:el=>{S.ui=S.ui||{};S.ui[el.dataset.k]=el.dataset.v;save();render();},
   catLike:el=>{const p=P();const k=el.dataset.k;const L=FOODS.filter(f=>f.cat===k&&allowedNoPref(p,f));const all=L.every(f=>p.prefs[f.id]===1);L.forEach(f=>{if(all)delete p.prefs[f.id];else p.prefs[f.id]=1;});UI.cat=k;commit();},
   restrOff:el=>{const p=P();p.restr=(p.restr||[]).filter(x=>x!==el.dataset.k);commit();toast("Restricción quitada.");},
+  dietaOpen:()=>{UI.sheet=sheetDieta;render();},
+  dCfg:el=>{const p=P();const k=el.dataset.k;const v=el.dataset.val;p[k]=v;if(k==="dietaEstilo"&&v==="keto"){p.reparto="igual";if(!p.recarga)p.recarga=1;}syncGoal(p);const t=computeTargets(p);if(["kcal","p","f","c"].some(x=>t[x]!==p.targets[x]))logTargets(p,t,k==="dietaEstilo"?`Estilo de dieta: ${DIET_STYLES[v][0]}`:"Cambio de comidas","recal");save();render();},
+  dAyuno:el=>{const p=P();const on=el.dataset.v==="1";p.ayuno={...(p.ayuno||{ini:"13:00",h:8}),on};if(on&&!["2","3a"].includes(p.comidas))p.comidas="3a";if(!on&&p.comidas==="3a")p.comidas="3";save();render();},
+  dGo:el=>{UI.sheet=null;UI.view=el.dataset.v;render();window.scrollTo(0,0);},
+  dApply:()=>{const p=P();const ws=weekStart(today());const nm=buildWeek(p,ws);const old=p.menus[ws];const ti=(new Date().getDay()+6)%7;
+    if(old){for(let i=0;i<ti;i++)nm.days[i]=old.days[i];Object.keys(p.done).forEach(k=>{const d=k.split(":")[0];if(weekStart(d)===ws&&d>=today())delete p.done[k];});}
+    p.menus[ws]=nm;delete p.menus[addDays(ws,7)];UI.sheet=null;UI.view="dieta";UI.menuWeek=ws;commit();toast("Menú rehecho desde hoy.");},
   medToggle:()=>{UI.medOpen=!UI.medOpen;render();},
   pref:el=>{const p=P();const v=+el.dataset.v;if(v===0)delete p.prefs[el.dataset.id];else p.prefs[el.dataset.id]=v;commit();},
   prefAll:el=>{const p=P();const v=+el.dataset.v;FOODS.filter(f=>f.cat===UI.cat&&(v!==1||allowedNoPref(p,f))).forEach(f=>{if(v===0)delete p.prefs[f.id];else p.prefs[f.id]=v;});commit();},
@@ -673,6 +682,17 @@ const SUB={
     UI.pfDirty=false;
     UI.err=null;Object.assign(p,d);syncGoal(p);const t=computeTargets(p);logTargets(p,t,"Cambio de perfil","recal");commit();toast(`Guardado. Objetivo: ${p.targets.kcal} kcal`);}
 };
+function sheetDieta(){
+  const p=P();const ay=p.ayuno&&p.ayuno.on;
+  return `<div class="sheet-h"><div><span class="lbl">Tu dieta</span><h2>Cambiar cómo comes</h2></div><button class="btn ghost sm" data-a="closeSheet">${ic("x",'width="18"')}</button></div>
+  <div class="stack">
+  <div class="field"><span>1. Tipo de dieta</span>${choiceCards(DIET_STYLES,p.dietaEstilo,"dCfg","dietaEstilo","e_",recStyle(p.meta,p.deporte))}</div>
+  <div class="field"><span>2. Comidas al día</span><div class="seg">${(ay?[["2","2"],["3a","3"]]:[["2","2"],["3","3"],["4","4"],["5","5"]]).map(([k,t])=>`<button class="${p.comidas===k?"on":""}" data-a="dCfg" data-k="comidas" data-val="${k}">${t}</button>`).join("")}</div></div>
+  <div class="field"><span>3. Ayuno intermitente</span><div class="seg"><button class="${!ay?"on":""}" data-a="dAyuno" data-v="0">No</button><button class="${ay?"on":""}" data-a="dAyuno" data-v="1">Sí, ventana de 8 horas</button></div></div>
+  <div class="field"><span>4. Lo que te gusta y lo que no</span><button class="btn wide" data-a="dGo" data-v="alimentos">Elegir alimentos</button></div>
+  <button class="btn pri wide big-btn" data-a="dApply">Aplicar y rehacer el menú desde hoy</button>
+  <p class="small muted">Los días que ya han pasado no se tocan. Tu objetivo y tus calorías se cambian en Objetivos.</p></div>`;
+}
 function applyCfg(p,motivo){
   syncGoal(p);const t=computeTargets(p);
   if(["kcal","p","f","c"].some(k=>t[k]!==p.targets[k]))logTargets(p,t,motivo||"Cambio de configuración","recal");
