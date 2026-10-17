@@ -39,7 +39,7 @@ const I={
   chev:'<path d="m9 6 6 6-6 6"/>',book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/><path d="M9 7h6"/>',chevl:'<path d="m15 6-6 6 6 6"/>'
 };
 const ic=(n,s="")=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ${s}>${I[n]}</svg>`;
-const NAV=[["inicio","Inicio","home"],["entreno","Entreno","dumb"],["registro","Registro","scale"],["dieta","Dieta","plate"],["compra","Compra","cart"],["cocina","Batch cooking","pot"],["alimentos","Alimentos","leaf"],["objetivos","Objetivos","target"],["perfil","Perfil","user"],["copias","Copia de seguridad","save"],["aprende","Por qué Afina","book"]];
+const NAV=[["inicio","Inicio","home"],["entreno","Entreno","dumb"],["registro","Registro","scale"],["dieta","Dieta y alimentos","plate"],["compra","Compra","cart"],["cocina","Batch cooking","pot"],["objetivos","Objetivos","target"],["perfil","Perfil","user"],["copias","Copia de seguridad","save"],["aprende","Por qué Afina","book"]];
 
 /* ===== Render principal ===== */
 let _rendering=false;
@@ -67,10 +67,10 @@ function _render(){
   else{
     const v={inicio:viewInicio,registro:viewRegistro,dieta:viewDieta,compra:viewCompra,cocina:viewCocina,alimentos:viewAlimentos,objetivos:viewObjetivos,perfil:viewPerfil,copias:viewCopias,mas:viewMas,logros:viewLogros,aprende:viewAprende,entreno:viewEntreno}[UI.view]||viewInicio;
     body=`<aside class="side"><div class="brand"><b>Afina</b><span class="muted small">${SLOGAN}</span></div>
-      ${NAV.map(([k,t,i])=>`<button class="navi ${UI.view===k?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}
+      ${NAV.map(([k,t,i])=>`<button class="navi ${UI.view===k||(k==="dieta"&&UI.view==="alimentos")?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}
       <div class="who"><span class="lbl">Perfil</span><div>${esc(p.nombre)}</div></div></aside>
       <main class="main">${v(p)}<p class="disc">Las estimaciones de gasto y grasa corporal son orientativas y no sustituyen la valoración de un profesional sanitario.</p></main>
-      <nav class="bnav">${[["inicio","Inicio","home"],["entreno","Entreno","dumb"],["dieta","Dieta","plate"],["registro","Registro","scale"],["mas","Más","more"]].map(([k,t,i])=>`<button class="${UI.view===k||(k==="mas"&&["compra","cocina","alimentos","objetivos","perfil","copias","aprende"].includes(UI.view))?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}</nav>`;
+      <nav class="bnav">${[["inicio","Inicio","home"],["entreno","Entreno","dumb"],["dieta","Dieta","plate"],["registro","Registro","scale"],["mas","Más","more"]].map(([k,t,i])=>`<button class="${UI.view===k||(k==="dieta"&&UI.view==="alimentos")||(k==="mas"&&["compra","cocina","objetivos","perfil","copias","aprende"].includes(UI.view))?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}</nav>`;
   }
   root.innerHTML=`<div class="shell">${body}</div>${UI.sheet?`<div class="overlay" data-a="closeSheet"><div class="sheet" data-stop="1">${UI.sheet()}</div></div>`:""}`;
 }
@@ -106,7 +106,7 @@ function viewOnboarding(){
     ${d.ayunoOn?`<div class="grid2"><label class="field"><span>Primera comida</span><input class="inp" type="time" name="ayunoIni" id="ob_ayunoIni" value="${esc(d.ayunoIni)}"></label><label class="field"><span>Horas de ventana</span><input class="inp num" type="number" name="ayunoH" id="ob_ayunoH" value="${d.ayunoH}" min="4" max="12"></label></div>`:""}
     <div class="field"><span>Comidas al día</span>${seg("comidas",(d.ayunoOn?[["2","2"],["3a","3"]]:[["2","2"],["3","3"],["3a","3 sin desayuno"],["4","4"],["5","5"]]))}</div>
     ${d.sexo==="M"?`<label class="chk"><input type="checkbox" name="embarazo" id="ob_embarazo" ${d.embarazo?"checked":""}> Embarazo o lactancia</label>`:""}</div>`;}
-  if(step===4)html=`<h2>Restricciones</h2><p class="muted" style="margin:6px 0 18px">Esto no son gustos: los alimentos afectados no aparecerán nunca. Los gustos los marcas después.</p>
+  if(step===4)html=`<h2>Restricciones</h2><p class="muted" style="margin:6px 0 18px">Esto no son gustos: los alimentos afectados no aparecerán nunca. Marca solo lo que de verdad no comes (por ejemplo, si eres vegetariano). Si no tienes ninguna, deja todo sin marcar.</p>
     <div class="grid2">${RESTRICTIONS.map(([k,t])=>`<label class="chk"><input type="checkbox" name="restr" value="${k}" ${d.restr.includes(k)?"checked":""}> ${t}</label>`).join("")}</div>`;
   if(step===5){
     const prof=syncGoal(obToProfile(d));const t=computeTargets(prof);const tw=targetWeight(prof);
@@ -418,30 +418,38 @@ function viewCocina(p){
 /* ===== Alimentos y preferencias ===== */
 function viewAlimentos(p){
   const ban=banned(p);const q=UI.q.trim().toLowerCase();
-  const list=q?FOODS.filter(f=>f.name.toLowerCase().includes(q)):FOODS.filter(f=>f.cat===UI.cat);
+  /* Solo alimentos de siempre: los poco habituales ni se ven (salvo búsqueda, marcados o si una restricción los hace necesarios) */
+  const vis=f=>UI.raros||basicoOK(p,f);
+  const catVis=k=>FOODS.some(f=>f.cat===k&&vis(f));
+  if(!catVis(UI.cat))UI.cat=CATS.map(c=>c[0]).find(catVis)||UI.cat;
+  const ocultos=FOODS.filter(f=>!basicoOK(p,f)).length;
+  const banBy=f=>RESTRICTIONS.find(r=>(p.restr||[]).includes(r[0])&&r[2].some(t=>f.t.includes(t)));
+  const vegR=(p.restr||[]).filter(k=>k==="vegetariano"||k==="vegano");
+  const list=q?FOODS.filter(f=>f.name.toLowerCase().includes(q)):FOODS.filter(f=>f.cat===UI.cat&&vis(f));
   const cnt=v=>Object.values(p.prefs).filter(x=>x===v).length;
   const likedIn=c=>FOODS.filter(f=>f.cat===c&&p.prefs[f.id]===1).length;
-  const nIn=c=>FOODS.filter(f=>f.cat===c&&!f.t.some(t=>ban.has(t))).length;
+  const nIn=c=>FOODS.filter(f=>f.cat===c&&!f.t.some(t=>ban.has(t))&&(UI.raros||basicoOK(p,f))).length;
   const cat=CATS.find(c=>c[0]===UI.cat);const g=groupOfCat(UI.cat);
   const row=f=>{const b=f.t.some(t=>ban.has(t));const v=p.prefs[f.id]??0;
-    if(b)return `<div class="frow ban"><span class="fck"></span><div class="fnm"><b>${esc(f.name)}</b><span class="small muted">Excluido por tus restricciones</span></div></div>`;
+    if(b){const r=banBy(f);return `<div class="frow ban"><span class="fck"></span><div class="fnm"><b>${esc(f.name)}</b><span class="small muted">Bloqueado por la restricción «${r?r[1]:"activa"}»</span></div>${r?`<button class="btn sm" data-a="restrOff" data-k="${r[0]}">Quitar «${r[1]}»</button>`:""}</div>`;}
     const nb=!basicoOK(p,f)&&v!==-1;
     return `<div class="frow ${v===1?"like":v===-1?"no":""} ${nb?"nb":""}"><button class="fsel" data-a="pref" data-id="${f.id}" data-v="${v===1?0:1}" aria-pressed="${v===1}"><span class="fck">${v===1?"✓":""}</span><span class="fnm"><b>${esc(f.name)}</b><span class="small muted num">${nb?"No es básico: no sale salvo que lo marques · ":""}${f.kcal} kcal · P ${f.p} · G ${f.f} · HC ${f.c}${f.u?` · 1 ${f.un} ≈ ${f.u} g`:""}</span></span></button>
     <button class="fno ${v===-1?"on":""}" data-a="pref" data-id="${f.id}" data-v="${v===-1?0:-1}" aria-label="${v===-1?"Volver a permitir":"No quiero"} ${esc(f.name)}">${v===-1?"No ✕":"✕"}</button></div>`;};
-  return `<div class="head"><div><h1>Alimentos</h1><p class="sub">${cnt(1)} te gustan · ${cnt(-1)} descartados · ${FOODS.length} en total</p></div></div>
+  return `<div class="head"><div><h1>Mis alimentos</h1><p class="sub">${cnt(1)} te gustan · ${cnt(-1)} descartados · ${FOODS.length} en total</p></div></div>
   <div class="stack">
+  ${(p.restr||[]).length?`<div class="alert ${vegR.length?"bad":"warn"}"><span class="dot"></span><div><b>Restricción activa: ${(p.restr||[]).map(k=>RESTRICTIONS.find(r=>r[0]===k)[1]).join(", ")}</b>${vegR.length?"Por eso no puedes marcar carne ni pescado, y por eso aparecen tofu o seitán. Si no eres vegetariano, quítala con este botón.":"Excluye esos alimentos aunque los marques."}<br>${(p.restr||[]).map(k=>`<button class="btn sm pri" style="margin:8px 6px 0 0" data-a="restrOff" data-k="${k}">Quitar «${RESTRICTIONS.find(r=>r[0]===k)[1]}»</button>`).join("")}</div></div>`:""}
   <div class="card stack how"><p><b>Cómo funciona.</b> Toca un alimento para marcarlo como que te gusta: puedes marcar todos los que quieras de cada grupo. La ✕ lo descarta y no saldrá nunca.</p>
     <label class="chk"><input type="checkbox" data-c="basico" id="basico" ${p.basico!==false?"checked":""}><span><b>Solo alimentos de siempre</b><br><span class="hint">${p.basico!==false?"Fuera del menú: seitán, tofu, tempeh, quinoa, cuscús, kéfir, skyr, semillas y otros poco habituales. Si alguno te gusta, márcalo y vuelve a entrar.":"Cualquier alimento de la lista puede salir en el menú."}</span></span></label>
     <label class="chk"><input type="checkbox" data-c="soloGusta" id="solo_gusta" ${p.soloGusta?"checked":""}><span><b>Usar solo lo que marco</b><br><span class="hint">${p.soloGusta?"El menú solo usa lo marcado. Si en algún grupo no marcas nada, usa lo más habitual de ese grupo.":"Ahora lo marcado sale mucho más, y lo no marcado puede salir de vez en cuando para dar variedad."}</span></span></label></div>
-  ${(p.restr||[]).length?`<div class="alert warn"><span class="dot"></span><div><b>Restricciones activas: ${(p.restr||[]).map(k=>RESTRICTIONS.find(r=>r[0]===k)[1]).join(", ")}</b>Excluyen esos alimentos aunque los marques. ${(p.restr||[]).map(k=>`<button class="btn sm" style="margin:6px 6px 0 0" data-a="restrOff" data-k="${k}">Quitar «${RESTRICTIONS.find(r=>r[0]===k)[1]}»</button>`).join("")}</div></div>`:""}
   <div class="card stack"><span class="lbl">Marcado rápido por tipo</span><p class="small muted">Toca un tipo para marcar todos sus alimentos de siempre. Luego, dentro de cada uno, quita los que no quieras.</p>
-    <div class="chips wrap">${CATS.map(([k,t])=>{const L=FOODS.filter(f=>f.cat===k&&allowedNoPref(p,f));if(!L.length)return "";const all=L.every(f=>p.prefs[f.id]===1);const some=L.some(f=>p.prefs[f.id]===1);return `<button class="${all?"on":some?"half":""}" data-a="catLike" data-k="${k}">${all?"✓ ":some?"◐ ":""}${t}</button>`;}).join("")}</div></div>
+    <div class="chips wrap">${CATS.map(([k,t])=>{const L=FOODS.filter(f=>f.cat===k&&allowedNoPref(p,f)&&vis(f));if(!L.length)return "";const all=L.every(f=>p.prefs[f.id]===1);const some=L.some(f=>p.prefs[f.id]===1);return `<button class="${all?"on":some?"half":""}" data-a="catLike" data-k="${k}">${all?"✓ ":some?"◐ ":""}${t}</button>`;}).join("")}</div></div>
   <input class="inp" type="search" id="fsearch" placeholder="Buscar alimento" value="${esc(UI.q)}" data-c="search">
-  ${q?"":`<div class="catbar" role="tablist">${GROUPS.map(gr=>gr.cats.map(k=>{const n=likedIn(k);return `<button role="tab" class="${UI.cat===k?"on":""}" style="--gc:${gr.col}" data-a="cat" data-k="${k}">${CATS.find(c=>c[0]===k)[1]}${n?` <span class="cnt">${n}</span>`:""}</button>`;}).join("")).join("")}</div>
+  ${q?"":`<div class="catbar" role="tablist">${GROUPS.map(gr=>gr.cats.filter(catVis).map(k=>{const n=likedIn(k);return `<button role="tab" class="${UI.cat===k?"on":""}" style="--gc:${gr.col}" data-a="cat" data-k="${k}">${CATS.find(c=>c[0]===k)[1]}${n?` <span class="cnt">${n}</span>`:""}</button>`;}).join("")).join("")}</div>
   <div class="row between"><div><h2 style="margin:0">${cat[1]}</h2><span class="small muted">${likedIn(UI.cat)} de ${nIn(UI.cat)} marcados</span></div>
     <div class="row" style="gap:6px"><button class="btn sm" data-a="prefAll" data-v="1">Marcar todos</button><button class="btn sm ghost" data-a="prefAll" data-v="0">Quitar marcas</button></div></div>
   <details class="catinfo" style="--gc:${g.col}"><summary class="small">Por qué ${esc(cat[1].toLowerCase())} y qué aporta</summary><p class="small">${g.d}</p><p class="small muted">${CAT_INFO[UI.cat]||""}</p></details>`}
   <div class="flist">${list.map(row).join("")||`<p class="muted">Nada coincide con la búsqueda.</p>`}</div>
+  ${p.basico!==false&&ocultos&&!q?`<p class="small muted" style="text-align:center">${UI.raros?`Estás viendo también los poco habituales. <button class="linklike" data-a="raros" data-v="0">Ocultarlos</button>`:`Hay ${ocultos} alimentos poco habituales ocultos (seitán, tofu, quinoa…). <button class="linklike" data-a="raros" data-v="1">Verlos</button>`}</p>`:""}
   <details class="card"><summary><b>Restricciones</b><span class="small muted"> · ${(p.restr||[]).length?(p.restr||[]).map(k=>RESTRICTIONS.find(r=>r[0]===k)[1]).join(", "):"ninguna"}</span></summary>
     <p class="small muted" style="margin:8px 0">Excluyen alimentos por completo, aunque los hayas marcado.</p>
     <div class="grid2">${RESTRICTIONS.map(([k,t])=>`<label class="chk"><input type="checkbox" data-c="restr" data-k="${k}" id="rs_${k}" ${(p.restr||[]).includes(k)?"checked":""}> ${t}</label>`).join("")}</div></details>
@@ -560,7 +568,7 @@ function periTag(p,day,mi){
   return mi===pre?"Antes de entrenar":mi===post?"Después de entrenar":"";
 }
 function viewMas(){
-  const it=[["logros","Logros","Medallas, racha y récords","medal"],["compra","Compra","Lista de la semana","cart"],["cocina","Batch cooking","Qué cocinar y cómo conservarlo","pot"],["alimentos","Alimentos","Gustos y restricciones","leaf"],["objetivos","Objetivos","Calorías, macros y pausas","target"],["perfil","Perfil","Datos, perfiles y borrado","user"],["copias","Copia de seguridad","Guardar y restaurar","save"],["aprende","Por qué Afina","Cómo funciona tu cuerpo y qué buscamos","book"]];
+  const it=[["logros","Logros","Medallas, racha y récords","medal"],["compra","Compra","Lista de la semana","cart"],["cocina","Batch cooking","Qué cocinar y cómo conservarlo","pot"],["objetivos","Objetivos","Calorías, macros y pausas","target"],["perfil","Perfil","Datos, perfiles y borrado","user"],["copias","Copia de seguridad","Guardar y restaurar","save"],["aprende","Por qué Afina","Cómo funciona tu cuerpo y qué buscamos","book"]];
   return `<div class="head"><h1>Más</h1></div>${displayCard()}<div class="mas" style="margin-top:16px">${it.map(([k,t,d,i])=>`<button data-a="go" data-v="${k}">${ic(i)}<b>${t}</b><span>${d}</span></button>`).join("")}</div>`;
 }
 
@@ -622,7 +630,8 @@ const A={
   lgGo:()=>{UI.sheet=null;UI.lgShow=null;UI.view="logros";render();window.scrollTo(0,0);},
   lgSumClose:()=>{const p=P();p.logros=p.logros||{seen:{}};p.logros.sumClosed=addDays(weekStart(today()),-7);commit();},
   uiSet:el=>{S.ui=S.ui||{};S.ui[el.dataset.k]=el.dataset.v;save();render();},
-  catLike:el=>{const p=P();const k=el.dataset.k;const L=FOODS.filter(f=>f.cat===k&&allowedNoPref(p,f));const all=L.every(f=>p.prefs[f.id]===1);L.forEach(f=>{if(all)delete p.prefs[f.id];else p.prefs[f.id]=1;});UI.cat=k;commit();},
+  raros:el=>{UI.raros=el.dataset.v==="1";render();},
+  catLike:el=>{const p=P();const k=el.dataset.k;const L=FOODS.filter(f=>f.cat===k&&allowedNoPref(p,f)&&(UI.raros||basicoOK(p,f)));const all=L.every(f=>p.prefs[f.id]===1);L.forEach(f=>{if(all)delete p.prefs[f.id];else p.prefs[f.id]=1;});UI.cat=k;commit();},
   restrOff:el=>{const p=P();p.restr=(p.restr||[]).filter(x=>x!==el.dataset.k);commit();toast("Restricción quitada.");},
   dietaOpen:()=>{UI.sheet=sheetDieta;render();},
   dCfg:el=>{const p=P();const k=el.dataset.k;const v=el.dataset.val;p[k]=v;if(k==="dietaEstilo"&&v==="keto"){p.reparto="igual";if(!p.recarga)p.recarga=1;}syncGoal(p);const t=computeTargets(p);if(["kcal","p","f","c"].some(x=>t[x]!==p.targets[x]))logTargets(p,t,k==="dietaEstilo"?`Estilo de dieta: ${DIET_STYLES[v][0]}`:"Cambio de comidas","recal");save();render();},
@@ -633,7 +642,7 @@ const A={
     p.menus[ws]=nm;delete p.menus[addDays(ws,7)];UI.sheet=null;UI.view="dieta";UI.menuWeek=ws;commit();toast("Menú rehecho desde hoy.");},
   medToggle:()=>{UI.medOpen=!UI.medOpen;render();},
   pref:el=>{const p=P();const v=+el.dataset.v;if(v===0)delete p.prefs[el.dataset.id];else p.prefs[el.dataset.id]=v;commit();},
-  prefAll:el=>{const p=P();const v=+el.dataset.v;FOODS.filter(f=>f.cat===UI.cat&&(v!==1||allowedNoPref(p,f))).forEach(f=>{if(v===0)delete p.prefs[f.id];else p.prefs[f.id]=v;});commit();},
+  prefAll:el=>{const p=P();const v=+el.dataset.v;FOODS.filter(f=>f.cat===UI.cat&&(v!==1||(allowedNoPref(p,f)&&(UI.raros||basicoOK(p,f))))).forEach(f=>{if(v===0)delete p.prefs[f.id];else p.prefs[f.id]=v;});commit();},
   editT:()=>{UI.sheet=sheetEditT;render();},
   recal:el=>{UI.pfDirty=false;P().recalcPending=false;const p=P();const ad=adaptiveTDEE(p);const t=computeTargets(p,el.dataset.src==="real"&&ad?{tdee:ad.tdee}:{});
     logTargets(p,t,el.dataset.src==="real"?`Recalibrado con gasto real (${ad.tdee} kcal)`:"Recalculado con la fórmula","recal");commit();toast(`Nuevo objetivo: ${p.targets.kcal} kcal`);},

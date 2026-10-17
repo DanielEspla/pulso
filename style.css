@@ -389,3 +389,6 @@ details.catinfo summary{cursor:pointer;color:var(--accent-t)}
 
 ol.simple-ex{margin:6px 0 4px;padding-left:22px;display:flex;flex-direction:column;gap:10px}
 ol.simple-ex li span{display:block}
+.seg.dtabs{margin:0 0 16px;width:100%}
+.seg.dtabs button{flex:1;font-weight:600;padding:11px 8px}
+.frow.ban .btn{flex-shrink:0;align-self:center;margin-right:10px}

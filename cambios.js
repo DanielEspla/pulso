@@ -57,3 +57,10 @@ Object.assign(A,{
   vetoOff:el=>{const p=P();const g=G(p);g.vetado=vetados(p).filter(x=>x!==el.dataset.id);commit();toast("Recuperado. Puede volver a salir en tus planes.");},
   swSimple:el=>{const p=P();const s=+el.dataset.s,si=+el.dataset.si;UI.sw={};const ctx={mode:"plan",s,si,ex:G(p).plan.sessions[s].slots[si].ex};UI.sheet=()=>sheetSwapEx(P(),ctx);UI.swCtx=ctx;render();}
 });
+
+/* ===== Dieta y alimentos en una sola pestaña ===== */
+function dietTabs(on){
+  return `<div class="seg dtabs" role="tablist"><button role="tab" class="${on==="dieta"?"on":""}" data-a="go" data-v="dieta">Menú de la semana</button><button role="tab" class="${on==="alimentos"?"on":""}" data-a="go" data-v="alimentos">Mis alimentos</button></div>`;
+}
+const _viewDietaBase=viewDieta;viewDieta=function(p){return dietTabs("dieta")+_viewDietaBase(p);};
+const _viewAlimBase=viewAlimentos;viewAlimentos=function(p){return dietTabs("alimentos")+_viewAlimBase(p);};
