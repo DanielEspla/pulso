@@ -68,6 +68,7 @@ function gymHoy(p){
   const lu=levelUpSuggest(p);
   return `<div class="stack">
   ${!g.log.length?`<div class="alert"><span class="dot"></span><div><b>¿Vienes de PULSO?</b>Trae tus entrenos para que la progresión arranque con tus pesos reales.<div style="margin-top:8px"><button class="btn sm" data-a="go" data-v="copias">Importar de PULSO</button></div></div></div>`:""}
+  ${fixedHoyAlert(p)}
   ${lu?`<div class="alert ok"><span class="dot"></span><div><b>Te está sabiendo a poco</b>Tres sesiones seguidas pidiendo más y tu fuerza no cae. ¿Subimos a nivel ${lu}? Más series, más cerca del fallo${lu==="avanzado"?" y técnicas de intensidad":""}.<div class="row" style="margin-top:8px"><button class="btn sm pri" data-a="lvlUp" data-k="${lu}">Subir a ${lu}</button><button class="btn sm ghost" data-a="lvlNo">Todavía no</button></div></div></div>`:""}
   ${pa?`<div class="alert bad"><span class="dot"></span><div><b>Molestias repetidas en ${JOINTS[pa.joint].toLowerCase()}</b>Las has marcado ${pa.n} veces en dos semanas. Cambiar ejercicios no basta: consulta con un fisioterapeuta antes de seguir cargando esa zona.</div></div>`:""}
   ${dl?`<div class="alert warn"><span class="dot"></span><div><b>Quizá te toque descargar</b>${esc(dl)} Una semana suave ahora te deja rendir más después.<div style="margin-top:8px"><button class="btn sm" data-a="deloadNow">Hacer la descarga esta semana</button></div></div></div>`:""}
@@ -212,8 +213,9 @@ function gymPlan(p){
   const order=Object.keys(MUSCLES).filter(m=>vol[m]);
   const ed=edadDe(p);
   return `<div class="stack">
+  ${fixedPlanCard(p)}
   ${planHistCard(p)}
-  <div class="card stack"><div class="row between"><span class="lbl">Bloque actual</span><span class="small muted">5 semanas</span></div>
+  <div class="card stack"><div class="row between"><span class="lbl">Bloque actual</span><span class="small muted">${g.plan.mesoLen?`Bloque de ${g.plan.mesoLen} semanas: ${g.plan.mesoLen-1} de trabajo y 1 de descarga`:"5 semanas"}</span></div>
     <div class="weeks">${WEEK_NAMES.map((w,i)=>`<div class="${i===wk?"on":""} ${i===4?"dl":""}"><b>S${i+1}</b><span>${i===4?"Descarga":"RIR "+(s.nivel==="principiante"?[3,3,2,2][i]:[3,2,2,1][i])}</span></div>`).join("")}</div>
     <p class="small">${wk===4?"Semana de descarga: la mitad de series y lejos del fallo. La fatiga se va y el músculo consolida lo ganado.":`Cada semana te acercas un poco más al fallo y en las semanas 3 y 4 sube el número de series. Después toca una semana de descarga.`}</p>
     ${wk<4?`<button class="btn sm" data-a="deloadNow">Adelantar la descarga a esta semana</button>`:""}</div>

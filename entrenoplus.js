@@ -107,7 +107,7 @@ function planHistCard(p){
   const H=G(p).planHist||[];if(!H.length)return "";
   return `<details class="card"><summary><b>Planes anteriores</b><span class="small muted"> · ${H.length}</span></summary><div class="stack" style="margin-top:10px">
   <p class="small muted">Cada vez que el plan se rehace (por cambiar días, nivel u objetivo) se guarda el anterior. Puedes volver a él; tu historial de pesos no se toca.</p>
-  ${H.map((h,i)=>`<div class="row between"><div><b>${fdate(h.date)}</b><span class="small muted"> · ${h.plan.sessions.length} sesiones · ${esc(NIVELES[h.nivel]?NIVELES[h.nivel].split(" (")[0]:"")}</span><br><span class="small">${esc(planLabel(h.plan))}</span></div><button class="btn sm" data-a="planBack" data-i="${i}">Volver a este</button></div>`).join("")}</div></details>`;
+  ${H.map((h,i)=>`<div class="row between"><div><b>${h.label?esc(h.label):fdate(h.date)}</b><span class="small muted"> · ${h.label?fdate(h.date)+" · ":""}${h.plan.sessions.length} sesiones · ${esc(NIVELES[h.nivel]?NIVELES[h.nivel].split(" (")[0]:"")}</span><br><span class="small">${esc(planLabel(h.plan))}</span></div><button class="btn sm" data-a="planBack" data-i="${i}">Volver a este</button></div>`).join("")}</div></details>`;
 }
 /* Sesiones hechas esta semana, para marcarlas en la selección */
 function sessionsDoneThisWeek(p){const ws=weekStart(today());const o={};G(p).log.filter(l=>l.date>=ws).forEach(l=>{o[l.sIdx]=(o[l.sIdx]||0)+1;});return o;}
