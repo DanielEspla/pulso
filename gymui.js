@@ -153,7 +153,7 @@ function viewGymSummary(p){
 /* ---- Cambiar ejercicio ---- */
 function sheetSwapEx(p,ctx){
   const exId=ctx.ex;const ex=EXM[exId];const st=UI.sw||{};
-  const reasons=[["ocupada","Está ocupada"],["nohay","No la hay en mi gimnasio"],["dolor","Me molesta"],["otro","Prefiero otro"]];
+  const reasons=[["ocupada","Está ocupada"],["nohay","No la hay en mi gimnasio"],["dolor","Me molesta o no puedo hacerlo"],["otro","Prefiero otro hoy"],["nogusta","No me gusta: no volver a ponerlo nunca"]];
   let body="";
   if(!st.reason)body=`<p class="muted" style="margin-bottom:12px">¿Qué pasa?</p><div class="stack">${reasons.map(([k,t])=>`<button class="btn wide" style="justify-content:flex-start" data-a="swR" data-k="${k}">${t}</button>`).join("")}</div>`;
   else if(st.reason==="dolor"&&!st.joint)body=`<p class="muted" style="margin-bottom:12px">¿Dónde lo notas?</p><div class="chips wrap">${Object.entries(JOINTS).map(([k,t])=>`<button data-a="swJ" data-k="${k}">${t}</button>`).join("")}</div>
@@ -162,10 +162,10 @@ function sheetSwapEx(p,ctx){
     ${ctx.mode==="ses"?`<button class="btn wide" style="margin-top:12px" data-a="skipEx">Saltar este ejercicio</button>`:""}`;
   else{
     const alts=alternativesFor(p,exId,st.reason,st.joint);
-    const permDefault=st.reason==="nohay"||st.reason==="dolor";
+    const permDefault=st.reason==="nohay"||st.reason==="dolor"||st.reason==="nogusta";
     if(st.perm==null)st.perm=permDefault;
     body=`${st.reason==="dolor"?`<p class="small muted" style="margin-bottom:8px">Ordenadas por menor carga en ${JOINTS[st.joint].toLowerCase()} y mismo músculo. Si la molestia sigue en la alternativa, para.</p>`:""}
-    ${ctx.mode==="ses"?`<label class="chk" style="margin-bottom:10px"><input type="checkbox" data-c="swPerm" id="sw_perm" ${st.perm?"checked":""}><span>Cambiarlo también en mi plan<br><span class="hint">Si no, solo cambia en la sesión de hoy.</span></span></label>`:""}
+    ${st.reason==="nogusta"?`<p class="small acc-t" style="margin-bottom:10px">Elige el sustituto. Este ejercicio desaparece de todos tus planes y no volverá a salir. Puedes recuperarlo en Plan.</p>`:""}${ctx.mode==="ses"&&st.reason!=="nogusta"?`<label class="chk" style="margin-bottom:10px"><input type="checkbox" data-c="swPerm" id="sw_perm" ${st.perm?"checked":""}><span>Cambiarlo también en mi plan<br><span class="hint">Si no, solo cambia en la sesión de hoy.</span></span></label>`:""}
     ${alts.length?`<div class="items">${alts.map(a=>`<button class="item alt" data-a="swDo" data-id="${a.e.id}"><span class="nm"><b>${esc(a.e.name)}</b><span class="small muted">${a.why.join(" · ")||MUSCLES[a.e.prim]}</span></span><span class="q">${ic("chev",'width="18"')}</span></button>`).join("")}</div>`:`<p class="muted">No hay alternativas con tu material. Revisa «Mi gimnasio» en los ajustes de entreno.</p>`}`;
   }
   return `<div class="sheet-h"><div><span class="lbl">Cambiar</span><h2>${esc(ex.name)}</h2></div><button class="btn ghost sm" data-a="closeSheet">${ic("x",'width="18"')}</button></div>
@@ -217,6 +217,7 @@ function gymPlan(p){
   return `<div class="stack">
   ${fixedPlanCard(p)}
   ${planHistCard(p)}
+  ${typeof vetoCard==="function"?vetoCard(p):""}
   <div class="card stack"><div class="row between"><span class="lbl">Bloque actual</span><span class="small muted">${g.plan.mesoLen?`Bloque de ${g.plan.mesoLen} semanas: ${g.plan.mesoLen-1} de trabajo y 1 de descarga`:"5 semanas"}</span></div>
     <div class="weeks">${WEEK_NAMES.map((w,i)=>`<div class="${i===wk?"on":""} ${i===4?"dl":""}"><b>S${i+1}</b><span>${i===4?"Descarga":"RIR "+(s.nivel==="principiante"?[3,3,2,2][i]:[3,2,2,1][i])}</span></div>`).join("")}</div>
     <p class="small">${wk===4?"Semana de descarga: la mitad de series y lejos del fallo. La fatiga se va y el músculo consolida lo ganado.":`Cada semana te acercas un poco más al fallo y en las semanas 3 y 4 sube el número de series. Después toca una semana de descarga.`}</p>
@@ -377,7 +378,8 @@ function gymSimple(p){
   ${typeof fixedHoyAlert==="function"?fixedHoyAlert(p):""}
   <div class="hero"><span class="lbl acc">${idx===g.next%n?"Hoy toca":"Has elegido"}</span><h2 class="disp">${esc(ses.name)}</h2>
     <p class="muted">${prev.length} ejercicios · ${series} series · unos ${sessionMinutes(p,idx)} minutos</p>
-    <ol class="simple-ex">${prev.map(x=>`<li><b>${esc(EXM[x.ex].name)}</b><span class="small muted">${x.sets} series de ${x.lo}-${x.hi}${EXM[x.ex].rep==="s"?" s":""}${lastW(x.ex)}</span></li>`).join("")}</ol>
+    <ol class="simple-ex">${prev.map(x=>`<li><div class="row between" style="flex-wrap:nowrap;gap:8px"><div><b>${esc(EXM[x.ex].name)}</b><span class="small muted">${x.sets} series de ${x.lo}-${x.hi}${EXM[x.ex].rep==="s"?" s":""}${lastW(x.ex)}</span></div><button class="btn ghost sm" data-a="swSimple" data-s="${idx}" data-si="${x.si}" aria-label="Cambiar ${esc(EXM[x.ex].name)}">Cambiar</button></div></li>`).join("")}</ol>
+    <p class="small muted">¿No puedes hacer alguno o no te gusta? Pulsa Cambiar. Durante la sesión también puedes.</p>
     <button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Empezar</button>
     ${n>1?`<div class="row" style="gap:8px;flex-wrap:nowrap"><button class="btn sm" style="flex:1" data-a="gsel" data-i="${(idx-1+n)%n}">← Otra anterior</button><button class="btn sm" style="flex:1" data-a="gsel" data-i="${(idx+1)%n}">Otra siguiente →</button></div>`:""}
     ${idx!==g.next%n?`<button class="btn ghost sm" style="align-self:center" data-a="gsel" data-i="${g.next%n}">Volver a la que toca</button>`:""}
