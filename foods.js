@@ -272,9 +272,9 @@ FOODS.forEach(f=>{
 });
 const FOOD = Object.fromEntries(FOODS.map(f=>[f.id,f]));
 
+/* Alimentación desactivada de momento: se trabajará en otra app */
+const NUTRI=false;
 const RESTRICTIONS = [
-  ["vegetariano","Vegetariano",["carne","pescado","marisco"]],
-  ["vegano","Vegano",["animal"]],
   ["sin_cerdo","Sin cerdo",["cerdo"]],
   ["sin_pescado","Sin pescado",["pescado"]],
   ["sin_marisco","Sin marisco (alergia)",["marisco"]],

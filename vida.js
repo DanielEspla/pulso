@@ -86,7 +86,7 @@ function sheetSupl(){
 
 /* ---- Tarjeta de la mañana ---- */
 function morningCard(p){
-  const ws=weekStart(today());const di=(new Date().getDay()+6)%7;const menu=p.menus&&p.menus[ws];
+  const ws=weekStart(today());const di=(new Date().getDay()+6)%7;const menu=NUTRI&&p.menus&&p.menus[ws];
   const g=p.gym;const gymToday=g&&g.setup&&(g.setup.dias||[]).includes(di);const doneGym=g&&g.log&&g.log.some(l=>l.date===today());
   let meals="";let prep=[];
   if(menu){const day=menu.days[di];
@@ -101,10 +101,10 @@ function morningCard(p){
     if(C.length)prep.push(`la cena lleva ${C.map(f=>f.name.toLowerCase()).join(" y ")}: si llegas justo, déjalo hecho a mediodía`);
   }
   const fam=famFactor(p)?` · cocinas para ${1+(+(p.familia||{}).adultos||0)+(+(p.familia||{}).ninos||0)}`:"";
-  return `<div class="card stack morning"><div class="row between"><div><span class="lbl acc">Hoy</span><h2 style="margin:2px 0 0">${fdateL(today())}</h2></div><div class="row" style="gap:6px"><button class="btn sm" data-a="dietaOpen">Cambiar dieta</button><button class="btn sm" data-a="go" data-v="dieta">Menú</button></div></div>
-  ${menu?`<div class="mlist">${meals}</div>`:`<p class="small muted">Sin menú esta semana. <button class="btn sm pri" data-a="go" data-v="dieta">Generarlo</button></p>`}
+  return `<div class="card stack morning"><div class="row between"><div><span class="lbl acc">Hoy</span><h2 style="margin:2px 0 0">${fdateL(today())}</h2></div>${NUTRI?`<div class="row" style="gap:6px"><button class="btn sm" data-a="dietaOpen">Cambiar dieta</button><button class="btn sm" data-a="go" data-v="dieta">Menú</button></div>`:""}</div>
+  ${!NUTRI?"":menu?`<div class="mlist">${meals}</div>`:`<p class="small muted">Sin menú esta semana. <button class="btn sm pri" data-a="go" data-v="dieta">Generarlo</button></p>`}
   ${prep.length?`<p class="small"><b>Saca o prepara:</b> ${esc(prep.join("; "))}${fam}.</p>`:""}
-  ${g&&g.setup?`<p class="small">${gymToday?(doneGym?"Entreno de hoy hecho.":`Hoy entrenas ${HORA_TXT[gymHourOf(p,di)]}.`):"Hoy no hay gimnasio."}${!doneGym&&gymToday&&p.reparto==="peri"?" Los hidratos van en la comida de antes y la de después.":""}</p>`:""}
+  ${g&&g.setup?`<p class="small">${gymToday?(doneGym?"Entreno de hoy hecho.":`Hoy entrenas ${HORA_TXT[gymHourOf(p,di)]}.`):"Hoy no hay gimnasio."}${NUTRI&&!doneGym&&gymToday&&p.reparto==="peri"?" Los hidratos van en la comida de antes y la de después.":""}</p>`:""}
   ${suplLine(p)}</div>`;
 }
 

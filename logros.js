@@ -40,7 +40,7 @@ function lgWeekStatus(p,ws){
   const checks=[];
   if(plannedGym&&!descarga)checks.push(["Entrenos",ses>=plannedGym,`${Math.min(ses,plannedGym)} de ${plannedGym}`]);
   checks.push(["Pesajes",weigh>=(pausa?3:5),`${weigh} de ${pausa?3:5}`]);
-  if(totalMeals&&!pausa)checks.push(["Comidas hechas",done>=Math.ceil(totalMeals*0.8),`${done} de ${Math.ceil(totalMeals*0.8)}`]);
+  if(NUTRI&&totalMeals&&!pausa)checks.push(["Comidas hechas",done>=Math.ceil(totalMeals*0.8),`${done} de ${Math.ceil(totalMeals*0.8)}`]);
   return {ok:checks.every(c=>c[1]),checks,ses,weigh,done,totalMeals,descarga,pausa};
 }
 function lgStreak(p){
@@ -86,7 +86,8 @@ function lgMedals(p){
     {id:"cardio",fam:"cuerpo",t:"Cardio",d:"Sesiones de cardio apuntadas.",v:((p.gym&&p.gym.cardioLog)||[]).length,th:[10,50,100,250],u:"sesiones"},
     {id:"movilidad",fam:"cuerpo",t:"Movilidad y equilibrio",d:"Rutinas de movilidad hechas.",v:((p.gym&&p.gym.mobLog)||[]).length,th:[10,50,100,250],u:"sesiones"},
     {id:"racha",fam:"cuerpo",t:"Racha semanal",d:"Tu mejor racha de semanas cumplidas.",v:S_.best,th:[4,12,26,52],u:"semanas"}
-  ].filter(Boolean);
+  ].filter(Boolean).filter(m=>NUTRI||!["comidas","diascompletos","medit","legumbre"].includes(m.id));
+  if(!NUTRI)M.forEach(m=>{if(m.fam==="dieta")m.fam="cuerpo";});
   M.forEach(m=>{m.tier=m.th.filter(x=>m.v>=x).length;m.next=m.th[m.tier];m.pct=m.next?Math.min(1,m.v/m.next):1;});
   return M;
 }
@@ -140,16 +141,16 @@ function weeklySummaryCard(p){
   const cell=(l,v)=>`<div><span class="lbl">${l}</span><div class="v2 num">${v}</div></div>`;
   return `<div class="card stack"><div class="row between"><div><span class="lbl acc">Tu semana</span><h2 style="margin:2px 0 0">Del ${fdate(r.lw)} al ${fdate(addDays(r.lw,6))}</h2></div><button class="btn ghost sm" data-a="lgSumClose" aria-label="Cerrar">${ic("x",'width="16"')}</button></div>
   <div class="grid3">${cell("Entrenos",r.ses)}${cell("Toneladas",nf(r.tons,1))}${cell("Récords",r.recs.length)}</div>
-  <div class="grid3">${cell("Nota mediterránea",r.md?`${r.md.ok}/${r.md.n}`:"—")}${cell("Cintura",r.dW!=null?sgn(r.dW,1)+" cm":"—")}${cell("Semana",r.ok?"Cumplida":"Pendiente")}</div>
+  <div class="grid3">${NUTRI?cell("Nota mediterránea",r.md?`${r.md.ok}/${r.md.n}`:"—"):""}${cell("Cintura",r.dW!=null?sgn(r.dW,1)+" cm":"—")}${cell("Semana",r.ok?"Cumplida":"Pendiente")}</div>
   ${r.recs.length?`<p class="small">${r.recs.slice(0,3).map(x=>`${esc(EXM[x.ex]?EXM[x.ex].name:x.ex)}: ${nf(x.b,1)} kg`).join(" · ")}</p>`:""}
   ${r.n?`<p class="small muted">Lo más cerca: ${esc(r.n.t)}, ${fmtV(r.n,r.n.v)} de ${fmtV(r.n,r.n.next)} ${r.n.u}.</p>`:""}</div>`;
 }
 function viewLogros(p){
   const s=lgStreak(p);const M=lgMedals(p);const rec=lgRecords(p);
-  const fams=[["gym","Gimnasio"],["dieta","Dieta"],["cuerpo","Cuerpo y constancia"]];
+  const fams=[["gym","Gimnasio"],...(NUTRI?[["dieta","Dieta"]]:[]),["cuerpo","Cuerpo y constancia"]];
   const tops=Object.entries(rec.best).filter(([id])=>EXM[id]).sort((a,b)=>b[1]-a[1]).slice(0,12);
   const lastRec=id=>{const l=rec.list.filter(r=>r.ex===id).pop();return l?l.date:null;};
-  return `<div class="head"><div><h1>Logros</h1><p class="sub">Constancia, hábitos y fuerza. Nada de premios por pasar hambre.</p></div></div>
+  return `<div class="head"><div><h1>Logros</h1><p class="sub">Constancia, hábitos y fuerza.</p></div></div>
   <div class="stack">
   <div class="hero"><span class="lbl acc">Racha semanal ${infoBtn("racha","racha semanal")}</span>
     <div class="row between"><div class="v2 disp">${s.streak} <small>semana${s.streak===1?"":"s"}</small></div><span class="small muted">Mejor: ${s.best} · Comodín ${s.jokerReady?"disponible":"usado"}</span></div>

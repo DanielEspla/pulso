@@ -1,5 +1,5 @@
 /* ===== Grupos de alimentos y contenido divulgativo ===== */
-const SLOGAN="Aprende a comer. Vive más y mejor.";
+const SLOGAN=NUTRI?"Aprende a comer. Vive más y mejor.":"Entrena con cabeza. Vive más y mejor.";
 const GROUPS=[
   {k:"prot",t:"Proteínas",col:"var(--prot)",cats:["aves","vacuno","cerdo","otras","fiambres","pescado","marisco","huevos","vegprot"],
    d:"Construyen y reparan músculo, órganos, hormonas y defensas. Son lo que más sacia. En cada comida principal hay una, y la app fija su cantidad para proteger tu músculo mientras pierdes grasa."},

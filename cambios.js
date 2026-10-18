@@ -64,3 +64,19 @@ function dietTabs(on){
 }
 const _viewDietaBase=viewDieta;viewDieta=function(p){return dietTabs("dieta")+_viewDietaBase(p);};
 const _viewAlimBase=viewAlimentos;viewAlimentos=function(p){return dietTabs("alimentos")+_viewAlimBase(p);};
+
+/* ===== Alimentación apagada (NUTRI=false): se trabajará en otra app ===== */
+const NUTRI_VIEWS=["dieta","compra","cocina","alimentos","objetivos"];
+if(!NUTRI){
+  for(let i=NAV.length-1;i>=0;i--)if(NUTRI_VIEWS.includes(NAV[i][0]))NAV.splice(i,1);
+  const _go=A.go;A.go=el=>{const v=el&&el.dataset&&el.dataset.v;if(NUTRI_VIEWS.includes(v))return _go({dataset:{v:"inicio"}});return _go(el);};
+  if(NUTRI_VIEWS.includes(UI.view))UI.view="inicio";
+  const _mas=viewMas;viewMas=function(p){return _mas(p).replace(/<button[^>]*data-v="(compra|cocina|objetivos|alimentos)"[\s\S]*?<\/button>/g,"");};
+  const _apr=viewAprende;viewAprende=function(){
+    const h=_apr();const i=h.indexOf('<h2 style="margin-top:8px">Cómo crece el músculo');const j=h.indexOf('<h2 style="margin-top:8px">Qué vas a notar');
+    if(i<0||j<0)return h;const head=h.slice(0,h.indexOf('<div class="stack learn">'));
+    return head+`<div class="stack learn"><div class="card stack" style="background:var(--accent-soft);border-color:transparent"><span class="lbl" style="color:var(--accent)">El objetivo</span><p class="lead">Entrenar fuerza con cabeza para ganar músculo, proteger las articulaciones y llegar en forma a muchos años. Aquí tienes en qué se basa cada decisión del entreno.</p></div>`+h.slice(i,j)+`</div>`;
+  };
+}
+/* Vegetariano y vegano eliminados: se quitan de cualquier perfil guardado */
+try{Object.values(S.profiles||{}).forEach(p=>{if(p.restr)p.restr=p.restr.filter(k=>k!=="vegetariano"&&k!=="vegano");});save();}catch(e){}

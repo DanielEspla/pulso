@@ -77,7 +77,7 @@ function _render(){
       ${themeBtn("side")}
       <div class="who"><span class="lbl">Perfil</span><div>${esc(p.nombre)}</div></div></aside>
       <main class="main">${themeBtn("float")}${v(p)}<p class="disc">Las estimaciones de gasto y grasa corporal son orientativas y no sustituyen la valoración de un profesional sanitario.</p></main>
-      <nav class="bnav">${[["inicio","Inicio","home"],["entreno","Entreno","dumb"],["dieta","Dieta","plate"],["registro","Registro","scale"],["mas","Más","more"]].map(([k,t,i])=>`<button class="${UI.view===k||(k==="dieta"&&UI.view==="alimentos")||(k==="mas"&&["compra","cocina","objetivos","perfil","copias","aprende"].includes(UI.view))?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}</nav>`;
+      <nav class="bnav">${(NUTRI?[["inicio","Inicio","home"],["entreno","Entreno","dumb"],["dieta","Dieta","plate"],["registro","Registro","scale"],["mas","Más","more"]]:[["inicio","Inicio","home"],["entreno","Entreno","dumb"],["registro","Registro","scale"],["logros","Logros","medal"],["mas","Más","more"]]).map(([k,t,i])=>`<button class="${UI.view===k||(k==="dieta"&&UI.view==="alimentos")||(k==="mas"&&["compra","cocina","objetivos","perfil","copias","aprende"].includes(UI.view))?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}</nav>`;
   }
   root.innerHTML=`<div class="shell">${body}</div>${UI.sheet?`<div class="overlay" data-a="closeSheet"><div class="sheet" data-stop="1">${UI.sheet()}</div></div>`:""}`;
 }
@@ -101,29 +101,29 @@ function viewOnboarding(){
     <div class="stack"><div class="field"><span>Trabajo</span>${seg("trabajo",[["sentado","Sentado"],["mixto","De pie / mixto"],["fisico","Físico"]])}</div>
     ${num("pasos","Pasos al día","Media aproximada. Si no lo sabes: 4.000 poco activo, 7.000 normal, 10.000 activo.")}
     ${sportPicker(d,"ob")}</div>`;
-  if(step===3){const gm=GOALS[d.meta];html=`<h2>Tu objetivo ${infoBtn("objetivo","objetivo")}</h2><p class="muted" style="margin:6px 0 18px">Decide tus calorías, tu proteína y cómo entrenas. Puedes cambiarlo cuando quieras.</p>
+  if(step===3){const gm=GOALS[d.meta];html=`<h2>Tu objetivo ${infoBtn("objetivo","objetivo")}</h2><p class="muted" style="margin:6px 0 18px">${NUTRI?"Decide tus calorías, tu proteína y cómo entrenas.":"Decide cómo entrenas."} Puedes cambiarlo cuando quieras.</p>
     <div class="stack">${goalCards(d.meta,"obSet")}
     ${["recomp","definicion","volumen","estetica"].includes(d.meta)?`<div class="field"><span>Ritmo</span>${seg("ritmo",[["suave","Suave"],["normal","Normal"],["rapido","Rápido"]])}<span class="hint">${ritmoHint(d)}</span></div>`:""}
     ${num("grasaObj","Grasa corporal objetivo (%)",`Si lo dejas vacío: ${d.sexo==="H"?15:23} %. Con ella se calcula tu peso objetivo.`)}
-    <h3 style="margin-top:8px">Cómo quieres comer</h3>
+    ${NUTRI?`<h3 style="margin-top:8px">Cómo quieres comer</h3>
     <div class="field"><span>Estilo de dieta ${infoBtn("estilo","estilo de dieta")}</span>${choiceCards(DIET_STYLES,d.estilo,"obSet","estilo","e_",recStyle(d.meta,d.deporte))}</div>
     ${d.estilo!=="keto"?`<div class="field"><span>Reparto de hidratos ${infoBtn("reparto","reparto")}</span>${seg("reparto",Object.entries(REPARTOS).map(([k,v])=>[k,v[0]]))}<span class="hint">${REPARTOS[d.reparto][1]}</span></div>`:""}
     <div class="field"><span>Días de recarga a la semana ${infoBtn("recarga","recarga")}</span>${seg("recarga",[["0","Ninguno"],["1","Uno"],["2","Dos"]])}${d.estilo==="keto"&&d.recarga==="0"?`<span class="hint">En keto se recomienda al menos un día de recarga si entrenas fuerte.</span>`:""}</div>
     <label class="chk"><input type="checkbox" name="ayunoOn" id="ob_ayunoOn" ${d.ayunoOn?"checked":""} data-c="obRe"><span>Ayuno intermitente ${infoBtn("ayuno","ayuno intermitente")}</span></label>
     ${d.ayunoOn?`<div class="grid2"><label class="field"><span>Primera comida</span><input class="inp" type="time" name="ayunoIni" id="ob_ayunoIni" value="${esc(d.ayunoIni)}"></label><label class="field"><span>Horas de ventana</span><input class="inp num" type="number" name="ayunoH" id="ob_ayunoH" value="${d.ayunoH}" min="4" max="12"></label></div>`:""}
-    <div class="field"><span>Comidas al día</span>${seg("comidas",(d.ayunoOn?[["2","2"],["3a","3"]]:[["2","2"],["3","3"],["3a","3 sin desayuno"],["4","4"],["5","5"]]))}</div>
+    <div class="field"><span>Comidas al día</span>${seg("comidas",(d.ayunoOn?[["2","2"],["3a","3"]]:[["2","2"],["3","3"],["3a","3 sin desayuno"],["4","4"],["5","5"]]))}</div>`:""}
     ${d.sexo==="M"?`<label class="chk"><input type="checkbox" name="embarazo" id="ob_embarazo" ${d.embarazo?"checked":""}> Embarazo o lactancia</label>`:""}</div>`;}
   if(step===4)html=`<h2>Restricciones</h2><p class="muted" style="margin:6px 0 18px">Esto no son gustos: los alimentos afectados no aparecerán nunca. Marca solo lo que de verdad no comes (por ejemplo, si eres vegetariano). Si no tienes ninguna, deja todo sin marcar.</p>
     <div class="grid2">${RESTRICTIONS.map(([k,t])=>`<label class="chk"><input type="checkbox" name="restr" value="${k}" ${d.restr.includes(k)?"checked":""}> ${t}</label>`).join("")}</div>`;
   if(step===5){
     const prof=syncGoal(obToProfile(d));const t=computeTargets(prof);const tw=targetWeight(prof);
-    html=`<h2>Tu punto de partida</h2><p class="muted" style="margin:6px 0 18px">Es una estimación inicial. A partir de la tercera semana la app la corrige con tu peso real.</p>
-    <div class="card stack"><div class="row between"><div><span class="lbl">Calorías objetivo</span><div class="big">${t.kcal}<span class="small muted"> kcal</span></div></div><div style="text-align:right"><span class="lbl">Gasto estimado</span><div class="num" style="font-size:1.2rem;font-weight:700">${t.tdee} kcal</div></div></div>
+    html=`<h2>Tu punto de partida</h2><p class="muted" style="margin:6px 0 18px">${NUTRI?"Es una estimación inicial. A partir de la tercera semana la app la corrige con tu peso real.":"Estimación de partida a partir de tus medidas."}</p>
+    <div class="card stack">${NUTRI?`<div class="row between"><div><span class="lbl">Calorías objetivo</span><div class="big">${t.kcal}<span class="small muted"> kcal</span></div></div><div style="text-align:right"><span class="lbl">Gasto estimado</span><div class="num" style="font-size:1.2rem;font-weight:700">${t.tdee} kcal</div></div></div>
     ${macroBars(t,t)}
-    <p class="small muted">${sportSummary(prof)}</p>
+    `:""}<p class="small muted">${sportSummary(prof)}</p>
     <div class="grid3"><div><span class="lbl">Grasa estimada</span><div class="num"><b>${nf(t.bf)} %</b></div></div><div><span class="lbl">Masa magra</span><div class="num"><b>${nf(t.lbm)} kg</b></div></div><div><span class="lbl">Peso objetivo</span><div class="num"><b>${nf(tw)} kg</b></div></div></div>
     ${d.embarazo?`<div class="alert warn"><span class="dot"></span><div><b>Sin déficit</b>Con embarazo o lactancia la app no recorta calorías. Consulta la pauta con tu matrona o médico.</div></div>`:""}
-    ${t.kcal<=t.floor&&prof.objetivo==="perder"?`<div class="alert warn"><span class="dot"></span><div><b>Calorías en el mínimo</b>No bajamos de ${t.floor} kcal. Para ir más rápido, sube pasos.</div></div>`:""}</div>`;
+    ${NUTRI&&t.kcal<=t.floor&&prof.objetivo==="perder"?`<div class="alert warn"><span class="dot"></span><div><b>Calorías en el mínimo</b>No bajamos de ${t.floor} kcal. Para ir más rápido, sube pasos.</div></div>`:""}</div>`;
   }
   return `<div class="ob"><div class="row between"><div><h1>${first?"Afina":"Nuevo perfil"}</h1>${first?`<p class="muted">${SLOGAN}</p>`:""}</div>${!first?`<button class="btn ghost sm" data-a="obCancel">Cancelar</button>`:""}</div>
     <div class="steps">${Array.from({length:OB_STEPS},(_,i)=>`<i class="${i<=step?"on":""}"></i>`).join("")}</div>
@@ -261,17 +261,17 @@ function viewInicio(p){
   const wser=W.filter(w=>w.ci&&w.ci.cintura).slice(-12).map(w=>({l:fdate(w.week),y:w.ci.cintura}));
   const al=alertsFor(p);
   const gc=goalCfg(p);
-  return `<div class="head"><div><h1>Hola, ${esc(p.nombre)}</h1><p class="sub">${fdateL(today())}</p><button class="goalchip" data-a="go" data-v="objetivos">${gc.t}${gc.fase?" · "+gc.fase.replace("en fase de ",""):""} <span>Cambiar</span></button></div>
+  return `<div class="head"><div><h1>Hola, ${esc(p.nombre)}</h1><p class="sub">${fdateL(today())}</p>${NUTRI?`<button class="goalchip" data-a="go" data-v="objetivos">${gc.t}${gc.fase?" · "+gc.fase.replace("en fase de ",""):""} <span>Cambiar</span></button>`:""}</div>
     <button class="btn pri" data-a="go" data-v="registro">Registrar</button></div>
   <div class="stack">
   ${morningCard(p)}
-  ${p.pausa?`<div class="alert ok"><span class="dot"></span><div><b>Pausa de dieta en curso</b>Comes en mantenimiento desde el ${fdate(p.pausa.desde)}. <button class="btn sm" data-a="go" data-v="objetivos" style="margin-top:8px">Gestionar</button></div></div>`:""}
+  ${NUTRI&&p.pausa?`<div class="alert ok"><span class="dot"></span><div><b>Pausa de dieta en curso</b>Comes en mantenimiento desde el ${fdate(p.pausa.desde)}. <button class="btn sm" data-a="go" data-v="objetivos" style="margin-top:8px">Gestionar</button></div></div>`:""}
   <form class="card row between" data-s="quickWeight"><div><span class="lbl">Peso de hoy</span><p class="small muted">${p.weights[today()]?"Registrado. Puedes corregirlo.":"Aún sin registrar"}</p></div>
     <div class="row"><input class="inp num" style="width:110px" type="number" step="0.1" inputmode="decimal" id="qw" name="qw" value="${p.weights[today()]??""}" placeholder="kg"><button class="btn pri">Guardar</button></div></form>
   ${weeklySummaryCard(p)}
   ${logrosHomeCard(p)}
   ${gymHomeCard(p)}
-  ${ev?`<div class="card stack"><div class="row between"><div><span class="lbl">Decisión de la semana del ${fdate(dk)}</span></div>${pill(ev.d)}</div>
+  ${NUTRI&&ev?`<div class="card stack"><div class="row between"><div><span class="lbl">Decisión de la semana del ${fdate(dk)}</span></div>${pill(ev.d)}</div>
     <p>${esc(ev.why)}</p>${ev.det?`<p class="small muted">${esc(ev.det)}</p>`:""}
     ${(ev.d==="SUBIR"||ev.d==="BAJAR")?(applied?`<p class="small good">Ajuste aplicado.</p>`:`<div class="row"><button class="btn pri" data-a="applyDec" data-w="${dk}" data-d="${ev.d}">${ev.d==="SUBIR"?"Subir":"Bajar"} ${stepKcal(t)} kcal desde la próxima comida</button></div>`):""}</div>`:""}
   <div class="grid4">
@@ -281,14 +281,14 @@ function viewInicio(p){
     <div class="stat"><span class="lbl">Grasa estimada</span><div class="v">${nf(bf)}<small>%</small></div><div class="d">Objetivo ${nf(p.grasaObj,0)} %</div></div>
   </div>
   <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
-    <div class="card stack"><div class="row between"><span class="lbl">Objetivo diario</span><span class="num"><b>${t.kcal}</b> kcal</span></div>${macroBars(t)}</div>
+    ${NUTRI?`<div class="card stack"><div class="row between"><span class="lbl">Objetivo diario</span><span class="num"><b>${t.kcal}</b> kcal</span></div>${macroBars(t)}</div>`:""}
     <div class="card stack"><span class="lbl">Progreso</span>
       ${prog!=null?`<div><div class="macro-line"><span>Hacia ${nf(tw)} kg</span><span class="num muted">${nf(prog,0)} %</span></div><div class="bar"><i style="width:${Math.max(prog,2)}%"></i></div></div>`:""}
       <div class="macro-line" style="margin:0"><span>Ritmo real</span><span class="num">${ritmo!=null?`${sgn(ritmo,2)} kg/sem (${sgn(ritmoPct,2)} %)`:"—"}</span></div>
       <div class="macro-line" style="margin:0"><span>Ritmo buscado</span><span class="num muted">${p.objetivo==="perder"?`-${nf(banda(p)[0],2)} a -${nf(banda(p)[1],2)} %`:p.objetivo==="ganar"?`+${nf(banda(p)[0],2)} a +${nf(banda(p)[1],2)} %`:"±0,25 %"}</span></div>
       ${proj?`<p class="small muted">${proj}</p>`:""}</div>
   </div>
-  ${al.length?`<div class="stack">${al.map(([k,h,tx,btn])=>`<div class="alert ${k}"><span class="dot"></span><div><b>${esc(h)}</b>${esc(tx)}${btn?`<div style="margin-top:8px">${btn}</div>`:""}</div></div>`).join("")}</div>`:""}
+  ${NUTRI&&al.length?`<div class="stack">${al.map(([k,h,tx,btn])=>`<div class="alert ${k}"><span class="dot"></span><div><b>${esc(h)}</b>${esc(tx)}${btn?`<div style="margin-top:8px">${btn}</div>`:""}</div></div>`).join("")}</div>`:""}
   <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
     <div class="card"><span class="lbl">Peso medio semanal (kg)</span>${lineChart(series,dots,"kilos")}</div>
     <div class="card"><span class="lbl">Cintura (cm)</span>${lineChart(wser,null,"centímetros")}</div>
@@ -315,7 +315,7 @@ function viewRegistro(p){
       <label class="field"><span>Cintura (cm)</span><input class="inp num" type="number" step="0.1" inputmode="decimal" name="cintura" id="ci_cintura" value="${ci.cintura??""}"></label>
       <label class="field"><span>Pasos medios al día</span><input class="inp num" type="number" inputmode="numeric" name="pasos" id="ci_pasos" value="${ci.pasos??p.pasos}"></label>
       <label class="field"><span>Entrenos hechos</span><input class="inp num" type="number" inputmode="numeric" name="entrenos" id="ci_entrenos" value="${ci.entrenos??((G(p).log||[]).filter(l=>weekStart(l.date)===ws).length||p.entrenos)}"></label>
-      <label class="field"><span>Días que cumpliste la dieta</span>${sel("adherencia",[7,6,5,4,3,2,1,0].map(x=>[x,x+" de 7"]),ci.adherencia??7)}</label>
+      ${NUTRI?`<label class="field"><span>Días que cumpliste la dieta</span>${sel("adherencia",[7,6,5,4,3,2,1,0].map(x=>[x,x+" de 7"]),ci.adherencia??7)}</label>`:""}
       <label class="field"><span>Rendimiento en el entreno</span>${sel("rendimiento",[["ESTABLE","Estable"],["MEJORA","Mejora"],["BAJA","Baja"]],ci.rendimiento||(autoPerf(p,ws)||{}).v||"ESTABLE")}${autoPerf(p,ws)?`<span class="hint">Calculado con tus entrenos: fuerza ${sgn(autoPerf(p,ws).med,1)} %.</span>`:""}</label>
       ${p.sexo==="M"?`<label class="chk" style="align-self:end"><input type="checkbox" name="ciclo" id="ci_ciclo" ${ci.ciclo?"checked":""}> Retención por el ciclo</label>`:""}
     </div>
@@ -516,12 +516,13 @@ function viewPerfil(p){
     ${sel("sexo","Sexo",[["H","Hombre"],["M","Mujer"]])}<label class="field"><span>Fecha de nacimiento</span><input class="inp" type="date" name="nac" id="pf_nac" value="${esc(p.nac||"")}" max="${today()}"><span class="hint">${p.nac?edadDe(p)+" años":"Añádela para que la edad se actualice sola"}</span></label>${num("altura","Altura (cm)")}${num("cuello","Cuello (cm)","0.1")}${p.sexo==="M"?num("cadera","Cadera (cm)","0.1"):""}
     ${sel("trabajo","Trabajo",[["sentado","Sentado"],["mixto","De pie / mixto"],["fisico","Físico"]])}${num("pasos","Pasos al día")}
 ${num("grasaObj","Grasa objetivo (%)")}
-    ${sel("comidas","Comidas al día",Object.entries(MEAL_TXT))}</div>
-    <p class="hint">Al guardar se recalculan los objetivos con la fórmula. Si cambias el número de comidas, rehaz el menú de la semana.</p>
+    ${NUTRI?sel("comidas","Comidas al día",Object.entries(MEAL_TXT)):""}</div>
+    ${NUTRI?`<p class="hint">Al guardar se recalculan los objetivos con la fórmula. Si cambias el número de comidas, rehaz el menú de la semana.</p>`:""}
     ${UI.err?`<p class="err">${esc(UI.err)}</p>`:""}
-    <div class="row end"><button class="btn pri">Guardar y recalcular</button></div></form>
+    <div class="row end"><button class="btn pri">${NUTRI?"Guardar y recalcular":"Guardar"}</button></div></form>
+  ${NUTRI?"":`<div class="card stack"><span class="lbl">Tu objetivo ${infoBtn("objetivo","objetivo")}</span>${goalCards(p.meta,"goalAsk")}</div>`}
   <div class="card stack"><span class="lbl">Deporte y semana tipo</span>${sportPicker(p,"pf")}
-    ${UI.pfDirty?`<div class="alert warn"><span class="dot"></span><div><b>Cambios guardados</b>Recalcula para que se apliquen a tus calorías y macros.<div style="margin-top:8px"><button class="btn sm pri" data-a="recal" data-src="formula">Recalcular objetivos</button></div></div></div>`:""}</div>
+    ${UI.pfDirty?`<div class="alert warn"><span class="dot"></span><div><b>Cambios guardados</b>${NUTRI?"Recalcula para que se apliquen a tus calorías y macros.":"Pulsa el botón para aplicarlos."}<div style="margin-top:8px"><button class="btn sm pri" data-a="recal" data-src="formula">Recalcular objetivos</button></div></div></div>`:""}</div>
   <div class="card stack"><span class="lbl">Perfiles en este dispositivo</span>
     ${others.length?others.map(o=>`<div class="row between"><span>${esc(o.nombre)}</span><button class="btn sm" data-a="switch" data-id="${o.id}">Cambiar a este</button></div>`).join(""):`<p class="small muted">Solo hay este perfil. Si otra persona usa este mismo móvil, crea el suyo y así no se mezclan los datos.</p>`}
     <div class="row"><button class="btn" data-a="newProfile">Crear otro perfil</button></div></div>
@@ -585,7 +586,7 @@ const A={
   go:el=>{UI.view=el.dataset.v;UI.confirm=null;UI.err=null;UI.sheet=null;render();window.scrollTo(0,0);},
   goReg:el=>{UI.regWeek=el.dataset.w;UI.view="registro";render();window.scrollTo(0,0);},
   obSet:el=>{readOb();UI.ob.d[el.dataset.k]=el.dataset.val;if(el.dataset.k==="estilo")UI.ob.d.estiloTouched=true;if(el.dataset.k==="meta"&&!UI.ob.d.estiloTouched){UI.ob.d.estilo=recStyle(el.dataset.val,UI.ob.d.deporte);if(UI.ob.d.estilo!=="keto"&&UI.ob.d.estilo!=="bajahc"&&UI.ob.d.recarga==="1"&&!UI.ob.d.recTouched)UI.ob.d.recarga="0";}if(el.dataset.k==="recarga")UI.ob.d.recTouched=true;if(el.dataset.k==="estilo"&&el.dataset.val==="keto"){UI.ob.d.reparto="igual";if(UI.ob.d.recarga==="0")UI.ob.d.recarga="1";}if(el.dataset.k==="objetivo"&&el.dataset.val==="ganar"&&UI.ob.d.ritmo==="rapido")UI.ob.d.ritmo="normal";render();},
-  obBack:()=>{readOb();UI.err=null;UI.ob.step--;render();},
+  obBack:()=>{readOb();UI.err=null;UI.ob.step--;if(!NUTRI&&UI.ob.step===4)UI.ob.step--;render();},
   obCancel:()=>{UI.ob=null;UI.err=null;render();},
   spMain:el=>{const ns=el.dataset.ns;const d=spTarget(ns);const old=d.deporte;const id=el.dataset.id;
     d.deporte=id;d.secundarios=(d.secundarios||[]).filter(x=>x!==id);d.plan=d.plan||Array(7).fill("");
@@ -680,8 +681,8 @@ function copy(text,msg,ta){
 }
 const SUB={
   obNext:f=>{readOb();const {step,d}=UI.ob;const e=obValidate(step,d);if(e){UI.err=e;render();return;}UI.err=null;
-    if(step<OB_STEPS-1){UI.ob.step++;render();window.scrollTo(0,0);return;}
-    const p=obToProfile(d);createProfile(p);UI.ob=null;UI.view="alimentos";UI.cat="aves";commit();toast("Perfil creado. Marca ahora lo que te gusta.");},
+    if(step<OB_STEPS-1){UI.ob.step++;if(!NUTRI&&UI.ob.step===4)UI.ob.step++;render();window.scrollTo(0,0);return;}
+    const p=obToProfile(d);createProfile(p);UI.ob=null;UI.view=NUTRI?"alimentos":"entreno";UI.cat="aves";commit();toast(NUTRI?"Perfil creado. Marca ahora lo que te gusta.":"Perfil creado. Ahora prepara tu entreno.");},
   quickWeight:f=>{const v=parseFloat(String(f.qw.value).replace(",","."));const p=P();
     if(!(v>=30&&v<=350)){toast("Revisa el peso");return;}p.weights[today()]=r1(v);commit();toast("Peso guardado");},
   checkin:f=>{const p=P();const g=n=>f[n]?f[n].value:"";const cint=parseFloat(String(g("cintura")).replace(",","."));
@@ -723,11 +724,11 @@ function sheetGoal(p,id){
   const ent={musculo:"centrado en músculo",fuerza:"centrado en fuerza: básicos pesados",salud:"salud y longevidad: menos fatiga"}[g.train.enfoque];
   return `<div class="sheet-h"><div><span class="lbl">Cambiar objetivo</span><h2>${g.t}</h2></div><button class="btn ghost sm" data-a="closeSheet">${ic("x",'width="18"')}</button></div>
   <div class="stack"><p>${esc(g.d)}${gc.fase?` Con tu grasa actual empezarías ${gc.fase}.`:""}</p>
-  <div class="scroll"><table class="t"><thead><tr><th></th><th>Ahora</th><th>Nuevo</th></tr></thead><tbody>
-  ${row("Calorías",a.kcal,b.kcal," kcal")}${row("Proteína",a.p,b.p," g")}${row("Hidratos",a.c,b.c," g")}${row("Grasas",a.f,b.f," g")}</tbody></table></div>
+  ${NUTRI?`<div class="scroll"><table class="t"><thead><tr><th></th><th>Ahora</th><th>Nuevo</th></tr></thead><tbody>
+  ${row("Calorías",a.kcal,b.kcal," kcal")}${row("Proteína",a.p,b.p," g")}${row("Hidratos",a.c,b.c," g")}${row("Grasas",a.f,b.f," g")}</tbody></table></div>`:""}
   <p class="small">Entreno: ${ent}${g.train.vol>1?", con más volumen":g.train.vol<0.95?", con algo menos de volumen":""}${g.train.estetica?" y series extra en los músculos que marcan la silueta":""}. ${p.gym&&p.gym.setup?"El plan de gimnasio se rehace; tu historial se mantiene.":""}</p>
   ${id==="volumen"&&bodyFat(p,currentWeight(p),currentWaist(p))>(p.sexo==="H"?18:26)?`<div class="alert warn"><span class="dot"></span><div><b>Con tu grasa actual no es lo ideal</b>Con un ${nf(bodyFat(p,currentWeight(p),currentWaist(p)))} % de grasa, comer de más suma sobre todo grasa. Recomposición o Estética te darán mejor resultado ahora; Volumen limpio funciona mejor por debajo de un ${p.sexo==="H"?15:23} %.</div></div>`:""}
-  ${recStyle(id,p.deporte)!==(p.dietaEstilo||"equilibrada")?`<p class="small muted">Para este objetivo se recomienda el estilo ${DIET_STYLES[recStyle(id,p.deporte)][0]}. Ahora tienes ${DIET_STYLES[p.dietaEstilo||"equilibrada"][0]}; lo puedes cambiar en «Cómo comes». No es obligatorio.</p>`:""}
+  ${NUTRI&&recStyle(id,p.deporte)!==(p.dietaEstilo||"equilibrada")?`<p class="small muted">Para este objetivo se recomienda el estilo ${DIET_STYLES[recStyle(id,p.deporte)][0]}. Ahora tienes ${DIET_STYLES[p.dietaEstilo||"equilibrada"][0]}; lo puedes cambiar en «Cómo comes». No es obligatorio.</p>`:""}
   ${days<28?`<div class="alert warn"><span class="dot"></span><div><b>Cambiaste de objetivo hace ${days} días</b>Para saber si algo funciona hacen falta unas 4 semanas. Puedes cambiar igualmente.</div></div>`:""}
   <button class="btn pri wide" data-a="goalDo" data-k="${id}">Cambiar a ${g.t}</button>
   <button class="btn ghost wide" data-a="info" data-k="g_${id}">Qué es ${g.t}</button></div>`;
