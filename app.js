@@ -56,6 +56,12 @@ function applyDisplay(){
 function displayCard(){const u=S.ui||{};const b=(k,v,t)=>`<button class="${(u[k]||(k==="theme"?"oscuro":"normal"))===v?"on":""}" data-a="uiSet" data-k="${k}" data-v="${v}">${t}</button>`;
   return `<div class="card stack"><span class="lbl">Pantalla</span><div class="field"><span>Tema</span><div class="seg">${b("theme","oscuro","Oscuro")}${b("theme","claro","Claro")}${b("theme","auto","Como el móvil")}</div><span class="hint">El claro se lee mejor con sol o mucha luz, por ejemplo en el gimnasio.</span></div>
   <div class="field"><span>Tamaño de letra</span><div class="seg">${b("size","normal","Normal")}${b("size","grande","Grande")}</div></div></div>`;}
+function isLight(){const t=(S.ui||{}).theme||"oscuro";return t==="claro"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches);}
+function themeBtn(kind){const l=isLight();
+  const sun='<svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  const moon='<svg viewBox="0 0 24 24" width="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+  const label=l?"Modo oscuro":"Modo claro";
+  return kind==="side"?`<button class="navi" data-a="themeToggle">${l?moon:sun}${label}</button>`:`<button class="theme-fab" data-a="themeToggle" aria-label="Cambiar a ${label.toLowerCase()}" title="${label}">${l?moon:sun}</button>`;}
 function _render(){
   applyDisplay();
   if(UI.lgNew&&!UI.sheet&&!UI.gsum&&!UI.ob&&P()){UI.lgShow=UI.lgNew;UI.lgNew=null;UI.sheet=sheetLogro;}
@@ -68,8 +74,9 @@ function _render(){
     const v={inicio:viewInicio,registro:viewRegistro,dieta:viewDieta,compra:viewCompra,cocina:viewCocina,alimentos:viewAlimentos,objetivos:viewObjetivos,perfil:viewPerfil,copias:viewCopias,mas:viewMas,logros:viewLogros,aprende:viewAprende,entreno:viewEntreno}[UI.view]||viewInicio;
     body=`<aside class="side"><div class="brand"><b>Afina</b><span class="muted small">${SLOGAN}</span></div>
       ${NAV.map(([k,t,i])=>`<button class="navi ${UI.view===k||(k==="dieta"&&UI.view==="alimentos")?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}
+      ${themeBtn("side")}
       <div class="who"><span class="lbl">Perfil</span><div>${esc(p.nombre)}</div></div></aside>
-      <main class="main">${v(p)}<p class="disc">Las estimaciones de gasto y grasa corporal son orientativas y no sustituyen la valoración de un profesional sanitario.</p></main>
+      <main class="main">${themeBtn("float")}${v(p)}<p class="disc">Las estimaciones de gasto y grasa corporal son orientativas y no sustituyen la valoración de un profesional sanitario.</p></main>
       <nav class="bnav">${[["inicio","Inicio","home"],["entreno","Entreno","dumb"],["dieta","Dieta","plate"],["registro","Registro","scale"],["mas","Más","more"]].map(([k,t,i])=>`<button class="${UI.view===k||(k==="dieta"&&UI.view==="alimentos")||(k==="mas"&&["compra","cocina","objetivos","perfil","copias","aprende"].includes(UI.view))?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}</nav>`;
   }
   root.innerHTML=`<div class="shell">${body}</div>${UI.sheet?`<div class="overlay" data-a="closeSheet"><div class="sheet" data-stop="1">${UI.sheet()}</div></div>`:""}`;
@@ -629,6 +636,7 @@ const A={
   lgClose:()=>{UI.sheet=null;UI.lgShow=null;render();},
   lgGo:()=>{UI.sheet=null;UI.lgShow=null;UI.view="logros";render();window.scrollTo(0,0);},
   lgSumClose:()=>{const p=P();p.logros=p.logros||{seen:{}};p.logros.sumClosed=addDays(weekStart(today()),-7);commit();},
+  themeToggle:()=>{S.ui=S.ui||{};S.ui.theme=isLight()?"oscuro":"claro";save();render();},
   uiSet:el=>{S.ui=S.ui||{};S.ui[el.dataset.k]=el.dataset.v;save();render();},
   raros:el=>{UI.raros=el.dataset.v==="1";render();},
   catLike:el=>{const p=P();const k=el.dataset.k;const L=FOODS.filter(f=>f.cat===k&&allowedNoPref(p,f)&&(UI.raros||basicoOK(p,f)));const all=L.every(f=>p.prefs[f.id]===1);L.forEach(f=>{if(all)delete p.prefs[f.id];else p.prefs[f.id]=1;});UI.cat=k;commit();},

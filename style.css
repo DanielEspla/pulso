@@ -392,3 +392,5 @@ ol.simple-ex li span{display:block}
 .seg.dtabs{margin:0 0 16px;width:100%}
 .seg.dtabs button{flex:1;font-weight:600;padding:11px 8px}
 .frow.ban .btn{flex-shrink:0;align-self:center;margin-right:10px}
+.theme-fab{display:none;position:fixed;top:12px;right:12px;z-index:30;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+@media (max-width:959px){.theme-fab{display:flex}.main>.head,.main>.seg.dtabs{margin-right:48px}.main>.seg.dtabs{width:auto}}
