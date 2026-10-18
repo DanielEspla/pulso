@@ -394,3 +394,5 @@ ol.simple-ex li span{display:block}
 .frow.ban .btn{flex-shrink:0;align-self:center;margin-right:10px}
 .theme-fab{display:none;position:fixed;top:12px;right:12px;z-index:30;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.18)}
 @media (max-width:959px){.theme-fab{display:flex}.main>.head,.main>.seg.dtabs{margin-right:48px}.main>.seg.dtabs{width:auto}}
+.upd{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;z-index:60;display:flex;gap:12px;align-items:center;background:var(--accent,#C9734A);color:#fff;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-weight:600;max-width:calc(100% - 32px)}
+.upd button{border:0;background:#fff;color:#1b1820;font-weight:700;border-radius:10px;padding:8px 14px;cursor:pointer}
