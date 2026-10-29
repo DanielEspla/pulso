@@ -153,6 +153,7 @@ function viewGymSummary(p){
     ${e.fb?`<span class="hint">${e.fb==="mas"?"Anotado: los músculos de hoy tendrán una serie más en su próxima sesión.":e.fb==="menos"?"Anotado: una serie menos para esos músculos. Recuperar también es entrenar.":"Perfecto, seguimos con el plan."}</span>`:""}</div>
   <p class="small muted">Para recuperar: proteína en las próximas horas y dormir bien esta noche. Es cuando el músculo se reconstruye.</p>
   ${mobOn(p)&&mobWeek(p)<2&&!(G(p).mobLog||[]).includes(today())?`<button class="btn wide" data-a="mobOpen">Rematar con 5 minutos de movilidad</button>`:""}
+  <button class="btn wide" data-a="shareOpen">Crear imagen para compartir</button>
   <button class="btn pri wide" data-a="closeSum">Hecho</button></div></div>`;
 }
 
