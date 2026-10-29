@@ -12,7 +12,7 @@ const WEEK_NAMES=["Semana 1 · Adaptación","Semana 2 · Acumulación","Semana 3
 function gymDefaults(p){
   const items={};GYM_ITEMS.forEach(([id])=>items[id]=!GYM_DEFAULT_OFF.includes(id));
   const dias=(p.plan||[]).map((s,i)=>s==="gimnasio"?i:-1).filter(i=>i>=0);
-  return {nivel:"intermedio",enfoque:"musculo",tecnicas:true,dias:dias.length?dias:[0,2,4],duracion:60,hora:"tarde",items,dolor:{},prio:[]};
+  return {nivel:"intermedio",enfoque:"musculo",tecnicas:true,supers:false,dias:dias.length?dias:[0,2,4],duracion:60,hora:"tarde",items,dolor:{},prio:[]};
 }
 function enf(p){if(p.meta&&typeof goalCfg==="function")return goalCfg(p).train.enfoque;return (G(p).setup||{}).enfoque||"musculo";}
 function goalVol(p){if(p.meta&&typeof goalCfg==="function")return goalCfg(p).train.vol;return {perder:0.9,mantener:1,ganar:1.1}[p.objetivo]||1;}
@@ -95,8 +95,10 @@ function slotMinutes(p,ex,sl,sets,inSS){
 function listMinutes(p,list){return 5+list.reduce((a,sl)=>a+slotMinutes(p,EXM[sl.ex],sl,sl.sets,!!sl.ss),0);}
 /* Superseries: emparejar aislamientos consecutivos de músculos distintos */
 const PUSH=["empuje_h","empuje_v"],PULL=["tiron_h","tiron_v"];
-function pairSupersets(list,lvl){
+function supersOn(p){return !!((G(p).setup||{}).supers);}
+function pairSupersets(list,lvl,on){
   list.forEach(x=>delete x.ss);let tag=0;
+  if(!on)return;
   for(let i=0;i<list.length-1;i++){
     if(list[i].ss||list[i].main||list[i+1].main)continue;
     const a=EXM[list[i].ex],b=EXM[list[i+1].ex];
@@ -130,7 +132,7 @@ function buildGymPlan(p){
       return {...sl,sets:clamp(Math.round(sets),sl.p==="core"?1:minSets(s.nivel,sl),maxSets+1)};
     });
     list=list.map(sl=>{const id=pickEx(p,sl,used);if(id)used[id]=(used[id]||0)+1;return {...sl,ex:id};}).filter(x=>x.ex);
-    pairSupersets(list,s.nivel);
+    pairSupersets(list,s.nivel,supersOn(p));
     /* Recortar si no cabe: primero series de aislamientos, luego ejercicios del final */
     /* Si no cabe: primero se quitan ejercicios del final, nunca se baja de las series mínimas por nivel.
        Mejor menos ejercicios bien hechos que muchos con dos series. */
@@ -141,10 +143,10 @@ function buildGymPlan(p){
       const big=list.slice().reverse().find(x=>!x.main&&x.sets>Math.max(4,fl(x)));
       if(big){big.sets--;continue;}
       const last=list.slice().reverse().find(x=>!x.main);
-      if(list.length>4&&last){list.splice(list.lastIndexOf(last),1);if(used[last.ex])used[last.ex]--;pairSupersets(list,s.nivel);continue;}
+      if(list.length>4&&last){list.splice(list.lastIndexOf(last),1);if(used[last.ex])used[last.ex]--;pairSupersets(list,s.nivel,supersOn(p));continue;}
       const cmp=list.slice().reverse().find(x=>x.sets>fl(x));
       if(cmp){cmp.sets--;continue;}
-      if(list.length>3){const rm=list.pop();if(used[rm.ex])used[rm.ex]--;pairSupersets(list,s.nivel);continue;}
+      if(list.length>3){const rm=list.pop();if(used[rm.ex])used[rm.ex]--;pairSupersets(list,s.nivel,supersOn(p));continue;}
       break;
     }
     return {key:k,name,slots:list};
@@ -278,7 +280,7 @@ function sessionPreview(p,idx,wellness){
     if(firstOfMuscle&&wk<4)sets=clamp(sets+((g.adj||{})[ex.prim]||0),1,6);
     if(wellness==="cansado")rir+=1;
     if(wellness==="muy")(rir+=1,sets=Math.max(1,sets-1));
-    return {si,ex:sl.ex,sets,lo:range[0],hi:range[1],rir,rest:restFor(p,ex,sl),main:!!sl.main,ss:sl.ss||"",tech:wellness==="muy"?null:techFor(p,ex,sl,wk)};
+    return {si,ex:sl.ex,sets,lo:range[0],hi:range[1],rir,rest:restFor(p,ex,sl),main:!!sl.main,ss:supersOn(p)?(sl.ss||""):"",tech:wellness==="muy"?null:techFor(p,ex,sl,wk)};
   });
 }
 function sessionMinutes(p,idx){

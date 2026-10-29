@@ -35,7 +35,7 @@ const FIXED_WHY={
 function fixedAvail(p,id){const ex=EXM[id];if(ex&&exAvailable(p,ex)&&!exBlocked(p,ex))return id;const alt=alternativesFor(p,id,"dolor","l")[0];return alt&&alt.e?alt.e.id:id;}
 function makeFixedPlan(p,key){
   const F=FIXED_PLANS[key];const lv=(G(p).setup||{}).nivel||"intermedio";
-  const sessions=F.sessions.map(([name,rows],i)=>{const slots=rows.map(([ex,sets,main])=>{const id=fixedAvail(p,ex);return {p:EXM[id].pat,sets,main:main?1:undefined,ex:id};});pairSupersets(slots,lv);return {key:key+"_"+i,name,slots};});
+  const sessions=F.sessions.map(([name,rows],i)=>{const slots=rows.map(([ex,sets,main])=>{const id=fixedAvail(p,ex);return {p:EXM[id].pat,sets,main:main?1:undefined,ex:id};});pairSupersets(slots,lv,supersOn(p));return {key:key+"_"+i,name,slots};});
   return {created:today(),n:sessions.length,sessions,custom:key,mesoLen:F.mesoLen,title:F.name,v:F.v||1};
 }
 function applyFixedPlan(p,key){

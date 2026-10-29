@@ -32,6 +32,7 @@ function viewGymSetup(p){
   if(step===0){const gc=goalCfg(p);h=`<h2>Tu punto de partida</h2><p class="muted" style="margin:6px 0 18px">Con esto se decide el volumen, los rangos de repeticiones y cuánto te acercas al fallo.</p>
     <div class="stack"><div class="field"><span>Experiencia en el gimnasio ${infoBtn("nivel","nivel")}</span>${seg("nivel",Object.entries(NIVELES).map(([k,v])=>[k,v.split(" (")[0]]))}<span class="hint">${NIVELES[d.nivel]}. ${d.nivel==="avanzado"?"Empiezas directamente a RIR 1-2: la primera sesión de cada ejercicio sirve para calibrar el peso.":"Si dudas, elige el nivel inferior: la app te propondrá subir cuando lo notes fácil."}</span></div>
     <div class="card flat"><span class="lbl">Tu objetivo</span><p style="margin-top:4px"><b>${gc.t}</b> ${infoBtn("g_"+gc.id,gc.t)}${gc.fase?` <span class="muted small">· ${gc.fase}</span>`:""}</p><p class="small muted">El entreno se adapta a él. Puedes cambiarlo cuando quieras en ${NUTRI?"Objetivos":"Más › Perfil"}.</p></div>
+    <label class="chk"><input type="checkbox" data-c="gsSup" id="gs_sup" ${d.supers?"checked":""}><span>Superseries<br><span class="hint">Empareja algunos ejercicios: una serie de uno, pasas al otro y descansas al terminar la pareja. Ahorra tiempo, pero cambias de ejercicio en mitad. Apagado: haces cada ejercicio entero con su descanso.</span></span></label>
     ${d.nivel!=="principiante"?`<label class="chk"><input type="checkbox" data-c="gsTec" id="gs_tec" ${d.tecnicas?"checked":""}><span>Técnicas de intensidad ${infoBtn("tecnicas","técnicas de intensidad")}<br><span class="hint">Rest-pause, descendentes, parciales y series top en la última serie. Más estímulo sin alargar la sesión.</span></span></label>`:""}</div>`;}
   if(step===1)h=`<h2>Cuándo entrenas</h2><p class="muted" style="margin:6px 0 18px">Los días que marques serán días de gimnasio en tu semana tipo y en tu dieta.</p>
     <div class="stack"><div class="field"><span>Días de gimnasio</span><div class="dchips">${DIAS.map((x,i)=>`<button type="button" class="dch ${d.dias.includes(i)?"on":""}" data-a="gsDay" data-i="${i}">${i===2?"X":x[0]}</button>`).join("")}</div><span class="hint">${d.dias.length} día${d.dias.length===1?"":"s"}: ${d.dias.length?SPLIT_TXT[Math.min(6,d.dias.length)]:"elige al menos uno"}. Deja al menos un día entre sesiones cuando puedas.</span></div>
@@ -98,14 +99,19 @@ function viewRunner(p){
   const nWork=it.sets_.filter(s=>!s.warm).length;
   if(UI.rnFor!==d.cur+":"+it.ex){UI.rnFor=d.cur+":"+it.ex;const ls=it.sets_[it.sets_.length-1];UI.rnW=ls?ls.w:(sg.w??"");UI.rnR="";UI.rnRir=it.rir;UI.rnWarm=false;}
   const restLeft=UI.rest?Math.max(0,Math.ceil((UI.rest.until-Date.now())/1000)):0;
+  const ssId=supersOn(p)?it.ss:"";
+  const ssJ=ssId?d.exs.findIndex((x,k)=>k!==d.cur&&x.ss===ssId):-1;
+  const ssBox=ssJ>=0?(()=>{const o=d.exs[ssJ];const mine=it.sets_.filter(s=>!s.warm).length,his=o.sets_.filter(s=>!s.warm).length;
+    const on=EXM[o.ex].name;const next=(o.done||o.skipped)?`Tu pareja ya está terminada: haz las series que te quedan aquí con descanso normal.`:mine===his?`Haz tu serie ${mine+1} de ${it.sets} aquí. Al guardarla pasas a ${esc(on)} con solo 20 s de cambio.`:mine<his?`Haz tu serie ${mine+1} de ${it.sets} aquí. Al guardarla descansas ${restTxt(it.rest)} y vuelves a ${esc(on)}.`:`Aquí llevas una serie más que ${esc(on)}. Ve a ${esc(on)} para igualar la pareja.`;
+    return `<div class="alert warn ssbox"><span class="dot"></span><div><b>Superserie ${ssId}: ${esc(ex.name)} + ${esc(EXM[o.ex].name)}</b>${next}<div class="row" style="margin-top:8px"><button class="btn sm" data-a="rnGo" data-i="${ssJ}">Ir a ${esc(EXM[o.ex].name)}</button></div></div></div>`;})():"";
   return `<div class="runner">
   <div class="row between"><span class="lbl">${esc(d.name)} · Ejercicio ${d.cur+1} de ${d.exs.length}</span><button class="btn ghost sm" data-a="askConfirm" data-k="quitSes">Salir</button></div>
   ${UI.confirm==="quitSes"?`<div class="alert warn" style="margin-top:8px"><span class="dot"></span><div><b>¿Salir de la sesión?</b>Puedes guardar lo hecho hasta ahora o descartarlo.<div class="row" style="margin-top:8px"><button class="btn sm pri" data-a="finishSes">Guardar y terminar</button><button class="btn sm danger" data-a="discardSes">Descartar</button><button class="btn sm ghost" data-a="cancelConfirm">Seguir entrenando</button></div></div></div>`:""}
   ${finishBanner(p)}
   <div class="segbar">${d.exs.map((x,i)=>`<i class="${i<d.cur||x.done?"done":""} ${i===d.cur?"cur":""}" data-a="rnGo" data-i="${i}"></i>`).join("")}</div>
-  ${restLeft>0?`<div class="restbar" id="restbar"><div><span class="lbl">Descanso</span><b class="num" id="rest_n">${Math.floor(restLeft/60)}:${pad(restLeft%60)}</b></div><div class="row"><button class="btn sm" data-a="restAdd" data-v="-15">−15 s</button><button class="btn sm" data-a="restAdd" data-v="15">+15 s</button><button class="btn sm" data-a="restSkip">Saltar</button></div><i style="width:${Math.min(100,restLeft/UI.rest.total*100)}%" id="rest_i"></i></div>`:""}
+  ${restLeft>0?`<div class="restbar" id="restbar"><div><span class="lbl">${esc(UI.rest.label||"Descanso")}</span><b class="num" id="rest_n">${Math.floor(restLeft/60)}:${pad(restLeft%60)}</b></div><div class="row"><button class="btn sm" data-a="restAdd" data-v="-15">−15 s</button><button class="btn sm" data-a="restAdd" data-v="15">+15 s</button><button class="btn sm" data-a="restSkip">Saltar</button></div><i style="width:${Math.min(100,restLeft/UI.rest.total*100)}%" id="rest_i"></i></div>`:""}
   <h1 class="disp ex-title">${esc(ex.name)}</h1>
-  ${it.ss?(()=>{const j=d.exs.findIndex((x,k)=>k!==d.cur&&x.ss===it.ss);return j>=0?`<p class="small acc-t"><b>Superserie ${it.ss}</b> con ${esc(EXM[d.exs[j].ex].name)}: haces una serie de cada uno y descansas al terminar la pareja.</p>`:"";})():""}
+  ${ssBox}
   <div class="row" style="gap:6px"><button class="btn sm" data-a="ficha" data-id="${ex.id}">${ic("info",'width="16"')} Técnica y porqué</button><button class="btn sm" data-a="swapOpen" data-i="${d.cur}">${ic("swap",'width="16"')} Cambiar</button></div>
   <div class="card stack">
     <p class="acc-t"><b>Objetivo: ${it.sets} series · ${repTxt(it)} · RIR ${it.rir}</b> ${infoBtn("rir","RIR")} <span class="muted small">· descanso ${restTxt(it.rest)}</span></p>
@@ -234,7 +240,7 @@ function gymPlan(p){
     <p><b>Esfuerzo (RIR).</b> RIR son las repeticiones que te quedan en reserva al terminar una serie. Las series que crecen son las que acaban cerca del fallo, pero ir siempre al fallo genera mucha fatiga. Por eso empiezas a RIR 3 y bajas semana a semana. En máquinas y aislamientos puedes apurar más; en los básicos con barra, nunca al fallo${ed>=60?", y a tu edad los básicos se quedan a RIR 2 como mínimo":""}.</p>
     <p><b>Repeticiones.</b> Para ganar músculo valen rangos amplios (de 5 a 30) si llegas cerca del fallo. Los ejercicios grandes van en rangos más bajos porque se cargan mejor con peso; los pequeños, en rangos más altos porque con poco peso se trabajan sin estresar las articulaciones.</p>
     <p><b>Progresión doble.</b> Primero sumas repeticiones dentro del rango. Cuando llegas arriba en todas las series con margen, subes peso y vuelves a la parte baja. Es la forma más fiable de progresar sin estancarte.</p>
-    <p><b>Tiempo y superseries.</b> Cada sesión se monta para caber en los ${s.duracion} minutos que elegiste, contando calentamiento, series y descansos reales. Para meter más trabajo sin acortar descansos, algunos ejercicios van en superserie: haces una serie de uno, pasas al otro y descansas al terminar la pareja. Solo se emparejan ejercicios que no compiten entre sí (empuje con tirón, o dos músculos pequeños distintos), así que no pierdes rendimiento. Los ejercicios principales van siempre solos.</p>
+    <p><b>Tiempo y superseries.</b> Cada sesión se monta para caber en los ${s.duracion} minutos que elegiste, contando calentamiento, series y descansos reales. Si activas las superseries en los ajustes de entreno, para meter más trabajo sin acortar descansos algunos ejercicios van en superserie: haces una serie de uno, pasas al otro y descansas al terminar la pareja. Solo se emparejan ejercicios que no compiten entre sí (empuje con tirón, o dos músculos pequeños distintos), así que no pierdes rendimiento. Los ejercicios principales van siempre solos.</p>
     <p><b>Descansos.</b> Entre 2 y 3 minutos en los ejercicios grandes y alrededor de 1 minuto en los pequeños. Por debajo de un minuto se levanta menos y se crece algo menos; por encima de 2-3 minutos apenas se gana más. Descansar poco no quema más grasa: solo te hace levantar menos peso.</p>
     <p><b>Descarga.</b> Cada 5 semanas, una semana suave. Se va la fatiga acumulada y aparece lo ganado. Si el rendimiento cae antes, la app te propone adelantarla.</p>
     <p><b>Selección de ejercicios.</b> Se priorizan los que cargan el músculo en estiramiento, los estables (máquinas y poleas) para poder acercarte al fallo con seguridad y, si marcaste molestias, los que menos cargan esa zona.</p>
@@ -318,10 +324,10 @@ Object.assign(A,{
     UI.rnW=isNaN(w)?"":w;UI.rnR="";
     if(!UI.rnWarm){
       const nWork=it.sets_.filter(s=>!s.warm).length;if(nWork>=it.sets)it.done=true;
-      const j=it.ss?d.exs.findIndex((x,k)=>k!==d.cur&&x.ss===it.ss&&!x.done&&!x.skipped):-1;
+      const ssId=supersOn(p)?it.ss:"";const j=ssId?d.exs.findIndex((x,k)=>k!==d.cur&&x.ss===ssId&&!x.done&&!x.skipped):-1;
       const nj=j>=0?d.exs[j].sets_.filter(s=>!s.warm).length:0;
-      if(j>=0&&nj<nWork){UI.rest={until:Date.now()+20000,total:20};d.cur=j;toast(`Superserie: ahora ${EXM[d.exs[j].ex].name}`);}
-      else{UI.rest={until:Date.now()+it.rest*1000,total:it.rest};if(j>=0&&j<d.cur&&d.exs[j].sets_.filter(s=>!s.warm).length<d.exs[j].sets)d.cur=j;}
+      if(j>=0&&nj<nWork){UI.rest={until:Date.now()+20000,total:20,label:"Cambio a "+EXM[d.exs[j].ex].name};d.cur=j;toast(`Superserie: ahora ${EXM[d.exs[j].ex].name}`);}
+      else{const back=j>=0&&j<d.cur&&d.exs[j].sets_.filter(s=>!s.warm).length<d.exs[j].sets;UI.rest={until:Date.now()+it.rest*1000,total:it.rest,label:back?"Descanso · vuelves a "+EXM[d.exs[j].ex].name:"Descanso"};if(back)d.cur=j;}
     }
     commit();},
   delSet:el=>{const d=G(P()).draft;d.exs[d.cur].sets_.splice(+el.dataset.i,1);commit();},
@@ -351,6 +357,7 @@ Object.assign(A,{
 Object.assign(CHG,{
   gsItem:el=>{UI.gs.d.items[el.dataset.id]=el.checked;},
   gsTec:el=>{UI.gs.d.tecnicas=el.checked;},
+  gsSup:el=>{UI.gs.d.supers=el.checked;},
   rnWarm:el=>{UI.rnWarm=el.checked;render();},
   swPerm:el=>{UI.sw.perm=el.checked;},
   esearch:el=>{UI.eq=el.value;render();const s=document.getElementById("esearch");if(s){s.focus();s.setSelectionRange(s.value.length,s.value.length);}}
