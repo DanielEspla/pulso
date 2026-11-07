@@ -31,11 +31,11 @@ function viewGymSetup(p){
   let h="";
   if(step===0){const gc=goalCfg(p);h=`<h2>Tu punto de partida</h2><p class="muted" style="margin:6px 0 18px">Con esto se decide el volumen, los rangos de repeticiones y cuánto te acercas al fallo.</p>
     <div class="stack"><div class="field"><span>Experiencia en el gimnasio ${infoBtn("nivel","nivel")}</span>${seg("nivel",Object.entries(NIVELES).map(([k,v])=>[k,v.split(" (")[0]]))}<span class="hint">${NIVELES[d.nivel]}. ${d.nivel==="avanzado"?"Empiezas directamente a RIR 1-2: la primera sesión de cada ejercicio sirve para calibrar el peso.":"Si dudas, elige el nivel inferior: la app te propondrá subir cuando lo notes fácil."}</span></div>
-    <div class="card flat"><span class="lbl">Tu objetivo</span><p style="margin-top:4px"><b>${gc.t}</b> ${infoBtn("g_"+gc.id,gc.t)}${gc.fase?` <span class="muted small">· ${gc.fase}</span>`:""}</p><p class="small muted">El entreno se adapta a él. Puedes cambiarlo cuando quieras en ${NUTRI?"Objetivos":"Más › Perfil"}.</p></div>
+    <div class="card flat stack"><span class="lbl">Tu objetivo</span><p style="margin-top:4px"><b>${gc.t}</b> ${infoBtn("g_"+gc.id,gc.t)}${gc.fase?` <span class="muted small">· ${gc.fase}</span>`:""}</p><p class="small muted">El entreno se adapta a él (volumen, repeticiones y cercanía al fallo). Cámbialo aquí cuando quieras.</p>${goalCards(p.meta,"goalAsk")}</div>
     <label class="chk"><input type="checkbox" data-c="gsSup" id="gs_sup" ${d.supers?"checked":""}><span>Superseries<br><span class="hint">Empareja algunos ejercicios: una serie de uno, pasas al otro y descansas al terminar la pareja. Ahorra tiempo, pero cambias de ejercicio en mitad. Apagado: haces cada ejercicio entero con su descanso.</span></span></label>
     ${d.nivel!=="principiante"?`<label class="chk"><input type="checkbox" data-c="gsTec" id="gs_tec" ${d.tecnicas?"checked":""}><span>Técnicas de intensidad ${infoBtn("tecnicas","técnicas de intensidad")}<br><span class="hint">Rest-pause, descendentes, parciales y series top en la última serie. Más estímulo sin alargar la sesión.</span></span></label>`:""}</div>`;}
   if(step===1)h=`<h2>Cuándo entrenas</h2><p class="muted" style="margin:6px 0 18px">Los días que marques serán días de gimnasio en tu semana tipo y en tu dieta.</p>
-    <div class="stack"><div class="field"><span>Días de gimnasio</span><div class="dchips">${DIAS.map((x,i)=>`<button type="button" class="dch ${d.dias.includes(i)?"on":""}" data-a="gsDay" data-i="${i}">${i===2?"X":x[0]}</button>`).join("")}</div><span class="hint">${d.dias.length} día${d.dias.length===1?"":"s"}: ${d.dias.length?SPLIT_TXT[Math.min(6,d.dias.length)]:"elige al menos uno"}. Deja al menos un día entre sesiones cuando puedas.</span></div>
+    <div class="stack"><div class="field"><span>Días de gimnasio</span><div class="dchips">${DIAS.map((x,i)=>`<button type="button" class="dch ${d.dias.includes(i)?"on":""}" data-a="gsDay" data-i="${i}">${i===2?"X":x[0]}</button>`).join("")}</div><span class="hint">${d.dias.length} día${d.dias.length===1?"":"s"}: ${d.dias.length?SPLIT_TXT[Math.min(6,d.dias.length)]:"elige al menos uno"}. Deja al menos un día entre sesiones cuando puedas.</span>${d.dias.length?`<span class="hint"><b>Cómo quedará la tabla:</b> ${SPLIT_WHY[Math.min(6,d.dias.length)]}</span>`:""}${g.plan&&g.setup&&d.dias.length!==g.setup.dias.length?`<span class="hint"><b>Se rehará la tabla</b> (de ${g.plan.sessions.length} a ${Math.min(6,d.dias.length)} sesiones). La actual queda guardada en «Planes anteriores».</span>`:""}</div>
     <div class="field"><span>Tiempo por sesión</span>${seg("duracion",DURACIONES.map(m=>[m,m+" min"]))}</div>
     <div class="field"><span>A qué hora entrenas cada día</span>${d.dias.length?`<div class="stack" style="gap:6px">${d.dias.map(i=>`<div class="row between"><span style="min-width:80px">${DIAS[i]}</span><div class="seg" style="flex:1">${Object.entries(HORAS).map(([k,v])=>`<button type="button" class="${((d.horas||{})[i]||d.hora)===k?"on":""}" data-a="gsHora" data-i="${i}" data-k="${k}">${v.replace("Por la ","").replace("A ","").replace("mañana","Mañana").replace("mediodía","Mediodía").replace("tarde","Tarde").replace("noche","Noche")}</button>`).join("")}</div></div>`).join("")}</div>`:`<span class="hint">Elige primero los días.</span>`}<span class="hint">Sirve para poner más hidratos en la comida de antes y la de después de entrenar cada día.</span></div></div>`;
   if(step===2){
@@ -50,7 +50,8 @@ function viewGymSetup(p){
   return `<div class="ob"><div class="row between"><h1>${g.setup?"Ajustes de entreno":"Tu entreno"}</h1>${g.setup?`<button class="btn ghost sm" data-a="gsCancel">Cancelar</button>`:""}</div>
   <div class="steps">${Array.from({length:N},(_,i)=>`<i class="${i<=step?"on":""}"></i>`).join("")}</div>${h}
   ${UI.err?`<p class="err" style="margin-top:14px">${esc(UI.err)}</p>`:""}
-  <div class="row between" style="margin-top:22px">${step>0?`<button class="btn" data-a="gsBack">Atrás</button>`:"<span></span>"}<button class="btn pri" data-a="gsNext">${step===N-1?"Crear mi plan":"Siguiente"}</button></div></div>`;
+  <div class="row between" style="margin-top:22px">${step>0?`<button class="btn" data-a="gsBack">Atrás</button>`:"<span></span>"}<button class="btn pri" data-a="gsNext">${step===N-1?(g.setup?"Guardar y rehacer":"Crear mi plan"):"Siguiente"}</button></div>
+  ${g.setup&&step<N-1?`<button class="btn wide" style="margin-top:10px" data-a="gsSave">Guardar cambios ya</button>`:""}</div>`;
 }
 function applyGymSetup(p,d){
   const g=G(p);g.setup=d;
@@ -303,7 +304,10 @@ Object.assign(A,{
   gsOpen:()=>{UI.gs=null;UI.gs={step:0,d:JSON.parse(JSON.stringify(G(P()).setup||gymDefaults(P())))};render();window.scrollTo(0,0);},
   gsCancel:()=>{UI.gs=null;UI.err=null;render();},
   gsSet:el=>{const v=el.dataset.v;UI.gs.d[el.dataset.k]=/^\d+$/.test(v)?+v:v;render();},
-  gsDay:el=>{const d=UI.gs.d;const i=+el.dataset.i;d.dias=d.dias.includes(i)?d.dias.filter(x=>x!==i):[...d.dias,i].sort();render();},
+  gsDay:el=>{const d=UI.gs.d;const i=+el.dataset.i;if(!d.dias.includes(i)&&d.dias.length>=6){toast("Máximo 6 días: hace falta al menos uno de descanso");return;}d.dias=d.dias.includes(i)?d.dias.filter(x=>x!==i):[...d.dias,i].sort();render();},
+  gsSave:()=>{const {d}=UI.gs;if(!d.dias.length){UI.err="Elige al menos un día de gimnasio.";UI.gs.step=1;render();return;}
+    if(!GYM_ITEMS.some(([id])=>d.items[id])){UI.err="Marca al menos algo de material.";UI.gs.step=2;render();return;}
+    const p=P();const n0=(G(p).plan||{sessions:[]}).sessions.length;applyGymSetup(p,d);UI.gs=null;UI.err=null;UI.gtab="plan";commit();window.scrollTo(0,0);const n1=G(p).plan.sessions.length;toast(n1!==n0?`Tabla rehecha: ${n1} sesiones por semana.`:"Ajustes guardados. Tabla actualizada.");},
   gsAll:el=>{const v=el.dataset.v==="1";GYM_ITEMS.forEach(([id])=>UI.gs.d.items[id]=v);render();},
   gsJoint:el=>{const d=UI.gs.d;d.dolor[el.dataset.k]=d.dolor[el.dataset.k]?0:1;render();},
   gsPrio:el=>{const d=UI.gs.d;const k=el.dataset.k;if(d.prio.includes(k))d.prio=d.prio.filter(x=>x!==k);else if(d.prio.length<2)d.prio.push(k);else toast("Máximo dos músculos prioritarios");render();},
@@ -377,7 +381,7 @@ function gymSimple(p){
   const nx=g.plan.sessions[g.next%n];
   const lastW=id=>{const h=exHistory(p,id);if(!h.length)return "";const t=Math.max(...h[h.length-1].sets.map(s=>s.w||0));return t?` · última vez ${nf(t,t%1?1:0)} kg`:"";};
   const series=prev.reduce((a,x)=>a+x.sets,0);
-  const more=`<button class="btn wide" data-a="gFull" data-v="1">Plan, progreso y más opciones</button>`;
+  const more=`<button class="btn wide" data-a="gFull" data-v="1">Plan, progreso y más opciones</button><button class="btn ghost wide" data-a="gsOpen">Cambiar días, objetivo, nivel o material</button>`;
   if(last&&UI.gsel==null)return `<div class="head"><div><h1>Entreno</h1></div></div><div class="stack">
     <div class="hero"><span class="lbl acc">✓ Hoy ya has entrenado</span><h2 class="disp">${esc(last.name)}</h2><p class="muted">${sessionStats(p,last).sets} series en ${last.min} minutos. Guardado.</p><p>La próxima vez toca: <b>${esc(nx.name)}</b>.</p></div>
     ${typeof cardioCard==="function"?cardioCard(p):""}${more}</div>`;

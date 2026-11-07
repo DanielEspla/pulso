@@ -52,7 +52,17 @@ let _forceBuild=false;
 const _buildGymPlanFixed=buildGymPlan;
 buildGymPlan=function(p){const g=G(p);if(g.plan&&g.plan.custom&&!_forceBuild)return g.plan;return _buildGymPlanFixed(p);};
 const _applyGymSetupBase=applyGymSetup;
-applyGymSetup=function(p,d){const g=G(p);const keep=g.plan&&g.plan.custom;_forceBuild=!keep;try{_applyGymSetupBase(p,d);}finally{_forceBuild=false;}};
+/* Un plan escrito a mano solo se conserva si los días siguen siendo los mismos que sus sesiones.
+   Si cambias los días, la tabla se rehace sola (el plan fijo queda en «Planes anteriores»).
+   Si cambias material, molestias o superseries con el mismo número de días, se revisan sus ejercicios. */
+applyGymSetup=function(p,d){const g=G(p);const c=g.plan&&g.plan.custom;
+  const keep=!!c&&Math.min(6,d.dias.length)===g.plan.n;
+  const old0=JSON.stringify([(g.setup||{}).items,(g.setup||{}).dolor,!!(g.setup||{}).supers]);
+  _forceBuild=!keep;try{_applyGymSetupBase(p,d);}finally{_forceBuild=false;}
+  if(keep&&old0!==JSON.stringify([d.items,d.dolor,!!d.supers])){const old=g.plan;g.plan=makeFixedPlan(p,c);g.plan.v=old.v;}
+};
+const _goalDoA=A.goalDo;
+A.goalDo=function(el){_goalDoA(el);const g=G(P());if(g.plan&&g.plan.custom)toast("Objetivo cambiado. Tu plan escrito a mano se mantiene: pulsa «Rehacer plan» si quieres que se adapte al nuevo objetivo.");};
 /* Bloques más largos en los planes fijos: semanas de trabajo repartidas en las 4 fases y la última, descarga */
 const _mesoWeekBase=mesoWeek;
 mesoWeek=function(p){
@@ -72,6 +82,7 @@ function fixedSwitchHint(p){
 }
 function fixedPlanCard(p){
   const g=G(p);if(!g.plan)return "";
+  if(!/^dani/i.test((p.nombre||"").trim())&&!g.plan.custom)return "";
   if(!g.plan.custom)return `<details class="card"><summary><b>Planes escritos a mano</b><span class="small muted"> · tu plan de 6 días cuidando la lumbar</span></summary><div class="stack" style="margin-top:10px"><p class="small">Plan de 6 días con pecho, espalda y pierna dos veces por semana, ejercicios de poca carga lumbar y bloques de 7 semanas. Se guarda también una versión de 5 días por si la recuperación no da.</p><p class="small muted">Tu plan actual queda en «Planes anteriores» por si quieres volver.</p><button class="btn sm pri" data-a="fixedUse" data-k="dani6">Usar este plan</button></div></details>`;
   const why=FIXED_WHY[g.plan.custom];const bw=blockWeek(p);
   return `<div class="card stack"><div class="row between"><div><span class="lbl">Plan fijo</span><h3 style="margin:2px 0 0">${esc(g.plan.title||"")}</h3></div>${bw?`<span class="small muted">Semana ${bw.w} de ${bw.L}${bw.w===bw.L?" · descarga":""}</span>`:""}</div>
