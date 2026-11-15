@@ -22,7 +22,7 @@ function mineNewEx(p,name,prim,time,bw){
   g.customEx.push(c);registerImported([c]);return id;
 }
 /* Si un ejercicio propio existe solo en otro perfil, lo copia al activo para no perderlo */
-function mineKeep(p,id){const e=EXM[id];if(!e||!e.imported)return;const g=G(p);g.customEx=g.customEx||[];if(!g.customEx.some(c=>c.id===id))g.customEx.push({id:e.id,name:e.name,prim:e.prim,pat:e.pat,rep:e.rep,inc:e.inc});}
+function mineKeep(p,id){const e=EXM[id];if(!e||!e.imported||e.prog)return;const g=G(p);g.customEx=g.customEx||[];if(!g.customEx.some(c=>c.id===id))g.customEx.push({id:e.id,name:e.name,prim:e.prim,pat:e.pat,rep:e.rep,inc:e.inc});}
 /* Busca en la biblioteca: primero nombre exacto, luego el más corto que contenga todas las palabras */
 function mineMatch(name){
   const t=mineNorm(name);if(!t)return null;

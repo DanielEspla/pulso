@@ -169,4 +169,5 @@ X("plancha","Plancha","core","abdomen","","","","B","s","Codos debajo de los hom
 X("pallof","Press Pallof","core","abdomen","","poleas","","B","a","De lado a la polea a la altura del pecho|Empuja las manos al frente sin dejarte girar|Pausa con los brazos estirados","Rotar el tronco",1.25);
 X("dead_bug","Dead bug","core","abdomen","","","","B","a","Tumbado boca arriba, zona lumbar pegada al suelo|Estira brazo y pierna contrarios|Lento y controlado","Despegar la espalda del suelo",0);
 X("plancha_carga_lateral","Paseo o sostén con carga lateral","core","abdomen","trapecio","kettlebell","","B","s","Peso en una sola mano|Tronco recto, sin inclinarte|Aguanta respirando","Inclinarse hacia el peso",4);
+const isDist=id=>!!(EXM[id]&&EXM[id].rep==="m");
 const EXM=Object.fromEntries(EX.map(e=>[e.id,e]));

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Afina · Entrena con un plan que sabe cuánto levantas</title>
+<meta name="description" content="Afina es una app de entrenamiento que reconoce tu nivel y te da el peso con el que empezar. Plan de gimnasio, Hyrox, CrossFit, calistenia, paddle surf y fascias. Sin cuenta y con tus datos en tu móvil.">
+<meta name="theme-color" content="#121019"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-512.png">
+<meta property="og:title" content="Afina"><meta property="og:description" content="Un plan de entrenamiento que sabe cuánto levantas."><meta property="og:image" content="icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#121019;--surface:#1B1823;--sunk:#25202E;--hero:#261F34;--ink:#FAF6F1;--muted:#C2BBCB;--line:#3A3446;--accent:#C17352;--accent-t:#E8956F;--accent-ink:#FFF6F0;
+--fd:"Playfair Display",Georgia,serif;--fb:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--fb);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-t)}img{max-width:100%;display:block}
+.wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--fd);font-size:1.35rem;font-weight:700;color:var(--ink);text-decoration:none}
+.brand img{width:34px;height:34px;border-radius:9px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 24px;border-radius:14px;font-weight:600;font-size:1rem;text-decoration:none;border:1px solid var(--line);color:var(--ink);background:var(--surface)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);box-shadow:0 10px 30px -12px rgba(193,115,82,.8)}
+.btn.sm{min-height:40px;padding:0 16px;font-size:.92rem}
+h1,h2,h3{font-family:var(--fd);letter-spacing:-.01em;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.2rem,6.4vw,3.9rem);line-height:1.06}
+h2{font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.15}
+h3{font-size:1.2rem}
+.lbl{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--accent-t)}
+.muted{color:var(--muted)}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;padding:34px 0 60px}
+.hero p.lead{font-size:1.15rem;color:var(--muted);max-width:34em;margin:18px 0 26px}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.note{font-size:.88rem;color:var(--muted);margin-top:14px}
+.phone{width:min(300px,78vw);margin:0 auto;border-radius:38px;padding:10px;background:linear-gradient(160deg,#3a3446,#1b1823);box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 1px #453e52}
+.phone img{border-radius:29px;width:100%}
+section{padding:58px 0;border-top:1px solid var(--line)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center}
+
+.split p{color:var(--muted);margin:14px 0 0}
+.split ul{margin:16px 0 0;padding:0;list-style:none}
+.split li{padding:9px 0 9px 26px;position:relative;border-top:1px solid var(--line)}
+.split li:before{content:"";position:absolute;left:4px;top:19px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-top:26px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px}
+.card p{margin:8px 0 0;color:var(--muted);font-size:.95rem}
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:26px}
+.steps ol{margin:10px 0 0;padding-left:20px;color:var(--muted)}.steps li{margin:6px 0}
+.honest{background:var(--hero);border:1px solid var(--line);border-radius:22px;padding:28px}
+.honest p{color:var(--muted);margin:12px 0 0}
+details{border-top:1px solid var(--line);padding:16px 0}details:last-of-type{border-bottom:1px solid var(--line)}
+summary{font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px}
+summary:after{content:"+";color:var(--accent-t);font-size:1.3rem;line-height:1}details[open] summary:after{content:"–"}
+details p{color:var(--muted);margin:10px 0 0}
+.final{text-align:center}.final p{color:var(--muted);max-width:32em;margin:14px auto 24px}
+footer{border-top:1px solid var(--line);padding:26px 0 44px;font-size:.88rem;color:var(--muted)}
+footer .row{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media(max-width:780px){.hero,.split,.steps{grid-template-columns:1fr}.hero{padding-top:12px;gap:30px}section{padding:44px 0}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style></head><body>
+<div class="wrap">
+<header><a class="brand" href="web"><img src="icon-192.png" alt="">Afina</a><a class="btn sm pri" href="./">Abrir la app</a></header>
+
+<div class="hero">
+  <div>
+    <span class="lbl">Entrenamiento a tu medida</span>
+    <h1>Un plan que sabe cuánto levantas</h1>
+    <p class="lead">Casi todas las apps te tratan como si empezaras de cero. Afina te pregunta qué mueves hoy, calcula tu nivel y te dice con qué peso empezar cada ejercicio. Luego aprende de cada serie que haces.</p>
+    <div class="cta"><a class="btn pri" href="./">Abrir Afina</a><a class="btn" href="#instalar">Cómo se instala</a></div>
+    <p class="note">Sin registro, sin anuncios. Tus datos se quedan en tu móvil.</p>
+  </div>
+  <div class="phone"><img src="web/img/nivel.webp" width="520" height="840" alt="Pantalla de Afina con el nivel calculado a partir de la sentadilla, el press banca y el peso muerto"></div>
+</div>
+
+<section>
+  <div class="split">
+    <div class="phone"><img src="web/img/hoy.webp" width="520" height="840" loading="lazy" alt="Sesión del día en Afina con ejercicios, series y botón de empezar"></div>
+    <div class="txt">
+      <span class="lbl">Tu plan de gimnasio</span>
+      <h2>Hecho para tus días, tu material y tus articulaciones</h2>
+      <p>Le dices cuántos días entrenas, qué tienes a mano y qué te molesta. Te monta la semana y la va ajustando.</p>
+      <ul>
+        <li>Te propone el peso de cada serie según lo que hiciste la última vez.</li>
+        <li>Descansos con aviso de sonido y vibración.</li>
+        <li>Si un ejercicio no te va o no hay máquina, lo cambias por otro equivalente.</li>
+        <li>Detecta cuándo te estancas y te dice cómo salir.</li>
+        <li>¿Ya tienes tu rutina? La escribes o la pegas y la usas con el mismo contador.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="split rev">
+    <div class="txt">
+      <span class="lbl">Programas por disciplina</span>
+      <h2>Cinco formas de entrenar, cada una con tres niveles</h2>
+      <p>Base, Medio y Avanzado. La app te sugiere el tuyo a partir de tu valoración y puedes cambiarlo cuando quieras.</p>
+      <ul>
+        <li><b>Hyrox:</b> carrera y estaciones, con series en metros.</li>
+        <li><b>CrossFit:</b> fuerza, gimnásticos y acondicionamiento, con marcas de referencia.</li>
+        <li><b>Calistenia:</b> progresiones con tu propio peso.</li>
+        <li><b>Paddle surf:</b> core, piernas, equilibrio y remo.</li>
+        <li><b>Fascias de cuerpo entero:</b> rodillo, cadenas largas, rebotes y respiración.</li>
+      </ul>
+    </div>
+    <div class="phone"><img src="web/img/prog.webp" width="520" height="840" loading="lazy" alt="Lista de programas de Afina: WOD con cronómetro, Hyrox, CrossFit y calistenia"></div>
+  </div>
+</section>
+
+<section>
+  <div class="split">
+    <div class="phone"><img src="web/img/wod.webp" width="520" height="840" loading="lazy" alt="Cronómetro de WOD en Afina con cuenta atrás y contador de rondas"></div>
+    <div class="txt">
+      <span class="lbl">WOD con cronómetro</span>
+      <h2>AMRAP, For Time, EMOM y Tabata</h2>
+      <p>Cuenta atrás, avisos en cada cambio y un botón grande para sumar rondas sin mirar el móvil más de un segundo.</p>
+      <ul>
+        <li>Entrenos clásicos ya preparados: Fran, Cindy, Grace, Helen, Karen y Annie.</li>
+        <li>O monta el tuyo escribiendo los ejercicios.</li>
+        <li>Guarda el resultado y te dice en qué nivel estás.</li>
+        <li>Ves tu evolución en metros, tiempos y marcas.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="lbl">También incluye</span>
+  <h2>Lo que hace falta y nada que estorbe</h2>
+  <div class="grid">
+    <div class="card"><h3>Dieta, si la quieres</h3><p>Menú, lista de la compra y recetas. Está apagado por defecto: lo activas tú en Ajustes.</p></div>
+    <div class="card"><h3>Registro y logros</h3><p>Peso, medidas, récords, racha y medallas para ver de un vistazo si avanzas.</p></div>
+    <div class="card"><h3>Copia de seguridad</h3><p>Guardas tus datos en un archivo y los recuperas en otro móvil.</p></div>
+    <div class="card"><h3>Vídeos de técnica</h3><p>Cada ejercicio tiene sus claves, los errores típicos y un enlace para verlo en YouTube.</p></div>
+    <div class="card"><h3>Funciona sin conexión</h3><p>Una vez instalada, se abre aunque el gimnasio no tenga cobertura.</p></div>
+    <div class="card"><h3>A tu gusto</h3><p>Tema claro u oscuro y varias paletas de color.</p></div>
+  </div>
+</section>
+
+<section id="instalar">
+  <span class="lbl">Instalación</span>
+  <h2>Se instala desde el navegador, en un minuto</h2>
+  <div class="steps">
+    <div class="card"><h3>iPhone</h3><ol><li>Abre la app en Safari.</li><li>Pulsa el botón de compartir.</li><li>Elige «Añadir a pantalla de inicio».</li></ol></div>
+    <div class="card"><h3>Android</h3><ol><li>Abre la app en Chrome.</li><li>Pulsa el menú de los tres puntos.</li><li>Elige «Instalar aplicación» o «Añadir a pantalla de inicio».</li></ol></div>
+  </div>
+  <p class="note">No pasa por ninguna tienda. Cuando hay una versión nueva, la propia app te avisa y la actualizas con un toque.</p>
+</section>
+
+<section>
+  <div class="honest">
+    <span class="lbl">Con honestidad</span>
+    <h2 style="margin-top:8px">Lo que Afina es y lo que no</h2>
+    <p>Es una guía de entrenamiento, no un servicio médico ni un entrenador personal. Los niveles se comparan con referencias orientativas de la comunidad de fuerza y los pesos de partida son estimaciones: tu primera serie manda.</p>
+    <p>En cada programa te contamos qué respaldo tiene. Donde la evidencia es limitada, como en el entrenamiento de fascias, lo decimos tal cual.</p>
+    <p>Si tienes una lesión, una enfermedad o dudas, consulta antes con un médico o un fisioterapeuta.</p>
+  </div>
+</section>
+
+<section>
+  <span class="lbl">Preguntas frecuentes</span>
+  <h2 style="margin-bottom:22px">Antes de empezar</h2>
+  <details><summary>¿Tengo que crear una cuenta?</summary><p>No. Abres la app, respondes unas preguntas y empiezas. No pedimos correo ni teléfono.</p></details>
+  <details><summary>¿Dónde se guardan mis datos?</summary><p>En tu propio dispositivo, dentro del navegador. No se envían a ningún servidor. Por eso conviene hacer una copia de seguridad de vez en cuando, sobre todo antes de cambiar de móvil. Más detalle en la <a href="privacidad">página de privacidad</a>.</p></details>
+  <details><summary>¿Sirve si nunca he entrenado?</summary><p>Sí. Si no pones marcas, empiezas en nivel principiante, con ejercicios sencillos y la técnica explicada paso a paso.</p></details>
+  <details><summary>¿Y si ya llevo años entrenando?</summary><p>Haz la valoración de nivel con una serie reciente de sentadilla, press banca o peso muerto. El plan se adapta y te sugiere pesos de partida acordes.</p></details>
+  <details><summary>¿Necesito un gimnasio completo?</summary><p>No. Eliges el material que tienes y el plan se monta con eso. Calistenia y fascias casi no piden material.</p></details>
+  <details><summary>¿Avisa con la pantalla bloqueada?</summary><p>Todavía no. Durante la sesión la app mantiene la pantalla encendida para que no te pierdas el aviso del descanso.</p></details>
+</section>
+
+<section class="final">
+  <h2>Pruébala en tu próxima sesión</h2>
+  <p>Dos minutos de preguntas y tienes la semana montada.</p>
+  <a class="btn pri" href="./">Abrir Afina</a>
+</section>
+
+<footer><div class="row"><span>Afina · guía de entrenamiento, no servicio médico</span><span><a href="privacidad">Privacidad</a> · <a href="./">Abrir la app</a></span></div></footer>
+</div>
+</body></html>

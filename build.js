@@ -33,4 +33,7 @@ self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.a
 self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(fetch(e.request).then(r=>{const cp=r.clone();caches.open(C).then(c=>c.put(e.request,cp)).catch(()=>{});return r;}).catch(()=>caches.match(e.request).then(r=>r||caches.match("index.html"))));});
 `);
 ['icon-192.png','icon-512.png'].forEach(f=>{const s=path.join(__dirname,'assets',f);if(fs.existsSync(s))fs.copyFileSync(s,path.join(dist,f));});
+/* Web de presentación y privacidad */
+const web=path.join(__dirname,'web');if(fs.existsSync(web)){['web.html','privacidad.html'].forEach(f=>fs.copyFileSync(path.join(web,f),path.join(dist,f)));
+  fs.mkdirSync(path.join(dist,'web','img'),{recursive:true});fs.readdirSync(path.join(web,'img')).forEach(f=>fs.copyFileSync(path.join(web,'img',f),path.join(dist,'web','img',f)));}
 console.log('ok',Math.round(js.length/1024)+'KB js');

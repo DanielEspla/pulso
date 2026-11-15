@@ -78,7 +78,7 @@ function wodView(p){
     ${w.fmt==="tabata"?`<div class="row">${num("workS","Trabajo (s)",5,300)}${num("restS","Descanso (s)",0,300)}${num("rds","Rondas",1,50)}</div>`:""}
     <label class="field"><span>Qué vas a hacer</span><textarea class="inp" rows="4" data-wf="mov" placeholder="Una línea por ejercicio">${esc(w.mov)}</textarea></label>
     <button class="btn pri wide" data-a="wodGo">Empezar (cuenta atrás de ${w.cd} s)</button></div>
-  ${last.length?`<div class="card stack"><span class="lbl">Últimos WOD</span>${last.map(x=>`<div class="row between small"><span>${esc(x.date)} · ${esc(x.name)}</span><b>${esc(x.txt)}</b></div>`).join("")}</div>`:""}</div>`;
+  ${last.length?`<div class="card stack"><span class="lbl">Últimos WOD</span>${last.map(x=>`<div class="row between small"><span>${fdate(x.date)} · ${esc(x.name)}</span><b>${esc(x.txt)}</b></div>`).join("")}</div>`:""}</div>`;
 }
 const _viewProgWod=viewProg;
 viewProg=function(p){
@@ -98,14 +98,14 @@ Object.assign(A,{
     if(w.fmt==="tabata"&&(!(w.workS>=5)||!(w.restS>=0)||!(w.rds>=1))){toast("Revisa trabajo, descanso y rondas");return;}
     if((w.fmt==="amrap"||w.fmt==="emom")&&!(w.min>=1)){toast("Pon los minutos");return;}
     if(!ok(w.cap)||w.cap<0)w.cap=0;
-    w.step="run";w.t0=Date.now();w.last="";w.rounds=0;w.reps="";w.res="";audioUnlock();wodWake(true);render();window.scrollTo(0,0);},
+    ["min","workS","restS","rds","cap"].forEach(k=>{w[k]=+w[k]||0;});w.step="run";w.t0=Date.now();w.last="";w.rounds=0;w.reps="";w.res="";audioUnlock();wodWake(true);render();window.scrollTo(0,0);},
   wodRound:()=>{const w=UI.wod;w.rounds++;try{navigator.vibrate&&navigator.vibrate(40);}catch(e){}render();},
   wodUndo:()=>{const w=UI.wod;if(w.rounds>0)w.rounds--;render();},
   wodStop:()=>{const w=UI.wod;const c=wodCalc(w,Date.now());w.endT=c.el||0;if(w.fmt==="fortime")w.res=fmtT(Math.round(w.endT));w.step="done";wodWake(false);render();},
   wodExit:()=>{UI.wod=null;wodWake(false);UI.pg={screen:"list"};render();},
   wodSave:()=>{const p=P();const g=G(p);const w=UI.wod;let txt="",rec={date:today(),name:w.name||WOD_FMT[w.fmt].n,fmt:w.fmt,notes:w.notes||"",mov:w.mov};
-    if(w.fmt==="amrap"){const ex=parseInt(w.reps)||0;rec.rounds=w.rounds;rec.reps=ex;txt=w.rounds+(ex?" + "+ex:"")+" rondas";if(w.bid&&w.rounds>=0)(g.bench=g.bench||[]).push({id:w.bid,v:w.rounds,date:today()});}
-    else if(w.fmt==="fortime"){const t=parseTime(w.res);if(!(t>0)){toast("Pon el tiempo, por ejemplo 7:30");return;}rec.t=t;rec.rounds=+w.rounds||0;txt=fmtT(t);if(w.bid)(g.bench=g.bench||[]).push({id:w.bid,v:t,date:today()});}
+    if(w.fmt==="amrap"){const ex=parseInt(w.reps)||0;rec.rounds=w.rounds;rec.reps=ex;txt=w.rounds+(ex?" + "+ex:"")+" rondas";if(w.bid&&w.rounds>0)(g.bench=g.bench||[]).push({id:w.bid,v:w.rounds,date:today()});}
+    else if(w.fmt==="fortime"){const t=parseTime(w.res);if(!(t>0)){toast("Pon el tiempo, por ejemplo 7:30");return;}rec.t=t;rec.rounds=+w.rounds||0;txt=fmtT(t);if(w.bid&&!(w.cap>0&&t>=w.cap*60))(g.bench=g.bench||[]).push({id:w.bid,v:t,date:today()});}
     else{rec.min=w.min;txt=w.fmt==="emom"?w.min+" min":w.rds+"×"+w.workS+"/"+w.restS+" s";}
     rec.txt=txt;(g.wods=g.wods||[]).push(rec);if(g.wods.length>300)g.wods=g.wods.slice(-300);
     let extra="";if(w.bid){const b=BENCH.find(x=>x.id===w.bid);const v=rec.t||rec.rounds;if(b&&v)extra=" · "+benchLevel(b,v);}
@@ -115,3 +115,75 @@ document.addEventListener("input",e=>{const el=e.target.closest("[data-wf]");if(
 
 const _viewEntrenoWod=viewEntreno;
 viewEntreno=function(p){if(UI.wod&&UI.wod.step!=="setup"&&!G(p).draft)UI.pg={screen:"wod"};return _viewEntrenoWod(p);};
+
+/* ---- Sesiones de acondicionamiento como circuito con cronómetro ---- */
+const WOD_SES_RX=/Acondicionamiento|Metcon|Resistencia|Estaciones|Simulaci/i;
+function wodFromSession(id,lvl,i){
+  const s=progSessions(id,lvl)[i];if(!s)return null;
+  const rds=Math.min(...s.exs.map(x=>x.sets));
+  const mov=rds+" rondas\n"+s.exs.map(x=>{const e=EXM[x.ex];const q=e.rep==="m"?x.lo:(Math.round((x.lo+x.hi)/2/5)*5||x.lo);return q+(e.rep==="m"?" m de ":e.rep==="s"?" s de ":" ")+e.name.toLowerCase();}).join("\n");
+  return wodNew({fmt:"fortime",name:PROGS[id].n+" · "+s.n,mov,key:`prog:${id}:${lvl}:${i}`});
+}
+const _viewProgWodSes=viewProg;
+viewProg=function(p){
+  let h=_viewProgWodSes(p);const st=UI.pg;
+  if(st&&st.screen==="prog"&&(st.id==="crossfit"||st.id==="hyrox")){
+    const lvl=st.lvl!=null?st.lvl:progLevel(p,st.id);const ses=progSessions(st.id,lvl);
+    h=h.replace(/(<button class="btn [^"]*wide" data-a="pgStart" data-i="(\d+)">Empezar<\/button>)/g,(m,a,i)=>ses[+i]&&WOD_SES_RX.test(ses[+i].n)?a+`<button class="btn ghost wide" data-a="wodSes" data-i="${i}">Hacerla en circuito, con cronómetro</button>`:a);
+  }
+  return h;
+};
+A.wodSes=el=>{const p=P();const st=UI.pg;const lvl=st.lvl!=null?st.lvl:progLevel(p,st.id);const w=wodFromSession(st.id,lvl,+el.dataset.i);if(!w)return;UI.wod=w;UI.pg={screen:"wod"};render();const bl=document.getElementById('wod_build');if(bl)bl.scrollIntoView({block:'start'});};
+
+/* ---- Progreso de programas, distancias, marcas y WOD ---- */
+function progLog(p,id){return (G(p).log||[]).filter(l=>typeof l.mine==="string"&&l.mine.indexOf("prog:"+id+":")===0);}
+function exTrend(p,exId){
+  const e=EXM[exId];const h=exHistory(p,exId);if(h.length<2)return null;
+  let v,u;
+  if(e.rep==="m"){v=h.map(x=>x.sets.reduce((a,s)=>a+s.r,0));u="m";}
+  else if(e.rep==="s"){v=h.map(x=>Math.max(...x.sets.map(s=>s.r)));u="s";}
+  else if(h.some(x=>x.sets.some(s=>s.w>0))){v=h.map(x=>bestE1(x.sets));u="kg est.";}
+  else{v=h.map(x=>Math.max(...x.sets.map(s=>s.r)));u="reps";}
+  return {id:exId,n:h.length,v,u,ch:v[0]>0?(v[v.length-1]-v[0])/v[0]*100:null};
+}
+function trendRow(r){return `<div class="item"><span class="nm">${esc(EXM[r.id].name)}<span class="small muted"> · ${r.n} sesiones</span></span><span class="q row" style="gap:10px">${spark(r.v)}<span class="num small ${r.ch>0?"good":r.ch<0?"bad":""}">${nf(r.v[r.v.length-1],r.u==="kg est."?1:0)} ${r.u}</span></span></div>`;}
+function benchRows(p,filter){
+  const g=G(p);return BENCH.filter(filter).map(b=>{const l=(g.bench||[]).filter(x=>x.id===b.id);if(!l.length)return "";
+    const best=benchBest(g,b.id);const last=l[l.length-1];const f=v=>b.u==="r"?v+" rondas":fmtT(v);
+    const vals=l.map(x=>b.u==="r"?x.v:-x.v);
+    return `<div class="item"><span class="nm">${esc(b.n)}<span class="small muted"> · ${l.length} ${l.length===1?"vez":"veces"} · mejor ${f(best.v)}</span></span><span class="q row" style="gap:10px">${spark(vals)}<span class="num small">${f(last.v)}</span></span></div>`;}).join("");
+}
+function progProgressCard(p,id){
+  const lg=progLog(p,id);const g=G(p);const br=benchRows(p,b=>b.prog===id);
+  const wl=(g.wods||[]).filter(w=>w.name.indexOf(PROGS[id].n+" · ")===0);
+  if(!lg.length&&!br&&!wl.length)return `<div class="card stack"><span class="lbl">Tu progreso</span><p class="muted">Aún no hay sesiones de este programa. En cuanto hagas dos, aquí verás cómo evolucionas.</p></div>`;
+  const ws=weekStart(today());const wk=[];for(let i=7;i>=0;i--){const a=addDays(ws,-7*i);wk.push(lg.filter(l=>weekStart(l.date)===a).length);}
+  const ids=[...new Set(lg.flatMap(l=>l.exs.map(e=>e.ex)))].filter(x=>EXM[x]);
+  const tr=ids.map(x=>exTrend(p,x)).filter(Boolean).sort((a,b)=>b.n-a.n).slice(0,8);
+  return `<div class="card stack"><span class="lbl">Tu progreso</span>
+  <div class="grid3"><div class="stat"><span class="lbl">Sesiones</span><div class="v">${lg.length}</div><div class="d">${lg.length?"desde "+fdate(lg[0].date):"—"}</div></div>
+  <div class="stat"><span class="lbl">Esta semana</span><div class="v">${wk[7]}</div><div class="d">sesiones</div></div>
+  <div class="stat"><span class="lbl">8 semanas</span><div class="v" style="line-height:1">${spark(wk)||"—"}</div><div class="d">constancia</div></div></div>
+  ${tr.length?`<div class="items">${tr.map(trendRow).join("")}</div><p class="hint">Metros: total de la sesión. Segundos y repeticiones: tu mejor serie. Con peso: fuerza estimada.</p>`:`<p class="small muted">Repite una sesión y aquí aparece la evolución de cada ejercicio.</p>`}
+  ${br?`<span class="lbl">Marcas</span><div class="items">${br}</div>`:""}
+  ${wl.length?`<span class="lbl">Circuitos con cronómetro</span>${wl.slice(-4).reverse().map(x=>`<div class="row between small"><span>${fdate(x.date)} · ${esc(x.name.split(" · ")[1]||x.name)}</span><b>${esc(x.txt)}</b></div>`).join("")}`:""}
+  </div>`;
+}
+const _viewProgProgress=viewProg;
+viewProg=function(p){
+  let h=_viewProgProgress(p);const st=UI.pg;
+  if(st&&st.screen==="prog"){const mk='<div class="card stack"><span class="lbl">Qué necesitas</span>';if(h.includes(mk))h=h.replace(mk,progProgressCard(p,st.id)+mk);}
+  return h;
+};
+const _gymProgresoProg=gymProgreso;
+gymProgreso=function(p){
+  let h=_gymProgresoProg(p);const g=G(p);
+  const ids=[...new Set((g.log||[]).flatMap(l=>l.exs.map(e=>e.ex)))].filter(isDist);
+  const tr=ids.map(x=>exTrend(p,x)).filter(Boolean).sort((a,b)=>b.n-a.n);
+  const br=benchRows(p,()=>true);const wl=(g.wods||[]).slice(-6).reverse();
+  let add="";
+  if(tr.length)add+=`<div class="card"><span class="lbl">Carrera y distancias</span><div class="items">${tr.map(trendRow).join("")}</div><p class="hint" style="margin-top:8px">Metros totales por sesión en cada ejercicio.</p></div>`;
+  if(br)add+=`<div class="card"><span class="lbl">Marcas de referencia</span><div class="items">${br}</div></div>`;
+  if(wl.length)add+=`<div class="card stack"><span class="lbl">Últimos WOD</span>${wl.map(x=>`<div class="row between small"><span>${fdate(x.date)} · ${esc(x.name)}</span><b>${esc(x.txt)}</b></div>`).join("")}</div>`;
+  if(!add)return h;const i=h.lastIndexOf("</div>");return h.slice(0,i)+add+h.slice(i);
+};

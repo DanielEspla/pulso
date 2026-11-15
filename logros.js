@@ -6,12 +6,12 @@ const TONS_EQ=[[6,"un elefante africano"],[40,"un camión de 40 toneladas cargad
 
 /* ---- Datos base ---- */
 function lgSessions(p){return ((p.gym&&p.gym.log)||[]).filter(s=>s.exs&&s.exs.length).slice().sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);}
-function lgTons(p){return lgSessions(p).reduce((a,s)=>a+s.exs.reduce((b,x)=>b+x.sets.filter(t=>!t.warm).reduce((c,t)=>c+(t.w||0)*(t.r||0),0),0),0)/1000;}
+function lgTons(p){return lgSessions(p).reduce((a,s)=>a+s.exs.filter(x=>!isDist(x.ex)).reduce((b,x)=>b+x.sets.filter(t=>!t.warm).reduce((c,t)=>c+(t.w||0)*(t.r||0),0),0),0)/1000;}
 /* Récords: cada vez que la fuerza estimada de un ejercicio supera la mejor anterior */
 function lgRecords(p){
   const best={},list=[];
   lgSessions(p).forEach(s=>s.exs.forEach(x=>{
-    const ws=x.sets.filter(t=>!t.warm&&t.r>0&&t.w>0);if(!ws.length)return;
+    if(isDist(x.ex))return;const ws=x.sets.filter(t=>!t.warm&&t.r>0&&t.w>0);if(!ws.length)return;
     const b=Math.max(...ws.map(t=>e1rm(t.w,t.r,t.rir)));
     if(best[x.ex]!=null&&b>best[x.ex]*1.005)list.push({ex:x.ex,date:s.date,b,pb:best[x.ex]});
     if(best[x.ex]==null||b>best[x.ex])best[x.ex]=b;

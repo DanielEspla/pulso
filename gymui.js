@@ -263,7 +263,7 @@ function gymProgreso(p){
   const g=G(p);const ws=weekStart(today());const done=doneVolume(p,ws);const plan=plannedVolume(p);
   const ses=g.log.filter(l=>weekStart(l.date)===ws).length;
   const ap=autoPerf(p,ws)||autoPerf(p,addDays(ws,-7));
-  const ids=[...new Set(g.log.flatMap(l=>l.exs.map(e=>e.ex)))].filter(id=>EXM[id]);
+  const ids=[...new Set(g.log.flatMap(l=>l.exs.map(e=>e.ex)))].filter(id=>EXM[id]&&!isDist(id));
   const rows=ids.map(id=>{const h=exHistory(p,id);const v=h.map(x=>bestE1(x.sets));return {id,h,v,ch:v.length>1?(v[v.length-1]-v[0])/v[0]*100:null};}).filter(r=>r.v.some(x=>x>0)).sort((a,b)=>b.h.length-a.h.length);
   return `<div class="stack">
   <div class="grid3"><div class="stat"><span class="lbl">Sesiones</span><div class="v">${ses}<small>/ ${g.setup.dias.length}</small></div><div class="d">esta semana</div></div>

@@ -585,7 +585,7 @@ function periTag(p,day,mi){
 }
 function viewMas(){
   const it=[["logros","Logros","Medallas, racha y récords","medal"],["compra","Compra","Lista de la semana","cart"],["cocina","Batch cooking","Qué cocinar y cómo conservarlo","pot"],["objetivos","Objetivos","Calorías, macros y pausas","target"],["perfil","Perfil","Datos, perfiles y borrado","user"],["copias","Copia de seguridad","Guardar y restaurar","save"],["aprende","Por qué Afina","Cómo funciona tu cuerpo y qué buscamos","book"]];
-  return `<div class="head"><h1>Más</h1></div>${displayCard()}<div class="mas" style="margin-top:16px">${it.map(([k,t,d,i])=>`<button data-a="go" data-v="${k}">${ic(i)}<b>${t}</b><span>${d}</span></button>`).join("")}</div>`;
+  return `<div class="head"><h1>Más</h1></div>${displayCard()}<div class="mas" style="margin-top:16px">${it.map(([k,t,d,i])=>`<button data-a="go" data-v="${k}">${ic(i)}<b>${t}</b><span>${d}</span></button>`).join("")}</div><p class="small muted" style="margin-top:18px;text-align:center"><a href="web" target="_blank" rel="noopener">Qué es Afina</a> · <a href="privacidad" target="_blank" rel="noopener">Privacidad</a></p>`;
 }
 
 /* ===== Acciones ===== */

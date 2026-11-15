@@ -26,6 +26,7 @@ function warmupBox(p,it,sg){
    Tres sesiones seguidas sin superar tu mejor fuerza estimada previa, en al menos dos semanas.
    En déficit, mantener fuerza ya es buena señal: solo avisa si la fuerza cae. */
 function plateauFor(p,exId){
+  if(isDist(exId))return null;
   const h=exHistory(p,exId).filter(x=>x.sets.some(s=>s.w>0));if(h.length<5)return null;
   const v=h.map(x=>bestE1(x.sets));const last3=v.slice(-3),before=v.slice(0,-3);const b0=Math.max(...before);
   if(daysBetween(h[h.length-3].date,h[h.length-1].date)<7)return null;

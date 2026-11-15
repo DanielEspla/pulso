@@ -304,7 +304,7 @@ function finishSession(p){
 function sessionStats(p,entry){
   let sets=0,vol=0;const prs=[];
   entry.exs.forEach(x=>{
-    const ws=x.sets.filter(s=>!s.warm);sets+=ws.length;vol+=ws.reduce((a,s)=>a+(s.w||0)*s.r,0);
+    const ws=x.sets.filter(s=>!s.warm);sets+=ws.length;if(isDist(x.ex))return;vol+=ws.reduce((a,s)=>a+(s.w||0)*s.r,0);
     const prev=(G(p).log||[]).filter(l=>l.id!==entry.id&&l.date<=entry.date).flatMap(l=>l.exs.filter(e=>e.ex===x.ex).flatMap(e=>e.sets.filter(s=>!s.warm)));
     const b=bestE1(ws),pb=bestE1(prev);
     if(prev.length&&b>pb*1.005)prs.push({ex:x.ex,b,pb});
@@ -346,7 +346,7 @@ function autoPerf(p,ws){
   const before=log.filter(l=>l.date<ws&&daysBetween(l.date,ws)<=21);
   if(!inW.length||!before.length)return null;
   const ch=[];
-  const ids=new Set(inW.flatMap(l=>l.exs.map(e=>e.ex)));
+  const ids=new Set(inW.flatMap(l=>l.exs.map(e=>e.ex)).filter(id=>!isDist(id)));
   ids.forEach(id=>{
     const a=bestE1(inW.flatMap(l=>l.exs.filter(e=>e.ex===id).flatMap(e=>e.sets.filter(s=>!s.warm))));
     const b=bestE1(before.flatMap(l=>l.exs.filter(e=>e.ex===id).flatMap(e=>e.sets.filter(s=>!s.warm))));

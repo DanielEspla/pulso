@@ -151,6 +151,7 @@ function viewProg(p){
     <p class="small muted">Las referencias son orientativas, de la comunidad de fuerza, y no un estándar científico. Las series de más de 12 repeticiones dan una estimación menos fiable. Si algo te parece raro, ajusta sobre la marcha: la app aprende de tus series reales.</p>
     ${m?`<p class="small muted">Valoración anterior: ${fdate(m.date)}.</p>`:""}</div>`;
   }
+  if(st.screen==="res"&&!g.marks)st.screen="list";
   if(st.screen==="res"){const m=g.marks;
     const rows=LIFTS.filter(([k])=>m.e1[k]).map(([k,t])=>`<div class="row between"><span>${t}</span><span><b>${LVL_NAMES[m.lv[k].lv]}</b> <span class="small muted">${nf(m.e1[k],0)} kg estimados · ${nf(m.lv[k].ratio,2)}× tu peso</span></span></div>`).join("");
     return `<div class="stack">${back("Tu nivel","pgList")}
