@@ -16,7 +16,7 @@ fs.writeFileSync(path.join(dist,'index.html'),`<!doctype html>
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Afina</title><meta name="description" content="Aprende a comer. Vive más y mejor.">
-<meta name="theme-color" content="#121019"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0E1713"><meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Afina">
 <link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-512.png"><link rel="icon" href="icon-192.png">
 ${fonts}
@@ -25,7 +25,7 @@ ${css}</style></head><body>
 ${body}
 ${pwa}
 </body></html>`);
-fs.writeFileSync(path.join(dist,'manifest.json'),JSON.stringify({name:"Afina",short_name:"Afina",description:"Aprende a comer. Vive más y mejor.",start_url:"./",scope:"./",display:"standalone",background_color:"#121019",theme_color:"#121019",lang:"es",icons:[{src:"icon-192.png",sizes:"192x192",type:"image/png"},{src:"icon-512.png",sizes:"512x512",type:"image/png",purpose:"any maskable"}]},null,2));
+fs.writeFileSync(path.join(dist,'manifest.json'),JSON.stringify({name:"Afina",short_name:"Afina",description:"Aprende a comer. Vive más y mejor.",start_url:"./",scope:"./",display:"standalone",background_color:"#0E1713",theme_color:"#0E1713",lang:"es",icons:[{src:"icon-192.png",sizes:"192x192",type:"image/png"},{src:"icon-512.png",sizes:"512x512",type:"image/png",purpose:"any maskable"}]},null,2));
 
 fs.writeFileSync(path.join(dist,'sw.js'),`const C="afina-${ver}";
 self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(["./","index.html","manifest.json","icon-192.png","icon-512.png"])));self.skipWaiting();});

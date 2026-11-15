@@ -1,7 +1,7 @@
 /* Layout: app de una columna centrada; barra inferior en móvil, barra lateral en escritorio */
 :root{
-  --bg:#121019; --surface:#1B1823; --sunk:#25202E; --hero:#261F34; --ink:#FAF6F1; --muted:#C2BBCB; --line:#3A3446;
-  --accent:#C17352; --accent-t:#E8956F; --accent-ink:#FFF6F0; --accent-soft:#3F2921;
+  --bg:#0E1713; --surface:#16231D; --sunk:#1E2E26; --hero:#1A2B22; --ink:#F2F7F3; --muted:#B4C4BA; --line:#2F4439;
+  --accent:#3DBE82; --accent-t:#6FDBA5; --accent-ink:#06150D; --accent-soft:#1B3A2C;
   --ok:#7DC59C; --ok-soft:#1C3227; --warn:#E3AA5A; --warn-soft:#382B19; --bad:#E7826E; --bad-soft:#3C201C;
   --prot:#E39A78; --fat:#E2B65C; --carb:#8EA9DD;
   --f-display:"Playfair Display",Georgia,"Times New Roman",serif;
@@ -308,7 +308,7 @@ a{color:var(--accent)}
 .medal .inner{fill:none;stroke:var(--line);stroke-width:1}
 .medal.bronce .disc{fill:#a8703f;stroke:#c98d57}.medal.bronce .rib{fill:#7a4f2c}
 .medal.plata .disc{fill:#9ea4ad;stroke:#c9ced6}.medal.plata .rib{fill:#6d737c}
-.medal.oro .disc{fill:#c99a2e;stroke:#e8c25a}.medal.oro .rib{fill:#C17352}
+.medal.oro .disc{fill:#c99a2e;stroke:#e8c25a}.medal.oro .rib{fill:var(--accent)}
 .medal.platino .disc{fill:#8fc9c4;stroke:#c5ece8}.medal.platino .rib{fill:#4f8f8a}
 .medal:not(.off) .inner{stroke:rgba(255,255,255,.45)}
 .medal.off{opacity:.55}
@@ -347,8 +347,8 @@ ol.mob li span{display:block}
 
 /* ===== Tema claro y tamaño de letra ===== */
 :root[data-theme="light"]{
-  --bg:#F6F2EC; --surface:#FFFFFF; --sunk:#EFE8E0; --hero:#F7EAE1; --ink:#1C1820; --muted:#57505F; --line:#D9CFC4;
-  --accent:#A9532F; --accent-t:#9A4A29; --accent-ink:#FFFFFF; --accent-soft:#F7E2D7;
+  --bg:#F1F6F2; --surface:#FFFFFF; --sunk:#E6EEE8; --hero:#E3F0E8; --ink:#14201A; --muted:#4B5A51; --line:#CCD9D0;
+  --accent:#17663F; --accent-t:#145C39; --accent-ink:#FFFFFF; --accent-soft:#DDF0E5;
   --ok:#2C7A4F; --ok-soft:#E0F1E6; --warn:#8F5A0C; --warn-soft:#FBEED6; --bad:#B23E2A; --bad-soft:#FBE3DD;
   --prot:#C0613C; --fat:#A87B12; --carb:#4466A8; color-scheme:light;
 }
@@ -406,6 +406,8 @@ ol.simple-ex li span{display:block}
 :root[data-theme="light"][data-pal="energia"]{--bg:#F5F5F4;--surface:#FFFFFF;--sunk:#ECECEA;--hero:#FFF0E3;--ink:#17171A;--muted:#55555C;--line:#D6D6D2;--accent:#A84408;--accent-t:#9A3F07;--accent-ink:#FFFFFF;--accent-soft:#FFE6D2}
 :root[data-theme="dark"][data-pal="oceano"]{--bg:#0C1620;--surface:#142230;--sunk:#1B2D3E;--hero:#16283A;--ink:#F1F7FB;--muted:#B3C3D1;--line:#2B4157;--accent:#2BB6D6;--accent-t:#6AD3EA;--accent-ink:#031219;--accent-soft:#12394A}
 :root[data-theme="light"][data-pal="oceano"]{--bg:#F0F6FA;--surface:#FFFFFF;--sunk:#E4EDF3;--hero:#E0F0F7;--ink:#12202B;--muted:#4A5B69;--line:#C9D8E3;--accent:#0B6B85;--accent-t:#09607A;--accent-ink:#FFFFFF;--accent-soft:#D9EEF5}
+:root[data-theme="dark"][data-pal="nude"]{--bg:#191316;--surface:#231B1F;--sunk:#2D2328;--hero:#33252B;--ink:#FBF3F1;--muted:#CDBBBD;--line:#46363C;--accent:#E59AA6;--accent-t:#F2B6BF;--accent-ink:#2B1218;--accent-soft:#4A2932}
+:root[data-theme="light"][data-pal="nude"]{--bg:#FAF3EF;--surface:#FFFFFF;--sunk:#F3E7E1;--hero:#F7E3DE;--ink:#2B1D20;--muted:#6A5458;--line:#E6D3CD;--accent:#A8455E;--accent-t:#983A53;--accent-ink:#FFFFFF;--accent-soft:#F8DDE1}
 .pals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .pal{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;font:inherit;cursor:pointer}
 .pal.on{border-color:var(--accent);background:var(--accent-soft)}

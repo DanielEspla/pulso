@@ -47,16 +47,16 @@ function render(){
   if(_rendering){setTimeout(render,0);return;}
   _rendering=true;try{_render();}finally{_rendering=false;}
 }
-const PALS={terracota:["Terracota","Cálida y sobria",["#121019","#C17352","#E8956F"]],bosque:["Bosque","Verde: calma y menos esfuerzo percibido",["#0E1713","#3DBE82","#6FDBA5"]],energia:["Energía","Grafito y naranja vivo",["#0F0F11","#FF7A1A","#FF9A4D"]],oceano:["Océano","Azul turquesa, fría y limpia",["#0C1620","#2BB6D6","#6AD3EA"]]};
+const PALS={bosque:["Bosque","Verde: calma y menos esfuerzo percibido",["#0E1713","#3DBE82","#6FDBA5"]],energia:["Energía","Grafito y naranja vivo",["#0F0F11","#FF7A1A","#FF9A4D"]],oceano:["Océano","Azul turquesa, fría y limpia",["#0C1620","#2BB6D6","#6AD3EA"]],nude:["Nude rosa","Tonos nude y rosa, suave y cálida",["#FAF3EF","#E59AA6","#A8455E"]]};
 function applyDisplay(){
   const u=S.ui||{};const t=u.theme||"oscuro";
   const light=t==="claro"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches);
-  const r=document.documentElement;r.dataset.theme=light?"light":"dark";r.dataset.size=u.size==="grande"?"big":"normal";r.dataset.pal=PALS[u.pal]?u.pal:"terracota";
-  const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=getComputedStyle(r).getPropertyValue("--bg").trim()||(light?"#F6F2EC":"#121019");
+  const r=document.documentElement;r.dataset.theme=light?"light":"dark";r.dataset.size=u.size==="grande"?"big":"normal";r.dataset.pal=PALS[u.pal]?u.pal:"bosque";
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=getComputedStyle(r).getPropertyValue("--bg").trim()||(light?"#F1F6F2":"#0E1713");
 }
 function displayCard(){const u=S.ui||{};const b=(k,v,t)=>`<button class="${(u[k]||(k==="theme"?"oscuro":"normal"))===v?"on":""}" data-a="uiSet" data-k="${k}" data-v="${v}">${t}</button>`;
   return `<div class="card stack"><span class="lbl">Pantalla</span><div class="field"><span>Tema</span><div class="seg">${b("theme","oscuro","Oscuro")}${b("theme","claro","Claro")}${b("theme","auto","Como el móvil")}</div><span class="hint">El claro se lee mejor con sol o mucha luz, por ejemplo en el gimnasio.</span></div>
-  <div class="field"><span>Estilo de color</span><div class="pals">${Object.entries(PALS).map(([k,[t,d,c]])=>`<button type="button" class="pal ${(u.pal||"terracota")===k?"on":""}" data-a="uiSet" data-k="pal" data-v="${k}"><span class="sw">${c.map(x=>`<i style="background:${x}"></i>`).join("")}</span><span><b>${t}</b><small>${d}</small></span></button>`).join("")}</div><span class="hint">Prueba uno unos días. Se aplica a todo, también al modo claro.</span></div>
+  <div class="field"><span>Estilo de color</span><div class="pals">${Object.entries(PALS).map(([k,[t,d,c]])=>`<button type="button" class="pal ${(PALS[u.pal]?u.pal:"bosque")===k?"on":""}" data-a="uiSet" data-k="pal" data-v="${k}"><span class="sw">${c.map(x=>`<i style="background:${x}"></i>`).join("")}</span><span><b>${t}</b><small>${d}</small></span></button>`).join("")}</div><span class="hint">Prueba uno unos días. Se aplica a todo, también al modo claro.</span></div>
   <div class="field"><span>Dieta, compra y recetas</span><div class="seg">${b("nutri","si","Activadas").replace('data-a="uiSet"','data-a="nutriSet"').replace(/class="[^"]*"/,`class="${NUTRI?"on":""}"`)}${b("nutri","no","Desactivadas").replace('data-a="uiSet"','data-a="nutriSet"').replace(/class="[^"]*"/,`class="${NUTRI?"":"on"}"`)}</div><span class="hint">Menú semanal con tus calorías y macros, lista de la compra y recetas sencillas. Es opcional: el entrenamiento funciona igual sin ello.</span></div>
   <div class="field"><span>Tamaño de letra</span><div class="seg">${b("size","normal","Normal")}${b("size","grande","Grande")}</div></div></div>`;}
 function isLight(){const t=(S.ui||{}).theme||"oscuro";return t==="claro"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches);}

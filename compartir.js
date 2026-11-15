@@ -86,7 +86,7 @@ function shareFit(ctx,text,maxW){let t=String(text);if(ctx.measureText(t).width<
 function drawShareCard(p,e,quote){
   const W=1080,H=1920;const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
   const css=getComputedStyle(document.documentElement);const v=(n,d)=>(css.getPropertyValue(n)||d).trim()||d;
-  const bg=v("--bg","#121019"),hero=v("--hero","#261F34"),ink=v("--ink","#FAF6F1"),muted=v("--muted","#C2BBCB"),acc=v("--accent","#C17352"),accT=v("--accent-t","#E8956F"),line=v("--line","#3A3446");
+  const bg=v("--bg","#0E1713"),hero=v("--hero","#1A2B22"),ink=v("--ink","#F2F7F3"),muted=v("--muted","#B4C4BA"),acc=v("--accent","#3DBE82"),accT=v("--accent-t","#E8956F"),line=v("--line","#3A3446");
   const serif='"Playfair Display",Georgia,"Times New Roman",serif',sans='"Instrument Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif';
   const gr=x.createLinearGradient(0,0,0,H);gr.addColorStop(0,hero);gr.addColorStop(0.55,bg);gr.addColorStop(1,bg);x.fillStyle=gr;x.fillRect(0,0,W,H);
   x.fillStyle=acc;x.globalAlpha=0.9;x.fillRect(80,150,90,6);x.globalAlpha=1;
