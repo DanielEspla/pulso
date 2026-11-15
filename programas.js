@@ -252,8 +252,8 @@ const _runDist=viewRunner;
 viewRunner=function(p){
   let h=_runDist(p);const d=G(p).draft;if(!d)return h;
   const it=d.exs[d.cur];const ex=it&&EXM[it.ex];
-  if(ex&&ex.rep==="m"){
-    h=h.replace(new RegExp(`${it.lo}-${it.hi} reps · RIR \\d`),`${it.lo===it.hi?it.lo:it.lo+"-"+it.hi} m`);
+  if(ex&&(ex.rep==="m"||(ex.rep==="s"&&!incFor(ex)))){
+    h=h.replace(new RegExp(`${it.lo}-${it.hi} reps · RIR \\d`),`${it.lo===it.hi?it.lo:it.lo+"-"+it.hi} ${ex.rep==="m"?"m":"s"}`);
     h=h.replace('<div class="field"><span>¿Cuántas repeticiones más','<div class="field" style="display:none"><span>¿Cuántas repeticiones más');
     h=h.replace('<label class="chk sm-chk">','<label class="chk sm-chk" style="visibility:hidden">');
     if(!ex.inc)h=h.replace('<label class="field"><span>Peso (kg)</span>','<label class="field" style="display:none"><span>Peso (kg)</span>');
@@ -266,6 +266,10 @@ suggest=function(p,ex,range,rir){
   if(ex.rep==="m"&&!incFor(ex)){
     const first=!exHistory(p,ex.id).length;
     return {w:0,last:r.last,act:"same",txt:first?"Primera vez. Hazlo a ritmo controlado y anota los metros. La próxima vez intenta mantener el ritmo con menos descanso.":"Mismo reparto que la última vez. Intenta bajar el tiempo o recortar el descanso entre series."};
+  }
+  if(ex.rep==="s"&&!incFor(ex)){
+    const hs=exHistory(p,ex.id);const best=hs.length?Math.max(...hs[hs.length-1].sets.map(x=>x.r)):0;
+    return {w:0,last:r.last,act:"same",txt:best?`La última vez llegaste a ${best} s. Intenta sumar unos segundos sin perder la técnica.`:`Primera vez. Aguanta entre ${range[0]} y ${range[1]} segundos con buena técnica y anota lo que hagas.`};
   }
   return r;
 };

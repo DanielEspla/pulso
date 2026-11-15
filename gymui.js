@@ -113,7 +113,7 @@ function viewRunner(p){
   ${finishBanner(p)}
   <div class="segbar">${d.exs.map((x,i)=>`<i class="${i<d.cur||x.done?"done":""} ${i===d.cur?"cur":""}" data-a="rnGo" data-i="${i}"></i>`).join("")}</div>
   ${restLeft>0?`<div class="restbar" id="restbar"><div><span class="lbl">${esc(UI.rest.label||"Descanso")}</span><b class="num" id="rest_n">${Math.floor(restLeft/60)}:${pad(restLeft%60)}</b></div><div class="row"><button class="btn sm" data-a="restAdd" data-v="-15">−15 s</button><button class="btn sm" data-a="restAdd" data-v="15">+15 s</button><button class="btn sm" data-a="restSkip">Saltar</button></div><i style="width:${Math.min(100,restLeft/UI.rest.total*100)}%" id="rest_i"></i></div>`:""}
-  <h1 class="disp ex-title">${esc(ex.name)}</h1>
+  <div class="ex-head">${exFig(ex.id,64)}<h1 class="disp ex-title">${esc(ex.name)}</h1></div>
   ${ssBox}
   <div class="row" style="gap:6px"><button class="btn sm" data-a="ficha" data-id="${ex.id}">${ic("info",'width="16"')} Técnica y porqué</button><button class="btn sm" data-a="swapOpen" data-i="${d.cur}">${ic("swap",'width="16"')} Cambiar</button></div>
   <div class="card stack">
@@ -205,7 +205,7 @@ function sheetFicha(p,id,slot){
   const like=(g.likes||{})[id]||0;
   const range=repRange(p,ex,slot),rest=restFor(p,ex,slot);
   const sts=Object.entries(ex.st).filter(([,v])=>v>0).map(([k,v])=>`${JOINTS[k]}${v>=2?" (alta)":""}`);
-  return `<div class="sheet-h"><div><span class="lbl">${PATTERNS[ex.pat]}</span><h2>${esc(ex.name)}</h2></div><button class="btn ghost sm" data-a="closeSheet">${ic("x",'width="18"')}</button></div>
+  return `<div class="sheet-h"><div class="ex-head">${exFig(ex.id,60)}<div><span class="lbl">${PATTERNS[ex.pat]}</span><h2>${esc(ex.name)}</h2></div></div><button class="btn ghost sm" data-a="closeSheet">${ic("x",'width="18"')}</button></div>
   <div class="stack">
   <p><b>${MUSCLES[ex.prim]}</b>${ex.sec.length?` <span class="muted">· también ${ex.sec.map(m=>MUSCLES[m]?MUSCLES[m].toLowerCase():"").filter(Boolean).join(", ")}</span>`:""}</p>
   <div><span class="lbl">Por qué está en tu plan</span><ul class="tight">${whyEx(p,ex,slot).map(w=>`<li>${esc(w)}</li>`).join("")}</ul></div>
@@ -392,7 +392,7 @@ function gymSimple(p){
   ${typeof fixedHoyAlert==="function"?fixedHoyAlert(p):""}
   <div class="hero"><span class="lbl acc">${idx===g.next%n?"Hoy toca":"Has elegido"}</span><h2 class="disp">${esc(ses.name)}</h2>
     <p class="muted">${prev.length} ejercicios · ${series} series · unos ${sessionMinutes(p,idx)} minutos</p>
-    <ol class="simple-ex">${prev.map(x=>`<li><div class="row between" style="flex-wrap:nowrap;gap:8px"><div><b>${esc(EXM[x.ex].name)}</b><span class="small muted">${x.sets} series de ${x.lo}-${x.hi}${EXM[x.ex].rep==="s"?" s":""}${lastW(x.ex)}</span></div><button class="btn ghost sm" data-a="swSimple" data-s="${idx}" data-si="${x.si}" aria-label="Cambiar ${esc(EXM[x.ex].name)}">Cambiar</button></div></li>`).join("")}</ol>
+    <ol class="simple-ex">${prev.map(x=>`<li><div class="row between" style="flex-wrap:nowrap;gap:10px">${exFig(x.ex,42)}<div style="flex:1;min-width:0"><b>${esc(EXM[x.ex].name)}</b><span class="small muted">${x.sets} series de ${x.lo}-${x.hi}${EXM[x.ex].rep==="s"?" s":""}${lastW(x.ex)}</span></div><button class="btn ghost sm" data-a="swSimple" data-s="${idx}" data-si="${x.si}" aria-label="Cambiar ${esc(EXM[x.ex].name)}">Cambiar</button></div></li>`).join("")}</ol>
     <p class="small muted">¿No puedes hacer alguno o no te gusta? Pulsa Cambiar. Durante la sesión también puedes.</p>
     <button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Empezar</button>
     ${n>1?`<div class="row" style="gap:8px;flex-wrap:nowrap"><button class="btn sm" style="flex:1" data-a="gsel" data-i="${(idx-1+n)%n}">← Otra anterior</button><button class="btn sm" style="flex:1" data-a="gsel" data-i="${(idx+1)%n}">Otra siguiente →</button></div>`:""}

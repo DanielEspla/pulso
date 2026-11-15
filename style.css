@@ -412,3 +412,7 @@ ol.simple-ex li span{display:block}
 .pal .sw{display:flex;flex:0 0 auto;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
 .pal .sw i{display:block;width:16px;height:30px}
 .pal b{display:block;font-size:.95rem}.pal small{display:block;color:var(--muted);font-size:.78rem;line-height:1.25}
+
+.fig{flex:none;color:var(--ink);display:block}
+.ex-head{display:flex;align-items:center;gap:12px}
+.ex-head .ex-title{margin:0;flex:1;min-width:0}
