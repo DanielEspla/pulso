@@ -78,5 +78,4 @@ if(!NUTRI){
     return head+`<div class="stack learn"><div class="card stack" style="background:var(--accent-soft);border-color:transparent"><span class="lbl" style="color:var(--accent)">El objetivo</span><p class="lead">Entrenar fuerza con cabeza para ganar músculo, proteger las articulaciones y llegar en forma a muchos años. Aquí tienes en qué se basa cada decisión del entreno.</p></div>`+h.slice(i,j)+`</div>`;
   };
 }
-/* Vegetariano y vegano eliminados: se quitan de cualquier perfil guardado */
-try{Object.values(S.profiles||{}).forEach(p=>{if(p.restr)p.restr=p.restr.filter(k=>k!=="vegetariano"&&k!=="vegano");});save();}catch(e){}
+

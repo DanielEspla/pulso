@@ -81,4 +81,4 @@ function mealHours(p,n){
   return Array.from({length:n},(_,i)=>{const t=start+(n===1?0:Math.round(i*(len-30)/(n-1)));return pad(Math.floor(t/60)%24)+":"+pad(t%60);});
 }
 function ayunoTxt(p){if(!p.ayuno||!p.ayuno.on)return "";const [h,m]=(p.ayuno.ini||"13:00").split(":").map(Number);const e=h*60+m+(p.ayuno.h||8)*60;return `Ventana ${p.ayuno.ini||"13:00"}–${pad(Math.floor(e/60)%24)}:${pad(e%60)}`;}
-function menuCfg(p){return [p.dietaEstilo,p.reparto,p.recarga,p.comidas,(p.plan||[]).join(",")].join("|");}
+function menuCfg(p){return [p.dietaEstilo,p.reparto,p.recarga,p.comidas,(p.plan||[]).join(","),(p.restr||[]).slice().sort().join(",")].join("|");}

@@ -47,14 +47,17 @@ function render(){
   if(_rendering){setTimeout(render,0);return;}
   _rendering=true;try{_render();}finally{_rendering=false;}
 }
+const PALS={terracota:["Terracota","Cálida y sobria",["#121019","#C17352","#E8956F"]],bosque:["Bosque","Verde: calma y menos esfuerzo percibido",["#0E1713","#3DBE82","#6FDBA5"]],energia:["Energía","Grafito y naranja vivo",["#0F0F11","#FF7A1A","#FF9A4D"]],oceano:["Océano","Azul turquesa, fría y limpia",["#0C1620","#2BB6D6","#6AD3EA"]]};
 function applyDisplay(){
   const u=S.ui||{};const t=u.theme||"oscuro";
   const light=t==="claro"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches);
-  const r=document.documentElement;r.dataset.theme=light?"light":"dark";r.dataset.size=u.size==="grande"?"big":"normal";
-  const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=light?"#F6F2EC":"#121019";
+  const r=document.documentElement;r.dataset.theme=light?"light":"dark";r.dataset.size=u.size==="grande"?"big":"normal";r.dataset.pal=PALS[u.pal]?u.pal:"terracota";
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=getComputedStyle(r).getPropertyValue("--bg").trim()||(light?"#F6F2EC":"#121019");
 }
 function displayCard(){const u=S.ui||{};const b=(k,v,t)=>`<button class="${(u[k]||(k==="theme"?"oscuro":"normal"))===v?"on":""}" data-a="uiSet" data-k="${k}" data-v="${v}">${t}</button>`;
   return `<div class="card stack"><span class="lbl">Pantalla</span><div class="field"><span>Tema</span><div class="seg">${b("theme","oscuro","Oscuro")}${b("theme","claro","Claro")}${b("theme","auto","Como el móvil")}</div><span class="hint">El claro se lee mejor con sol o mucha luz, por ejemplo en el gimnasio.</span></div>
+  <div class="field"><span>Estilo de color</span><div class="pals">${Object.entries(PALS).map(([k,[t,d,c]])=>`<button type="button" class="pal ${(u.pal||"terracota")===k?"on":""}" data-a="uiSet" data-k="pal" data-v="${k}"><span class="sw">${c.map(x=>`<i style="background:${x}"></i>`).join("")}</span><span><b>${t}</b><small>${d}</small></span></button>`).join("")}</div><span class="hint">Prueba uno unos días. Se aplica a todo, también al modo claro.</span></div>
+  <div class="field"><span>Dieta, compra y recetas</span><div class="seg">${b("nutri","si","Activadas").replace('data-a="uiSet"','data-a="nutriSet"').replace(/class="[^"]*"/,`class="${NUTRI?"on":""}"`)}${b("nutri","no","Desactivadas").replace('data-a="uiSet"','data-a="nutriSet"').replace(/class="[^"]*"/,`class="${NUTRI?"":"on"}"`)}</div><span class="hint">Menú semanal con tus calorías y macros, lista de la compra y recetas sencillas. Es opcional: el entrenamiento funciona igual sin ello.</span></div>
   <div class="field"><span>Tamaño de letra</span><div class="seg">${b("size","normal","Normal")}${b("size","grande","Grande")}</div></div></div>`;}
 function isLight(){const t=(S.ui||{}).theme||"oscuro";return t==="claro"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches);}
 function themeBtn(kind){const l=isLight();
@@ -348,8 +351,10 @@ function viewDieta(p){
   const changed=!needNew&&(["kcal","p","f","c"].some(k=>menu.targets[k]!==p.targets[k])||!!menu.ciclado!==!!p.ciclado||(menu.cfg&&menu.cfg!==menuCfg(p)));
   const hrs=mealHours(p,day.meals.length);
   const confirmRegen=UI.confirm==="regenWeek";
+  const gap=(()=>{const ds=menu.days.filter(d=>!d.meals.some(m=>m.fuera));if(!ds.length||!(p.restr||[]).length)return 0;let e=0;ds.forEach(d=>{const t=dayTotals(d);const T2=d.T||menu.targets;e+=(t.p-T2.p)/T2.p;});return e/ds.length;})();
+  const gapAlert=gap<-0.1?`<div class="alert warn"><span class="dot"></span><div><b>Con tus restricciones no llego a tu proteína</b>Al menú le falta de media un ${Math.round(-gap*100)} % de la proteína objetivo. Si quitas alguna restricción que no sea imprescindible, o añades un suplemento de proteína vegetal, se acerca más.</div></div>`:"";
   return `<div class="head"><div><h1>Dieta</h1><p class="sub">${DIET_STYLES[p.dietaEstilo||"equilibrada"][0]} · ${MEAL_TXT[menu.comidas]} · ${menu.targets.kcal} kcal de media${ayunoTxt(p)?" · "+ayunoTxt(p):""}</p></div>${weekNav(ws,"menuW")}</div>
-  <button class="btn pri wide" style="margin-bottom:14px" data-a="dietaOpen">Cambiar mi dieta</button>
+  <button class="btn pri wide" style="margin-bottom:14px" data-a="dietaOpen">Cambiar mi dieta</button>${gapAlert}
   <div class="stack">
   ${needNew?`<div class="alert warn"><span class="dot"></span><div><b>Has cambiado el número de comidas</b>Este menú es de ${MEAL_TXT[menu.comidas]}. Rehazlo para aplicar los cambios.<div style="margin-top:8px"><button class="btn sm pri" data-a="genWeek">Rehacer el menú</button></div></div></div>`:""}
   ${changed?`<div class="alert warn"><span class="dot"></span><div><b>Tu objetivo o tu forma de comer han cambiado</b>El menú está hecho con la configuración anterior. <div style="margin-top:8px"><button class="btn sm pri" data-a="retarget">Ajustar cantidades a ${p.targets.kcal} kcal</button></div></div></div>`:""}
@@ -429,7 +434,7 @@ function viewAlimentos(p){
   const ban=banned(p);const q=UI.q.trim().toLowerCase();
   /* Solo alimentos de siempre: los poco habituales ni se ven (salvo búsqueda, marcados o si una restricción los hace necesarios) */
   const vis=f=>UI.raros||basicoOK(p,f);
-  const catVis=k=>FOODS.some(f=>f.cat===k&&vis(f));
+  const catVis=k=>FOODS.some(f=>f.cat===k&&vis(f)&&allowedNoPref(p,f));
   if(!catVis(UI.cat))UI.cat=CATS.map(c=>c[0]).find(catVis)||UI.cat;
   const ocultos=FOODS.filter(f=>!basicoOK(p,f)).length;
   const banBy=f=>RESTRICTIONS.find(r=>(p.restr||[]).includes(r[0])&&r[2].some(t=>f.t.includes(t)));
@@ -641,6 +646,7 @@ const A={
   lgGo:()=>{UI.sheet=null;UI.lgShow=null;UI.view="logros";render();window.scrollTo(0,0);},
   lgSumClose:()=>{const p=P();p.logros=p.logros||{seen:{}};p.logros.sumClosed=addDays(weekStart(today()),-7);commit();},
   themeToggle:()=>{S.ui=S.ui||{};S.ui.theme=isLight()?"oscuro":"claro";save();render();},
+  nutriSet:el=>{S.ui=S.ui||{};S.ui.nutri=el.dataset.v==='si';if(memoryOnly){toast('No se puede guardar esta preferencia en este navegador');S.ui.nutri=!S.ui.nutri;return;}try{sessionStorage.setItem('afina_go',S.ui.nutri&&P()&&!Object.keys(P().prefs||{}).length?'alimentos':(S.ui.nutri?'dieta':'mas'));}catch(e){}save();location.reload();},
   uiSet:el=>{S.ui=S.ui||{};S.ui[el.dataset.k]=el.dataset.v;save();render();},
   raros:el=>{UI.raros=el.dataset.v==="1";render();},
   catLike:el=>{const p=P();const k=el.dataset.k;const L=FOODS.filter(f=>f.cat===k&&allowedNoPref(p,f)&&(UI.raros||basicoOK(p,f)));const all=L.every(f=>p.prefs[f.id]===1);L.forEach(f=>{if(all)delete p.prefs[f.id];else p.prefs[f.id]=1;});UI.cat=k;commit();},
@@ -694,7 +700,7 @@ const SUB={
     if(!(v>=30&&v<=350)){toast("Revisa el peso");return;}p.weights[today()]=r1(v);commit();toast("Peso guardado");},
   checkin:f=>{const p=P();const g=n=>f[n]?f[n].value:"";const cint=parseFloat(String(g("cintura")).replace(",","."));
     if(g("cintura")&&!(cint>=40&&cint<=220)){toast("Revisa la cintura");return;}
-    p.checkins[UI.regWeek]={cintura:cint||null,pasos:+g("pasos")||0,entrenos:+g("entrenos")||0,adherencia:+g("adherencia"),rendimiento:g("rendimiento"),ciclo:f.ciclo?f.ciclo.checked:false,notas:g("notas")};
+    p.checkins[UI.regWeek]={cintura:cint||null,pasos:+g("pasos")||0,entrenos:+g("entrenos")||0,adherencia:f.adherencia?+f.adherencia.value:undefined,rendimiento:g("rendimiento"),ciclo:f.ciclo?f.ciclo.checked:false,notas:g("notas")};
     commit();toast("Revisión guardada");},
   fueraCustom:f=>{const k=+f.k.value;const l=f.l.value.trim()||"Comida fuera";if(!(k>=50&&k<=3000)){toast("Indica las calorías aproximadas");return;}setFuera(+f.dataset.m,l,k);},
   saveT:f=>{const p=P();const t={p:+f.p.value,f:+f.f.value,c:+f.c.value};if(!(t.p>=40&&t.f>=20&&t.c>=0)){toast("Revisa los valores");return;}

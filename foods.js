@@ -100,7 +100,7 @@ FG("marisco",{r:"P",s:"p",m:"plancha",sec:"Pescadería",t:"marisco animal"},[
 ]);
 FG("huevos",{r:"P",s:"d p s",m:"huevo",sec:"Huevos",t:"huevo animal"},[
  ["huevo","Huevos",143,12.6,9.9,0.7,{u:55,un:"huevo",q:[1,5,1]}],
- ["claras","Claras de huevo (brik)",50,11,0.2,0.7,{q:[100,400,50]}]
+ ["claras","Claras de huevo (brik)",50,11,0.2,0.7,{q:[100,300,50]}]
 ]);
 FG("lacteos",{r:"D",s:"d s",m:"listo",sec:"Lácteos",t:"lactosa animal",q:[100,500,25]},[
  ["yogur_proteico","Yogur alto en proteínas",60,10,0.2,4,{u:120,un:"yogur",q:[1,3,1]}],
@@ -272,9 +272,11 @@ FOODS.forEach(f=>{
 });
 const FOOD = Object.fromEntries(FOODS.map(f=>[f.id,f]));
 
-/* Alimentación desactivada de momento: se trabajará en otra app */
-const NUTRI=false;
+/* Dieta, compra y recetas: opcional, se enciende en Más > Pantalla (se guarda en S.ui.nutri) */
+const NUTRI=(()=>{try{return !!(JSON.parse(localStorage.getItem("definicion20:v2")).ui||{}).nutri;}catch(e){return false;}})();
 const RESTRICTIONS = [
+  ["vegetariano","Vegetariano (sin carne ni pescado)",["carne","pescado","marisco"]],
+  ["vegano","Vegano (nada de origen animal)",["animal"]],
   ["sin_cerdo","Sin cerdo",["cerdo"]],
   ["sin_pescado","Sin pescado",["pescado"]],
   ["sin_marisco","Sin marisco (alergia)",["marisco"]],

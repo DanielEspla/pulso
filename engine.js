@@ -563,7 +563,7 @@ function qtyTxt(f,q){
 function recipe(meal){
   const s=[];const it=meal.items.map(i=>({f:FOOD[i.id],q:i.q}));
   const by=r=>it.filter(x=>x.f.r===r);
-  const n=x=>`${qtyTxt(x.f,x.q)} de ${x.f.name.toLowerCase()}`;
+  const n=x=>(x.f.u&&x.f.name.toLowerCase()===x.f.un.toLowerCase())?qtyTxt(x.f,x.q):`${qtyTxt(x.f,x.q)} de ${x.f.name.toLowerCase()}`;
   by("C").forEach(x=>{
     const m={hervir:`Cuece ${n(x)} en agua con sal el tiempo del paquete y escurre.`,cuscus:`Hidrata ${n(x)} con el mismo volumen de agua hirviendo, tapa 5 minutos y suelta con un tenedor.`,horno:`Corta ${n(x)} en gajos y hornea a 210 °C unos 30-35 minutos (o 20 en air fryer).`,bote:`Escurre y enjuaga ${n(x)}. Calienta en sartén con las especias o tómalas templadas.`,micro:`Calienta ${n(x)} en el microondas 1 minuto.`,frio:`Prepara ${n(x)}.`}[x.f.m]||`Prepara ${n(x)}.`;
     s.push(m);

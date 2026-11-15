@@ -225,3 +225,6 @@ Object.assign(CHG,{
 });
 
 const _goMine=A.go;A.go=function(el,e){UI.mn=null;return _goMine(el,e);};
+
+/* Tras activar o desactivar la dieta (recarga): volver a la pantalla pedida */
+try{const _g=sessionStorage.getItem('afina_go');if(_g){sessionStorage.removeItem('afina_go');UI.view=_g;}}catch(e){}
