@@ -25,7 +25,7 @@ function matchExercise(id,name){
   return bs>=0.6?best:null;
 }
 function registerImported(list){
-  (list||[]).forEach(c=>{if(EXM[c.id])return;const e={id:c.id,name:c.name,pat:c.pat||"otro",prim:c.prim||"varios",sec:[],req:[""],st:{},C:false,S:false,B:false,rep:"h",cues:[],err:"",inc:2.5,imported:true};EX.push(e);EXM[c.id]=e;});
+  (list||[]).forEach(c=>{if(EXM[c.id])return;const e={id:c.id,name:c.name,pat:c.pat||"otro",prim:c.prim||"varios",sec:[],req:[""],st:{},C:false,S:false,B:false,rep:c.rep||"h",cues:[],err:"",inc:c.inc!=null?c.inc:2.5,imported:true};EX.push(e);EXM[c.id]=e;});
 }
 function customFor(p,id,name){
   const g=G(p);g.customEx=g.customEx||[];

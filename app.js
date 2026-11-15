@@ -76,7 +76,7 @@ function _render(){
       ${NAV.map(([k,t,i])=>`<button class="navi ${UI.view===k||(k==="dieta"&&UI.view==="alimentos")?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}
       ${themeBtn("side")}
       <div class="who"><span class="lbl">Perfil</span><div>${esc(p.nombre)}</div></div></aside>
-      <main class="main">${themeBtn("float")}${v(p)}<p class="disc">Las estimaciones de gasto y grasa corporal son orientativas y no sustituyen la valoración de un profesional sanitario.</p></main>
+      <main class="main">${themeBtn("float")}${v(p)}<p class="disc">Afina es una guía de entrenamiento, no un servicio médico. Si tienes una lesión, una enfermedad o dudas, consulta antes con un médico o fisioterapeuta. Las estimaciones son orientativas.</p></main>
       <nav class="bnav">${(NUTRI?[["inicio","Inicio","home"],["entreno","Entreno","dumb"],["dieta","Dieta","plate"],["registro","Registro","scale"],["mas","Más","more"]]:[["inicio","Inicio","home"],["entreno","Entreno","dumb"],["registro","Registro","scale"],["logros","Logros","medal"],["mas","Más","more"]]).map(([k,t,i])=>`<button class="${UI.view===k||(k==="dieta"&&UI.view==="alimentos")||(k==="mas"&&["compra","cocina","objetivos","perfil","copias","aprende"].includes(UI.view))?"on":""}" data-a="go" data-v="${k}">${ic(i)}${t}</button>`).join("")}</nav>`;
   }
   root.innerHTML=`<div class="shell">${body}</div>${UI.sheet?`<div class="overlay" data-a="closeSheet"><div class="sheet" data-stop="1">${UI.sheet()}</div></div>`:""}`;
@@ -133,8 +133,10 @@ function viewOnboarding(){
     <button class="btn pri" type="submit">${step===OB_STEPS-1?"Crear perfil":"Siguiente"}</button></div></form>
     ${first&&step===0?`<div class="card flat" style="margin-top:28px"><h3>Antes de empezar</h3><p class="muted small" style="margin:4px 0 12px">Qué busca Afina y cómo funciona tu cuerpo, explicado sin tecnicismos.</p><button class="btn" data-a="openLearn">Leer por qué Afina</button></div>`:""}</div>`;
 }
+const GOAL_MAIN=["recomp","volumen","fuerza"];
 function goalCards(sel,act,k="meta"){
-  return `<div class="gcards">${GOAL_ORDER.map(id=>{const g=GOALS[id];return `<div class="gcard ${sel===id?"on":""}"><button type="button" class="gsel" data-a="${act}" data-k="${k}" data-val="${id}"><b>${g.t}</b><span>${g.d}</span></button>${infoBtn("g_"+id,g.t)}</div>`;}).join("")}</div>`;
+  const adv=!!sel&&!GOAL_MAIN.includes(sel);const more=adv||!!UI.goalMore;const ids=more?GOAL_ORDER:GOAL_ORDER.filter(x=>GOAL_MAIN.includes(x));
+  return `<div class="gcards">${ids.map(id=>{const g=GOALS[id];return `<div class="gcard ${sel===id?"on":""}"><button type="button" class="gsel" data-a="${act}" data-k="${k}" data-val="${id}"><b>${g.t}</b><span>${g.d}</span></button>${infoBtn("g_"+id,g.t)}</div>`;}).join("")}</div>${adv?"":`<button type="button" class="btn ghost sm" style="margin-top:8px" data-a="goalMore">${more?"Menos objetivos":"Ver más objetivos"}</button>`}`;
 }
 function choiceCards(dict,sel,act,k,pre,rec){
   return `<div class="gcards">${Object.entries(dict).map(([id,v])=>`<div class="gcard ${sel===id?"on":""}"><button type="button" class="gsel" data-a="${act}" data-k="${k}" data-val="${id}"><b>${v[0]}${rec===id?' <span class="rec">Recomendada</span>':""}</b><span>${v[1]}</span></button>${infoBtn(pre+id,v[0])}</div>`).join("")}</div>`;
@@ -537,9 +539,10 @@ function viewCopias(){
   return `<div class="head"><div><h1>Copia de seguridad</h1><p class="sub">${S.lastBackup?"Última copia: "+fdate(S.lastBackup.slice(0,10)):"Sin copias todavía"}</p></div></div>
   <div class="stack">
   ${memoryOnly?`<div class="alert bad"><span class="dot"></span><div><b>Este navegador no está guardando datos</b>Puede ser una ventana privada. Haz copia antes de cerrar.</div></div>`:""}
-  <div class="card stack"><h2>Guardar copia</h2><p class="muted small">Copia el texto y pégalo en una nota, un correo a ti mismo o un archivo de Drive. Contiene todos los perfiles de este dispositivo.</p>
+  <div class="card stack"><h2>Guardar copia</h2><p class="muted small">Lo más fácil: «Compartir o guardar archivo» y mándatelo a ti mismo por WhatsApp o correo, o guárdalo en Drive. También puedes copiarlo como texto. Contiene todos los perfiles de este dispositivo.</p>
     <textarea class="inp" id="bk_out" readonly>${esc(json)}</textarea>
-    <div class="row"><button class="btn pri" data-a="copyBackup">Copiar copia de seguridad</button><span class="small muted">${Math.round(json.length/1024)} KB</span></div></div>
+    <div class="row"><button class="btn pri" data-a="shareBackupFile">Compartir o guardar archivo</button><button class="btn" data-a="saveBackupFile">Descargar archivo</button></div>
+    <div class="row"><button class="btn" data-a="copyBackup">Copiar como texto</button><span class="small muted">${Math.round(json.length/1024)} KB</span></div></div>
   ${pulsoCard()}
   <div class="card stack"><h2>Restaurar</h2><p class="muted small">Pega aquí una copia o elige el archivo donde la guardaste.</p>
     <input type="file" accept=".txt,.json,text/plain,application/json" id="bk_file" data-c="bkFile" class="inp">
@@ -661,6 +664,10 @@ const A={
   switch:el=>{S.active=el.dataset.id;UI.view="inicio";UI.menuWeek=weekStart(today());commit();},
   newProfile:()=>{UI.ob={step:0,d:obDefaults()};UI.err=null;render();window.scrollTo(0,0);},
   delProfile:()=>{const id=S.active;delete S.profiles[id];S.active=Object.keys(S.profiles)[0]||null;UI.confirm=null;UI.view="inicio";commit();},
+  goalMore:()=>{UI.goalMore=!UI.goalMore;render();},
+  saveBackupFile:()=>{const ta=document.getElementById("bk_out");const blob=new Blob([ta.value],{type:"application/json"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="afina-copia-"+today()+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);S.lastBackup=new Date().toISOString();save();toast("Archivo guardado en tus descargas");},
+  shareBackupFile:()=>{const ta=document.getElementById("bk_out");const f=new File([ta.value],"afina-copia-"+today()+".json",{type:"application/json"});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:"Copia de Afina"}).then(()=>{S.lastBackup=new Date().toISOString();save();render();}).catch(()=>{});}else A.saveBackupFile();},
   copyBackup:()=>{const ta=document.getElementById("bk_out");copy(ta.value,"Copia copiada. Pégala en un sitio seguro.",ta);S.lastBackup=new Date().toISOString();save();},
   checkImport:()=>{const t=document.getElementById("bk_in").value.trim();UI.bkIn=t;UI.err=null;
     try{const d=JSON.parse(t);if(!d||!["afina","definicion20"].includes(d.app)||!d.profiles)throw 0;UI.pending=d;UI.confirm="import";}catch(e){UI.err="Ese texto no es una copia válida de esta app. Copia el bloque completo.";}

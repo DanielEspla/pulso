@@ -33,6 +33,8 @@ function viewGymSetup(p){
     <div class="stack"><div class="field"><span>Experiencia en el gimnasio ${infoBtn("nivel","nivel")}</span>${seg("nivel",Object.entries(NIVELES).map(([k,v])=>[k,v.split(" (")[0]]))}<span class="hint">${NIVELES[d.nivel]}. ${d.nivel==="avanzado"?"Empiezas directamente a RIR 1-2: la primera sesión de cada ejercicio sirve para calibrar el peso.":"Si dudas, elige el nivel inferior: la app te propondrá subir cuando lo notes fácil."}</span></div>
     <div class="card flat stack"><span class="lbl">Tu objetivo</span><p style="margin-top:4px"><b>${gc.t}</b> ${infoBtn("g_"+gc.id,gc.t)}${gc.fase?` <span class="muted small">· ${gc.fase}</span>`:""}</p><p class="small muted">El entreno se adapta a él (volumen, repeticiones y cercanía al fallo). Cámbialo aquí cuando quieras.</p>${goalCards(p.meta,"goalAsk")}</div>
     <label class="chk"><input type="checkbox" data-c="gsSup" id="gs_sup" ${d.supers?"checked":""}><span>Superseries<br><span class="hint">Empareja algunos ejercicios: una serie de uno, pasas al otro y descansas al terminar la pareja. Ahorra tiempo, pero cambias de ejercicio en mitad. Apagado: haces cada ejercicio entero con su descanso.</span></span></label>
+    <label class="chk"><input type="checkbox" data-c="gsSnd" id="gs_snd" ${typeof snd==="function"&&snd()?"checked":""}><span>Sonido al acabar el descanso<br><span class="hint">Pitido y vibración cuando termina el descanso. Solo suena con la pantalla encendida. Es un ajuste de este móvil.</span></span></label>
+    <label class="chk"><input type="checkbox" data-c="gsWake" id="gs_wake" ${typeof wakeOn==="function"&&wakeOn()?"checked":""}><span>Mantener la pantalla encendida en la sesión<br><span class="hint">Así el aviso del descanso no se pierde con la pantalla apagada. Gasta algo más de batería. Es un ajuste de este móvil.</span></span></label>
     ${d.nivel!=="principiante"?`<label class="chk"><input type="checkbox" data-c="gsTec" id="gs_tec" ${d.tecnicas?"checked":""}><span>Técnicas de intensidad ${infoBtn("tecnicas","técnicas de intensidad")}<br><span class="hint">Rest-pause, descendentes, parciales y series top en la última serie. Más estímulo sin alargar la sesión.</span></span></label>`:""}</div>`;}
   if(step===1)h=`<h2>Cuándo entrenas</h2><p class="muted" style="margin:6px 0 18px">Los días que marques serán días de gimnasio en tu semana tipo y en tu dieta.</p>
     <div class="stack"><div class="field"><span>Días de gimnasio</span><div class="dchips">${DIAS.map((x,i)=>`<button type="button" class="dch ${d.dias.includes(i)?"on":""}" data-a="gsDay" data-i="${i}">${i===2?"X":x[0]}</button>`).join("")}</div><span class="hint">${d.dias.length} día${d.dias.length===1?"":"s"}: ${d.dias.length?SPLIT_TXT[Math.min(6,d.dias.length)]:"elige al menos uno"}. Deja al menos un día entre sesiones cuando puedas.</span>${d.dias.length?`<span class="hint"><b>Cómo quedará la tabla:</b> ${SPLIT_WHY[Math.min(6,d.dias.length)]}</span>`:""}${g.plan&&g.setup&&d.dias.length!==g.setup.dias.length?`<span class="hint"><b>Se rehará la tabla</b> (de ${g.plan.sessions.length} a ${Math.min(6,d.dias.length)} sesiones). La actual queda guardada en «Planes anteriores».</span>`:""}</div>
@@ -142,16 +144,16 @@ function tickRest(){
   const n=document.getElementById("rest_n"),i=document.getElementById("rest_i");
   if(n)n.textContent=`${Math.floor(left/60)}:${pad(left%60)}`;
   if(i)i.style.width=Math.min(100,left/UI.rest.total*100)+"%";
-  if(left<=0){UI.rest=null;try{navigator.vibrate&&navigator.vibrate([200,100,200]);}catch(e){}toast("Descanso terminado. A por la siguiente serie.");}
+  if(left<=0){UI.rest=null;if(typeof restDone==="function")restDone();else{try{navigator.vibrate&&navigator.vibrate([200,100,200]);}catch(e){}}toast("Descanso terminado. A por la siguiente serie.");}
 }
 function viewGymSummary(p){
   const e=UI.gsum;const st=sessionStats(p,e);
   return `<div class="stack"><div class="hero"><span class="lbl acc">✓ Sesión terminada y guardada</span><h2 class="disp">${esc(e.name)}</h2>
   <div class="grid3"><div><span class="lbl">Series</span><div class="v2">${st.sets}</div></div><div><span class="lbl">Minutos</span><div class="v2">${e.min}</div></div><div><span class="lbl">Kilos movidos</span><div class="v2">${nf(st.vol,0)}</div></div></div>
   ${st.prs.length?`<div class="alert ok"><span class="dot"></span><div><b>${st.prs.length>1?st.prs.length+" récords nuevos":"Récord nuevo"}</b>${st.prs.map(x=>`${esc(EXM[x.ex].name)}: ${nf(x.b,1)} kg de fuerza estimada (${sgn(x.b-x.pb,1)} kg)`).join("<br>")}</div></div>`:`<p class="small muted">Sin récords hoy. No pasa nada: el progreso se mide en semanas, no en sesiones.</p>`}
-  <div class="field"><span>¿Cómo te ha sabido la sesión?</span>
+  ${e.mine?"":`<div class="field"><span>¿Cómo te ha sabido la sesión?</span>
     <div class="fb3">${[["mas","Puedo más","Una serie más la próxima vez"],["justo","Justa","Seguimos igual"],["menos","Demasiado","Una serie menos"]].map(([k,t,d])=>`<button class="${e.fb===k?"on":""}" data-a="fbSes" data-k="${k}"><b>${t}</b><span>${d}</span></button>`).join("")}</div>
-    ${e.fb?`<span class="hint">${e.fb==="mas"?"Anotado: los músculos de hoy tendrán una serie más en su próxima sesión.":e.fb==="menos"?"Anotado: una serie menos para esos músculos. Recuperar también es entrenar.":"Perfecto, seguimos con el plan."}</span>`:""}</div>
+    ${e.fb?`<span class="hint">${e.fb==="mas"?"Anotado: los músculos de hoy tendrán una serie más en su próxima sesión.":e.fb==="menos"?"Anotado: una serie menos para esos músculos. Recuperar también es entrenar.":"Perfecto, seguimos con el plan."}</span>`:""}</div>`}
   <p class="small muted">Para recuperar: proteína en las próximas horas y dormir bien esta noche. Es cuando el músculo se reconstruye.</p>
   ${mobOn(p)&&mobWeek(p)<2&&!(G(p).mobLog||[]).includes(today())?`<button class="btn wide" data-a="mobOpen">Rematar con 5 minutos de movilidad</button>`:""}
   <button class="btn wide" data-a="shareOpen">Crear imagen para compartir</button>
@@ -185,9 +187,9 @@ function doSwap(p,ctx,newId){
   if(st.reason==="dolor"&&st.joint)(g.pains=g.pains||[]).push({date:today(),joint:st.joint,ex:old.id});
   const ne=EXM[newId];
   if(ctx.mode==="ses"){
-    const d=g.draft;const it=d.exs[ctx.i];const slot=g.plan.sessions[d.sIdx].slots[it.si];
-    const range=repRange(p,ne,slot);
-    const nu={...it,ex:newId,lo:range[0],hi:range[1],rir:rirTarget(p,ne,d.week)+(d.wellness==="cansado"||d.wellness==="muy"?1:0),rest:restFor(p,ne,slot)};
+    const d=g.draft;const it=d.exs[ctx.i];const slot=d.mine?null:g.plan.sessions[d.sIdx].slots[it.si];
+    const range=d.mine?[it.lo,it.hi]:repRange(p,ne,slot);
+    const nu=d.mine?{...it,ex:newId}:{...it,ex:newId,lo:range[0],hi:range[1],rir:rirTarget(p,ne,d.week)+(d.wellness==="cansado"||d.wellness==="muy"?1:0),rest:restFor(p,ne,slot)};
     if(it.sets_.length){it.done=true;nu.sets_=[];nu.sets=Math.max(1,it.sets-it.sets_.filter(s=>!s.warm).length);d.exs.splice(ctx.i+1,0,nu);d.cur=ctx.i+1;}
     else{nu.sets_=[];d.exs[ctx.i]=nu;}
     if(st.perm&&slot)slot.ex=newId;
