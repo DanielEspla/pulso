@@ -65,11 +65,11 @@ function viewMine(p){
   if(st.screen==="edit"){const d=st.d;
     return `<div class="stack">${back}
     <label class="field"><span>Nombre de la rutina</span><input class="inp" id="mn_name" data-mn="name" value="${esc(d.name)}" placeholder="Ej.: Pecho y tríceps"></label>
-    ${d.exs.length?d.exs.map((x,j)=>{const ex=EXM[x.ex];const t=ex.rep==="s";return `<div class="card stack"><div class="row between"><div><b>${esc(ex.name)}</b><div class="small muted">${esc(MUSCLES[ex.prim]||"")}</div></div>
+    ${d.exs.length?d.exs.map((x,j)=>{const ex=EXM[x.ex];const t=ex.rep==="s"||ex.rep==="m";return `<div class="card stack"><div class="row between"><div><b>${esc(ex.name)}</b><div class="small muted">${esc(MUSCLES[ex.prim]||"")}</div></div>
       <div class="row" style="gap:4px;flex-wrap:nowrap;flex-shrink:0"><button class="btn ghost sm" data-a="mineUp" data-j="${j}" aria-label="Subir">↑</button><button class="btn ghost sm" data-a="mineDown" data-j="${j}" aria-label="Bajar">↓</button><button class="btn ghost sm" data-a="mineDel" data-j="${j}" aria-label="Quitar">✕</button></div></div>
       <div class="mgrid"><label class="field"><span>Series</span><input class="inp num" type="number" inputmode="numeric" min="1" max="20" data-mn="sets" data-j="${j}" value="${x.sets}"></label>
-      <label class="field"><span>${t?"Seg. mín":"Reps mín"}</span><input class="inp num" type="number" inputmode="numeric" min="1" data-mn="lo" data-j="${j}" value="${x.lo}"></label>
-      <label class="field"><span>${t?"Seg. máx":"Reps máx"}</span><input class="inp num" type="number" inputmode="numeric" min="1" data-mn="hi" data-j="${j}" value="${x.hi}"></label></div>
+      <label class="field"><span>${ex.rep==="m"?"Metros mín":t?"Seg. mín":"Reps mín"}</span><input class="inp num" type="number" inputmode="numeric" min="1" data-mn="lo" data-j="${j}" value="${x.lo}"></label>
+      <label class="field"><span>${ex.rep==="m"?"Metros máx":t?"Seg. máx":"Reps máx"}</span><input class="inp num" type="number" inputmode="numeric" min="1" data-mn="hi" data-j="${j}" value="${x.hi}"></label></div>
       <label class="field"><span>Descanso</span><select class="inp" data-mn="rest" data-j="${j}">${MINE_REST.map(([v,t2])=>`<option value="${v}" ${+x.rest===v?"selected":""}>${t2}</option>`).join("")}${MINE_REST.some(([v])=>v===+x.rest)?"":`<option value="${x.rest}" selected>${x.rest} s</option>`}</select></label></div>`;}).join(""):`<div class="card flat"><p class="muted">Aún no hay ejercicios. Pulsa «Añadir ejercicio».</p></div>`}
     <button class="btn wide" data-a="mineAddEdit">+ Añadir ejercicio</button>
     ${UI.err?`<p class="err">${esc(UI.err)}</p>`:""}
@@ -94,7 +94,7 @@ function sheetMineAdd(p){
   return `<div class="sheet-h"><div><span class="lbl">Añadir</span><h2>Elige un ejercicio</h2></div><button class="btn ghost sm" data-a="closeSheet">${ic("x",'width="18"')}</button></div>
   <div class="stack"><input class="inp" type="search" id="mnq" data-mnq="1" placeholder="Buscar ejercicio o músculo" value="${esc(q)}">
   <div class="chips">${[["","Todos"],...Object.entries(MUSCLES).filter(([k])=>k!=="varios")].map(([k,t])=>`<button class="${mu===k?"on":""}" data-a="mineMus" data-k="${k}">${t}</button>`).join("")}</div>
-  <div class="items">${list.length?list.map(e=>`<button class="item" data-a="mineAddEx" data-id="${esc(e.id)}"><span class="nm"><b>${esc(e.name)}</b><span class="small muted">${esc(MUSCLES[e.prim]||"")}${e.imported?" · tuyo":""}</span></span><span class="q">+</span></button>`).join(""):`<p class="muted">No hay resultados. Créalo aquí abajo.</p>`}</div>
+  <div class="items">${list.length?list.map(e=>`<button class="item" data-a="mineAddEx" data-id="${esc(e.id)}"><span class="nm"><b>${esc(e.name)}</b><span class="small muted">${esc(MUSCLES[e.prim]||"")}${e.imported&&!e.prog?" · tuyo":""}</span></span><span class="q">+</span></button>`).join(""):`<p class="muted">No hay resultados. Créalo aquí abajo.</p>`}</div>
   <div class="card flat stack"><span class="lbl">Crear ejercicio propio</span>
     <input class="inp" data-mnn="name" placeholder="Nombre del ejercicio" value="${esc(nw.name!=null?nw.name:q)}">
     <label class="field"><span>Músculo principal</span><select class="inp" data-mnn="prim">${Object.entries(MUSCLES).filter(([k])=>k!=="varios").map(([k,t])=>`<option value="${k}" ${(nw.prim||"pecho")===k?"selected":""}>${t}</option>`).join("")}<option value="varios" ${nw.prim==="varios"?"selected":""}>Otro / varios</option></select></label>

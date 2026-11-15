@@ -4,7 +4,7 @@
    Antes de las series de trabajo de los ejercicios compuestos: subir peso en pocas repeticiones
    para preparar articulaciones, técnica y sistema nervioso sin cansar. */
 function warmupPlan(p,it,sg){
-  const ex=EXM[it.ex];if(!ex||!ex.C||ex.rep==="s"||!incFor(ex))return null;
+  const ex=EXM[it.ex];if(!ex||!ex.C||ex.rep==="s"||ex.rep==="m"||!incFor(ex))return null;
   const d=G(p).draft;const firstOfPattern=d?d.exs.findIndex(x=>EXM[x.ex]&&EXM[x.ex].pat===ex.pat)===d.exs.indexOf(it):true;
   if(!it.main&&!firstOfPattern)return null;
   const w=sg&&sg.w;

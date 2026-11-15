@@ -127,7 +127,7 @@ function viewRunner(p){
     ${prevSetHint(p,it)}
     <div class="entry">
       <label class="field"><span>Peso (kg)</span><input class="inp num big-inp" type="number" step="0.5" inputmode="decimal" id="rn_w" data-i="rnW" value="${UI.rnW??""}" placeholder="${sg.w??"kg"}"></label>
-      <label class="field"><span>${ex.rep==="s"?"Segundos":"Repeticiones"}</span><input class="inp num big-inp" type="number" inputmode="numeric" id="rn_r" data-i="rnR" value="${UI.rnR??""}" placeholder="${it.lo}-${it.hi}"></label>
+      <label class="field"><span>${repUnit(ex)[0]}</span><input class="inp num big-inp" type="number" inputmode="numeric" id="rn_r" data-i="rnR" value="${UI.rnR??""}" placeholder="${it.lo}-${it.hi}"></label>
     </div>
     ${UI.rnWarm?"":`<div class="field"><span>¿Cuántas repeticiones más podrías haber hecho?</span><div class="rir">${[0,1,2,3].map(v=>`<button class="${UI.rnRir===v?"on":""}" data-a="rnRir" data-v="${v}">${v===3?"3+":v}</button>`).join("")}</div></div>`}
     <div class="row between"><label class="chk sm-chk"><input type="checkbox" data-c="rnWarm" id="rn_warm" ${UI.rnWarm?"checked":""}> Serie de aproximación</label>
@@ -211,7 +211,7 @@ function sheetFicha(p,id,slot){
   <div><span class="lbl">Por qué está en tu plan</span><ul class="tight">${whyEx(p,ex,slot).map(w=>`<li>${esc(w)}</li>`).join("")}</ul></div>
   ${ex.cues.length?`<div><span class="lbl">Técnica</span><ol class="tight">${ex.cues.map(c=>`<li>${esc(c)}</li>`).join("")}</ol></div>`:`<p class="small muted">Ejercicio importado de PULSO. Si lo cambias por uno de la biblioteca de Afina tendrás técnica, explicación y alternativas.</p>`}
   ${ex.err?`<div class="alert"><span class="dot"></span><div><b>Error típico</b>${esc(ex.err)}</div></div>`:""}
-  <div class="grid2"><div><span class="lbl">Rango</span><p class="num">${range[0]}-${range[1]} ${ex.rep==="s"?"segundos":"repeticiones"}</p></div><div><span class="lbl">Descanso</span><p>${restTxt(rest)}</p></div>
+  <div class="grid2"><div><span class="lbl">Rango</span><p class="num">${range[0]}-${range[1]} ${repUnit(ex)[1]}</p></div><div><span class="lbl">Descanso</span><p>${restTxt(rest)}</p></div>
   <div><span class="lbl">Material</span><p class="small">${ex.req.filter(Boolean).map(r=>GYM_ITEM[r].t).join(", ")||"Peso corporal"}</p></div><div><span class="lbl">Exige a</span><p class="small">${sts.join(", ")||"Articulaciones sin carga especial"}</p></div></div>
   ${h.length?`<div><span class="lbl">Tus últimas veces</span>${h.map(x=>`<p class="small num">${fdate(x.date)}: ${x.sets.map(s=>(s.w?nf(s.w,s.w%1?1:0)+"×":"")+s.r).join(", ")} <span class="muted">· fuerza est. ${nf(bestE1(x.sets),0)} kg</span></p>`).join("")}</div>`:""}
   <a class="btn" href="https://www.youtube.com/results?search_query=${encodeURIComponent(ex.name+" técnica")}" target="_blank" rel="noopener">Ver vídeos de la técnica</a>
@@ -325,7 +325,7 @@ Object.assign(A,{
   rnRir:el=>{UI.rnRir=+el.dataset.v;render();},
   addSet:()=>{const p=P();const d=G(p).draft;const it=d.exs[d.cur];const ex=EXM[it.ex];
     const w=parseFloat(String(document.getElementById("rn_w").value).replace(",","."));const r=parseInt(document.getElementById("rn_r").value,10);
-    if(!(r>0&&r<300)){toast(ex.rep==="s"?"Indica los segundos":"Indica las repeticiones");return;}
+    if(!(r>0&&r<repUnit(ex)[2])){toast("Indica "+repUnit(ex)[3]);return;}
     if(incFor(ex)&&!(w>=0&&w<1000)){toast("Indica el peso");return;}
     it.sets_.push({w:isNaN(w)?0:w,r,rir:UI.rnWarm?null:UI.rnRir,warm:!!UI.rnWarm});
     UI.rnW=isNaN(w)?"":w;UI.rnR="";

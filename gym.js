@@ -389,7 +389,7 @@ const TECHS={
 function techFor(p,ex,sl,wk){
   const s=G(p).setup;if(!s||!s.tecnicas||wk===4||s.nivel==="principiante")return null;
   if(sl.main&&ex.C&&s.nivel==="avanzado"&&ex.req.some(r=>["barra","smith","prensa","hack","pendulo"].includes(r)))return "topset";
-  if(ex.C||ex.rep==="s")return null;
+  if(ex.C||ex.rep==="s"||ex.rep==="m")return null;
   const mach=ex.req.includes("poleas")||ex.req.some(r=>GYM_ITEM[r]&&GYM_ITEM[r].k==="maquina");
   if(!mach)return ex.S?"parciales":null;
   const h=[...ex.id].reduce((a,c)=>a+c.charCodeAt(0),0);
