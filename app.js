@@ -664,8 +664,8 @@ const A={
   switch:el=>{S.active=el.dataset.id;UI.view="inicio";UI.menuWeek=weekStart(today());commit();},
   newProfile:()=>{UI.ob={step:0,d:obDefaults()};UI.err=null;render();window.scrollTo(0,0);},
   delProfile:()=>{const id=S.active;delete S.profiles[id];S.active=Object.keys(S.profiles)[0]||null;UI.confirm=null;UI.view="inicio";commit();},
-  goalMore:()=>{UI.goalMore=!UI.goalMore;render();},
-  saveBackupFile:()=>{const ta=document.getElementById("bk_out");const blob=new Blob([ta.value],{type:"application/json"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="afina-copia-"+today()+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);S.lastBackup=new Date().toISOString();save();toast("Archivo guardado en tus descargas");},
+  goalMore:()=>{try{readOb();}catch(e){}UI.goalMore=!UI.goalMore;render();},
+  saveBackupFile:()=>{const ta=document.getElementById("bk_out");const blob=new Blob([ta.value],{type:"application/json"});const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="afina-copia-"+today()+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);S.lastBackup=new Date().toISOString();save();toast("Archivo guardado en tus descargas");render();},
   shareBackupFile:()=>{const ta=document.getElementById("bk_out");const f=new File([ta.value],"afina-copia-"+today()+".json",{type:"application/json"});
     if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:"Copia de Afina"}).then(()=>{S.lastBackup=new Date().toISOString();save();render();}).catch(()=>{});}else A.saveBackupFile();},
   copyBackup:()=>{const ta=document.getElementById("bk_out");copy(ta.value,"Copia copiada. Pégala en un sitio seguro.",ta);S.lastBackup=new Date().toISOString();save();},

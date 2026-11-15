@@ -315,7 +315,7 @@ function todayGym(p){
   const g=G(p);if(!g.plan)return null;
   const wd=(new Date().getDay()+6)%7;
   const isDay=(p.plan||[])[wd]==="gimnasio";
-  const doneToday=g.log.some(l=>l.date===today());
+  const doneToday=g.log.some(l=>l.date===today()&&!l.mine);
   return {isDay,doneToday,idx:g.next%g.plan.sessions.length,session:g.plan.sessions[g.next%g.plan.sessions.length]};
 }
 

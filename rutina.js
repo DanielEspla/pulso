@@ -8,17 +8,21 @@ const mineNorm=s=>normName(s);
 function mineList(p){const g=G(p);if(!g.mine)g.mine=[];return g.mine;}
 function mineCount(r){return r.exs.reduce((a,x)=>a+(+x.sets||0),0);}
 function mineDefaults(ex){const r=REPS[ex.rep]||REPS.h;return {ex:ex.id,sets:3,lo:r[0],hi:r[1],rest:REST[ex.rep]||90};}
-function mineEnsureSetup(p){const g=G(p);if(!g.setup){applyGymSetup(p,gymDefaults(p));}}
+function mineEnsureSetup(p){const g=G(p);if(!g.setup&&!g.plan){applyGymSetup(p,gymDefaults(p));}}
 
 /* ---- Ejercicios propios ---- */
 function mineNewEx(p,name,prim,time,bw){
   name=String(name||"").trim().replace(/\s+/g," ");if(!name)return null;
   const g=G(p);g.customEx=g.customEx||[];
-  const id="mi_"+mineNorm(name).replace(/ /g,"_").slice(0,36);
-  if(EXM[id])return id;
-  const c={id,name:name.charAt(0).toUpperCase()+name.slice(1),prim:prim||"varios",pat:MINE_PAT[prim||"varios"]||"otro",rep:time?"s":"h",inc:bw?0:2.5};
+  const nm=name.charAt(0).toUpperCase()+name.slice(1);
+  let id="mi_"+mineNorm(name).replace(/ /g,"_").replace(/[^a-z0-9_]/g,"").slice(0,36),k=1;const base=id;
+  while(EXM[id]&&EXM[id].name!==nm){k++;id=base+"_"+k;}
+  if(EXM[id]){mineKeep(p,id);return id;}
+  const c={id,name:nm,prim:prim||"varios",pat:MINE_PAT[prim||"varios"]||"otro",rep:time?"s":"h",inc:bw?0:2.5};
   g.customEx.push(c);registerImported([c]);return id;
 }
+/* Si un ejercicio propio existe solo en otro perfil, lo copia al activo para no perderlo */
+function mineKeep(p,id){const e=EXM[id];if(!e||!e.imported)return;const g=G(p);g.customEx=g.customEx||[];if(!g.customEx.some(c=>c.id===id))g.customEx.push({id:e.id,name:e.name,prim:e.prim,pat:e.pat,rep:e.rep,inc:e.inc});}
 /* Busca en la biblioteca: primero nombre exacto, luego el más corto que contenga todas las palabras */
 function mineMatch(name){
   const t=mineNorm(name);if(!t)return null;
@@ -32,15 +36,17 @@ function mineMatch(name){
 function mineParse(p,text){
   const out=[];let made=0,known=0;
   String(text||"").split(/\n|;/).forEach(raw=>{
-    let l=raw.replace(/^\s*(?:[-•*·]|\d+[.)])\s+/,"").trim();if(!l)return;
+    let l=raw.replace(/\t+/g," ").replace(/^\s*(?:[-•*·]|\d+\s*[.)\-–]|[a-zA-Z]\))\s*/,"").trim();if(!l)return;
+    if(/^(d[ií]a\s*\d|lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo|rutina|descanso|calentamiento|semana|bloque)\b/i.test(l)&&!/\d\s*[x×]\s*\d/i.test(l))return;
+    l=l.replace(/^(\d{1,2}\s*[x×]\s*\d{1,3}(?:\s*[-–]\s*\d{1,3})?)\s+(.+)$/i,"$2 $1").replace(/\s+\d{1,3}(?:[.,]\d+)?\s*kg\b/ig,"").replace(/\b(\d{1,2})\s*(?:sets?|series)\s*[x×de]*\s*(\d)/i,"$1x$2");
     let sets=3,lo=null,hi=null,time=false,name=l,m;
     if((m=l.match(/^(.*?)[\s:,\-–]*(\d{1,2})\s*[x×*]\s*(\d{1,3})(?:\s*[-–a]\s*(\d{1,3}))?\s*(s|seg|segundos|")?\b.*$/i))&&m[1].trim()){name=m[1];sets=+m[2];lo=+m[3];hi=m[4]?+m[4]:null;time=!!m[5];}
     else if((m=l.match(/^(.*?)[\s:,\-–]*(\d{1,2})\s*series?\s*(?:de|x)?\s*(\d{1,3})(?:\s*[-–a]\s*(\d{1,3}))?\s*(s|seg|segundos)?\b.*$/i))&&m[1].trim()){name=m[1];sets=+m[2];lo=+m[3];hi=m[4]?+m[4]:null;time=!!m[5];}
     name=name.replace(/[\s:,\-–]+$/,"").trim();if(!name)return;
     let id=mineMatch(name);
-    if(id){known++;}else{const g=normName(name);const gs=PAT_GUESS.find(([re])=>re.test(g));id=mineNewEx(p,name,gs?gs[2]:"varios",time,false);made++;}
+    if(id){known++;mineKeep(p,id);}else{const g=normName(name);const gs=PAT_GUESS.find(([re])=>re.test(g));id=mineNewEx(p,name,gs?gs[2]:"varios",time,false);made++;}
     const ex=EXM[id];const d=mineDefaults(ex);
-    if(lo!=null){d.lo=lo;d.hi=hi!=null?Math.max(hi,lo):(ex.rep==="s"||time?lo:lo+2);}
+    if(lo!=null){d.lo=lo;d.hi=hi!=null?Math.max(hi,lo):lo;}
     d.sets=clamp(sets,1,20);out.push(d);
   });
   return {exs:out,made,known};
@@ -88,7 +94,7 @@ function sheetMineAdd(p){
   return `<div class="sheet-h"><div><span class="lbl">Añadir</span><h2>Elige un ejercicio</h2></div><button class="btn ghost sm" data-a="closeSheet">${ic("x",'width="18"')}</button></div>
   <div class="stack"><input class="inp" type="search" id="mnq" data-mnq="1" placeholder="Buscar ejercicio o músculo" value="${esc(q)}">
   <div class="chips">${[["","Todos"],...Object.entries(MUSCLES).filter(([k])=>k!=="varios")].map(([k,t])=>`<button class="${mu===k?"on":""}" data-a="mineMus" data-k="${k}">${t}</button>`).join("")}</div>
-  <div class="items">${list.length?list.map(e=>`<button class="item" data-a="mineAddEx" data-id="${e.id}"><span class="nm"><b>${esc(e.name)}</b><span class="small muted">${esc(MUSCLES[e.prim]||"")}${e.imported?" · tuyo":""}</span></span><span class="q">+</span></button>`).join(""):`<p class="muted">No hay resultados. Créalo aquí abajo.</p>`}</div>
+  <div class="items">${list.length?list.map(e=>`<button class="item" data-a="mineAddEx" data-id="${esc(e.id)}"><span class="nm"><b>${esc(e.name)}</b><span class="small muted">${esc(MUSCLES[e.prim]||"")}${e.imported?" · tuyo":""}</span></span><span class="q">+</span></button>`).join(""):`<p class="muted">No hay resultados. Créalo aquí abajo.</p>`}</div>
   <div class="card flat stack"><span class="lbl">Crear ejercicio propio</span>
     <input class="inp" data-mnn="name" placeholder="Nombre del ejercicio" value="${esc(nw.name!=null?nw.name:q)}">
     <label class="field"><span>Músculo principal</span><select class="inp" data-mnn="prim">${Object.entries(MUSCLES).filter(([k])=>k!=="varios").map(([k,t])=>`<option value="${k}" ${(nw.prim||"pecho")===k?"selected":""}>${t}</option>`).join("")}<option value="varios" ${nw.prim==="varios"?"selected":""}>Otro / varios</option></select></label>
@@ -109,14 +115,14 @@ function mineAddTo(p,id){
   if(ctx==="edit"&&UI.mn&&UI.mn.d){UI.mn.d.exs.push(d0);}
   else if(ctx==="free"){mineStartDraft(p,"Entreno libre","libre",[d0]);}
   else if(ctx==="draft"&&G(p).draft){const d=G(p).draft;d.exs.push({si:d.exs.length,ex:id,sets:d0.sets,lo:d0.lo,hi:d0.hi,rir:2,rest:d0.rest,main:false,ss:"",tech:null,orig:id,sets_:[],done:false});d.cur=d.exs.length-1;UI.rnFor=null;}
-  UI.sheet=null;UI.mnq="";UI.mnm="";UI.mnNew=null;
+  UI.sheet=null;UI.mnq="";UI.mnm="";UI.mnNew=null;UI.err=null;
 }
 Object.assign(A,{
   mineOpen:()=>{const p=P();mineEnsureSetup(p);UI.gs=null;UI.mn={screen:"list"};UI.err=null;UI.view="entreno";commit();window.scrollTo(0,0);},
   mineClose:()=>{UI.mn=null;UI.err=null;UI.confirm=null;render();window.scrollTo(0,0);},
   mineList:()=>{UI.mn={screen:"list"};UI.err=null;UI.confirm=null;render();window.scrollTo(0,0);},
   mineNew:()=>{UI.mn={screen:"edit",d:{id:null,name:"",exs:[]}};UI.err=null;render();window.scrollTo(0,0);},
-  mineEdit:el=>{const r=mineList(P()).find(x=>x.id===el.dataset.id);if(!r)return;UI.mn={screen:"edit",d:JSON.parse(JSON.stringify(r))};UI.err=null;render();window.scrollTo(0,0);},
+  mineEdit:el=>{const r=mineList(P()).find(x=>x.id===el.dataset.id);if(!r)return;const d=JSON.parse(JSON.stringify(r));d.exs=d.exs.filter(x=>EXM[x.ex]);UI.mn={screen:"edit",d};UI.confirm=null;UI.err=null;render();window.scrollTo(0,0);},
   minePaste:()=>{UI.mn={screen:"paste",txt:""};UI.err=null;render();},
   minePasteDo:()=>{const p=P();const t=document.getElementById("mn_txt");const txt=t?t.value:UI.mn.txt;const r=mineParse(p,txt);
     if(!r.exs.length){UI.err="No he encontrado ningún ejercicio. Escribe uno por línea.";render();return;}
@@ -138,9 +144,9 @@ Object.assign(A,{
     d.name=(d.name||"").trim()||"Mi rutina "+(mineList(p).length+1);
     if(d.id){const i=mineList(p).findIndex(x=>x.id===d.id);if(i>=0)mineList(p)[i]=d;else mineList(p).push(d);}
     else{d.id=uid();d.created=today();mineList(p).push(d);}
-    UI.mn={screen:"list"};UI.err=null;commit();window.scrollTo(0,0);toast("Rutina guardada");},
+    UI.mn={screen:"list"};UI.err=null;UI.confirm=null;commit();window.scrollTo(0,0);toast("Rutina guardada");},
   mineDelDo:()=>{const p=P();const id=UI.mn.d.id;const g=G(p);g.mine=mineList(p).filter(x=>x.id!==id);UI.mn={screen:"list"};UI.confirm=null;commit();toast("Rutina borrada");},
-  mineStart:el=>{const p=P();const r=mineList(p).find(x=>x.id===el.dataset.id);if(!r)return;mineStartDraft(p,r.name,r.id,r.exs);commit();window.scrollTo(0,0);}
+  mineStart:el=>{const p=P();const r=mineList(p).find(x=>x.id===el.dataset.id);if(!r)return;const ok=r.exs.filter(x=>EXM[x.ex]);if(!ok.length){toast("Esta rutina tiene ejercicios que ya no existen. Edítala y vuelve a añadirlos.");return;}mineStartDraft(p,r.name,r.id,ok);commit();window.scrollTo(0,0);}
 });
 /* Escritura en los campos sin perder el foco */
 function mineField(e){
@@ -207,8 +213,8 @@ function restDone(){try{navigator.vibrate&&navigator.vibrate([200,100,200]);}cat
 function syncWake(){
   try{
     if(!("wakeLock" in navigator))return;
-    const p=P();const need=!!(p&&G(p).draft)&&wakeOn()&&document.visibilityState==="visible";
-    if(need&&!_wl){navigator.wakeLock.request("screen").then(l=>{_wl=l;l.addEventListener("release",()=>{if(_wl===l)_wl=null;});}).catch(()=>{});}
+    const p=P();const dr=p&&G(p).draft;const need=!!dr&&dr.date===today()&&UI.view==="entreno"&&wakeOn()&&document.visibilityState==="visible"&&Date.now()>(window._wlBack||0);
+    if(need&&!_wl){navigator.wakeLock.request("screen").then(l=>{_wl=l;l.addEventListener("release",()=>{if(_wl===l)_wl=null;});}).catch(()=>{window._wlBack=Date.now()+60000;});}
     else if(!need&&_wl){const l=_wl;_wl=null;l.release().catch(()=>{});}
   }catch(e){}
 }

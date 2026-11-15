@@ -70,7 +70,7 @@ function gymHoy(p){
   const idx=UI.gsel!=null?UI.gsel:td.idx;const ses=g.plan.sessions[idx];
   const well=UI.well||"normal";const prev=sessionPreview(p,idx,well);
   const dl=deloadSuggest(p);const pa=painAlert(p);
-  const last=g.log.slice().reverse().find(l=>l.date===today());
+  const last=g.log.slice().reverse().find(l=>l.date===today()&&!l.mine);
   const lu=levelUpSuggest(p);
   return `<div class="stack">
   ${!g.log.length?`<div class="alert"><span class="dot"></span><div><b>¿Vienes de PULSO?</b>Trae tus entrenos para que la progresión arranque con tus pesos reales.<div style="margin-top:8px"><button class="btn sm" data-a="go" data-v="copias">Importar de PULSO</button></div></div></div>`:""}
@@ -379,7 +379,7 @@ document.addEventListener("input",e=>{
 function gymSimple(p){
   const g=G(p);const td=todayGym(p);const n=g.plan.sessions.length;
   const idx=UI.gsel!=null?UI.gsel:td.idx;const ses=g.plan.sessions[idx];const prev=sessionPreview(p,idx,"normal");
-  const last=g.log.slice().reverse().find(l=>l.date===today());
+  const last=g.log.slice().reverse().find(l=>l.date===today()&&!l.mine);
   const nx=g.plan.sessions[g.next%n];
   const lastW=id=>{const h=exHistory(p,id);if(!h.length)return "";const t=Math.max(...h[h.length-1].sets.map(s=>s.w||0));return t?` · última vez ${nf(t,t%1?1:0)} kg`:"";};
   const series=prev.reduce((a,x)=>a+x.sets,0);

@@ -87,7 +87,7 @@ function sheetSupl(){
 /* ---- Tarjeta de la mañana ---- */
 function morningCard(p){
   const ws=weekStart(today());const di=(new Date().getDay()+6)%7;const menu=NUTRI&&p.menus&&p.menus[ws];
-  const g=p.gym;const gymToday=g&&g.setup&&(g.setup.dias||[]).includes(di);const doneGym=g&&g.log&&g.log.some(l=>l.date===today());
+  const g=p.gym;const gymToday=g&&g.setup&&(g.setup.dias||[]).includes(di);const doneGym=g&&g.log&&g.log.some(l=>l.date===today()&&!l.mine);
   let meals="";let prep=[];
   if(menu){const day=menu.days[di];
     meals=day.meals.map((m,mi)=>{const k=`${today()}:${mi}`;const main=m.fuera?m.fuera.label:m.items.filter(it=>["P","C"].includes(FOOD[it.id].r)).map(it=>FOOD[it.id].name).slice(0,2).join(" con ").toLowerCase();
