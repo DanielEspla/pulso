@@ -11,73 +11,113 @@
     ayuda: [
       {
         pregunta: 'Defineix majordom de palau, missi dominici, marca, comtat.',
-        traduccion: 'Define: mayordomo de palacio, missi dominici, marca, condado.',
-        respuesta: 'Mayordomo de palacio: el funcionario más poderoso de la corte franca, con más poder real que el propio rey. Carlos Martel y su hijo Pipino el Breve fueron mayordomos de palacio antes de hacerse reyes.\nMissi dominici: "enviados del señor" (del emperador). Inspectores que recorrían el imperio vigilando a condes, marqueses y obispos.\nMarca: territorio fronterizo con más tropas y vigilancia, por estar expuesto a ataques (Marca Bretona, Hispànica, de l\'Est, Sòraba, Pannònica, del Friuli, Danesa).\nCondado: división administrativa normal, dirigida por un conde nombrado por el emperador, al que juraba fidelidad.',
-        donde: 'página "4. Del regne dels francs a l\'imperi carolingi", caja rosa "IDEES CLAU".',
-        clave: 'Carlomagno dividió su imperio en condados (gobierno normal) y marcas (fronteras vigiladas), controlados por inspectores: los missi dominici.'
+        traduccion: 'Define: mayordomo de palacio, missi dominici, marca y condado.',
+        respuesta: 'Mayordomo de palacio: era el jefe de la corte del rey. Mandaba más que el rey.
+Missi dominici: significa "enviados del emperador". Eran inspectores. Iban por todo el imperio y vigilaban a los condes.
+Marca: zona del borde del imperio. Había muchos soldados para defenderla.
+Condado: una zona normal del imperio. La gobernaba un conde. El emperador lo elegía.',
+        donde: 'Mira la página 4, en la caja rosa que dice IDEES CLAU.',
+        clave: 'Carlomagno dividió su imperio en condados y marcas. Los missi dominici los vigilaban.'
       },
       {
         pregunta: "A la mort d'un rei franc, el regne es dividia entre els descendents. Analitza, a partir de l'exemple de Carlemany, els avantatges i inconvenients d'aquest sistema.",
-        traduccion: 'Cuando moría un rey franco, el reino se repartía entre sus hijos. Analiza, con el ejemplo de Carlomagno, las ventajas e inconvenientes de este sistema.',
-        respuesta: 'Ventaja: parecía justo, cada hijo recibía una parte y se evitaban luchas inmediatas.\nInconveniente: el imperio se hacía cada vez más pequeño y débil, y los hermanos acababan peleándose igual. Al morir Luis el Piadoso (hijo de Carlomagno), sus tres hijos se enfrentaron y en el 843 firmaron el Tratado de Verdún, partiendo el imperio en tres para siempre.',
-        donde: 'mismo texto, apartado "Què va passar després de la mort de Carlemany?".',
-        clave: 'Repartir el reino entre los hijos debilitaba el imperio generación tras generación: así acabó partido en tres con el Tratado de Verdún (843).'
+        traduccion: 'Cuando moría un rey franco, el reino se repartía entre sus hijos. Piensa en las ventajas y los problemas, con el ejemplo de Carlomagno.',
+        respuesta: 'Ventaja: cada hijo recibía una parte. Parecía justo.
+Problema: el reino se hacía más pequeño y más débil.
+Ejemplo: Carlomagno tenía un hijo, Luis el Piadoso. Cuando Luis murió, sus tres hijos se pelearon. En el año 843 partieron el imperio en tres. Es el Tratado de Verdún.',
+        donde: 'Mira el mismo texto, en el apartado "Què va passar després de la mort de Carlemany?".',
+        clave: 'Repartir el reino entre los hijos lo hizo más débil. Al final se partió en tres (año 843).'
       },
       {
         pregunta: "Llig el text. Quin fet relata? En quin any tingué lloc? Analitza'n les conseqüències.",
-        traduccion: '¿Qué hecho relata el texto? ¿En qué año tuvo lugar? Analiza sus consecuencias.',
-        respuesta: 'El texto (Annales Laureshamenses) cuenta la coronación de Carlomagno como emperador por el papa León III, el día de Navidad del año 800, en Roma.\nConsecuencia: nace oficialmente el Imperio carolingio y vuelve a existir el título de "emperador de Occidente".',
-        donde: 'Caixa de ferramentes, columna de texto junto al retrato de Carlomagno.',
-        clave: 'El papa coronó a Carlomagno emperador el año 800.'
+        traduccion: 'Lee el texto. ¿Qué hecho cuenta? ¿En qué año pasó? ¿Qué consecuencias tuvo?',
+        respuesta: 'El texto cuenta una coronación. El papa León III coronó emperador a Carlomagno.
+Fue en Roma, el día de Navidad del año 800.
+Consecuencia: nació el Imperio carolingio. Carlomagno fue emperador.',
+        donde: 'Mira la Caixa de ferramentes, en el texto que está junto al retrato de Carlomagno.',
+        clave: 'El papa coronó emperador a Carlomagno en el año 800.'
       },
       {
         pregunta: "Compara els mapes. Amb l'ajuda de l'atles, enumera els territoris actuals que abraça l'imperi carolingi.",
-        traduccion: 'Compara los mapas. Enumera los territorios actuales que abarca el imperio carolingio.',
-        respuesta: 'Aproximadamente: Francia, Bélgica, Países Bajos, Alemania occidental, Suiza, Austria, el norte de Italia y Cataluña/norte de España (Marca Hispánica).',
-        donde: 'mapa grande rosa "L\'expansió de l\'imperi carolingi".',
-        clave: 'El imperio cubría buena parte de la actual Francia, Alemania, Benelux, Suiza, Austria, norte de Italia y Cataluña.'
+        traduccion: 'Compara los mapas. ¿Qué países de hoy ocupaba el imperio?',
+        respuesta: 'El imperio de Carlomagno incluía estos países de hoy:
+Francia.
+Bélgica y Países Bajos.
+Alemania (la parte del oeste).
+Suiza y Austria.
+El norte de Italia.
+Cataluña, en España.',
+        donde: 'Mira el mapa grande de color rosa, "L\'expansió de l\'imperi carolingi".',
+        clave: 'El imperio ocupaba Francia, Alemania, Suiza, Austria, el norte de Italia y Cataluña.'
       },
       {
         pregunta: 'Anomena les marques. On es localitzaven?',
-        traduccion: 'Nombra las marcas. ¿Dónde se localizaban?',
-        respuesta: 'Marca Bretona (oeste), Marca Hispànica (suroeste, frontera con Al-Àndalus), Marca de l\'Est, Sòraba, Pannònica, del Friuli (este/sureste), Marca Danesa (norte). Todas en los bordes del imperio.',
-        donde: 'mapa grande, zonas rojizas junto a las fronteras.',
-        clave: 'Las marcas siempre estaban en el borde del imperio: eran la primera línea de defensa.'
+        traduccion: 'Nombra las marcas. ¿Dónde estaban?',
+        respuesta: 'Las marcas estaban en el borde del imperio:
+Marca Bretona: al oeste.
+Marca Hispánica: al suroeste, cerca de los musulmanes de Al-Ándalus.
+Marca Danesa: al norte.
+Marca del Este, Sorabia, Panonia y Friuli: al este.',
+        donde: 'Mira el mapa grande, en las zonas de color rojizo junto a las fronteras.',
+        clave: 'Las marcas estaban siempre en el borde. Defendían el imperio.'
       },
       {
         pregunta: "Què suposà el Tractat de Verdun per a l'imperi carolingi? En quin any es va signar?",
-        traduccion: '¿Qué supuso el Tratado de Verdún? ¿En qué año se firmó?',
-        respuesta: 'Año 843. Partió el imperio en tres: Carlos el Calvo (reino occidental, futura Francia), Luis el Germánico (reino oriental, futura Alemania) y Lotario (franja central con Italia, y el título de emperador). Nunca más se volvió a unir.',
-        donde: 'mapa pequeño "14. EL TRACTAT DE VERDUN".',
-        clave: 'El Tratado de Verdún (843) partió el imperio de Carlomagno en tres para siempre.'
+        traduccion: '¿Qué cambió con el Tratado de Verdún? ¿En qué año se firmó?',
+        respuesta: 'El Tratado de Verdún se firmó en el año 843.
+Partió el imperio en tres partes:
+Carlos el Calvo: el oeste. Hoy es Francia.
+Luis el Germánico: el este. Hoy es Alemania.
+Lotario: el centro, con Italia. También fue emperador.
+El imperio no se volvió a unir.',
+        donde: 'Mira el mapa pequeño "14. EL TRACTAT DE VERDUN".',
+        clave: 'El Tratado de Verdún (843) partió el imperio en tres.'
       },
       {
         pregunta: "Descriu l'evolució territorial que va experimentar l'imperi carolingi des del regne dels francs fins a l'any 843.",
-        traduccion: 'Describe la evolución territorial del imperio carolingio desde el reino franco hasta el 843.',
-        respuesta: 'Reino franco pequeño → Carlomagno lo expande (sajones, lombardos, Marca Hispánica) → año 800, coronado emperador → su hijo Luis el Piadoso lo debilita → 843, Tratado de Verdún, partido en tres.',
-        donde: 'combina el texto de la página 4 con los dos mapas de esta Caixa de ferramentes.',
-        clave: 'De reino franco pequeño a imperio enorme (800) a partido en tres en solo 43 años (843).'
+        traduccion: 'Cuenta cómo cambió el territorio del imperio, desde el reino franco hasta el año 843.',
+        respuesta: '1. Al principio, el reino de los francos era pequeño.
+2. Carlomagno lo hizo grande.
+3. En el año 800 lo coronaron emperador.
+4. Su hijo Luis el Piadoso lo debilitó.
+5. En el año 843 se partió en tres, con el Tratado de Verdún.',
+        donde: 'Mira el texto de la página 4 y los dos mapas de la Caixa de ferramentes.',
+        clave: 'Pequeño, luego enorme (año 800) y luego partido en tres (año 843).'
       },
       {
         pregunta: "Busca informació sobre Guillem de Normandia; Eduard, rei de Wessex, i Harold, rei d'Anglaterra. Qui van ser? Quin protagonisme històric tingueren? Com se'ls mostra en el tapís?",
-        traduccion: '¿Quiénes fueron Guillermo de Normandía, Eduardo y Harold? ¿Cómo se les muestra en el tapiz?',
-        respuesta: 'Eduardo (rey de Inglaterra): murió sin hijos; en 1064 nombró heredero a Guillermo y mandó a Harold a avisarle.\nHarold: traicionó el encargo y se proclamó rey él mismo.\nGuillermo: cruzó el mar, venció a Harold en Hastings (1066) y se convirtió en rey de Inglaterra.\nEn el tapiz: escena (1) Guillermo bajo un dosel ("WILLELM"); (2)(3) Harold proclamado rey ("HAROLD REX"); (4) la batalla, con "HAROLD REX INTERFECTUS EST" (Harold fue matado).',
-        donde: 'las 5 escenas numeradas del tapiz, con los textos en latín encima de cada personaje.',
-        clave: 'A Guillermo le prometieron el trono, Harold lo traicionó, y Guillermo lo recuperó ganando en Hastings (1066).'
+        traduccion: '¿Quiénes fueron Guillermo de Normandía, Eduardo y Harold? ¿Cómo salen en el tapiz?',
+        respuesta: 'Eduardo era el rey de Inglaterra. No tenía hijos. Dijo que el siguiente rey sería Guillermo.
+Harold era un noble inglés. Prometió ayudar a Guillermo. Pero no cumplió: se hizo rey él mismo.
+Guillermo era el duque de Normandía. Cruzó el mar y ganó a Harold en la batalla de Hastings, en 1066. Así fue rey de Inglaterra.
+En el tapiz:
+1. Guillermo está sentado bajo un dosel. Pone WILLELM.
+2 y 3. Harold es proclamado rey. Pone HAROLD REX.
+4. En la batalla pone HAROLD REX INTERFECTUS EST. Significa "mataron al rey Harold".',
+        donde: 'Mira las 5 escenas numeradas del tapiz. Las palabras en latín están encima de cada persona.',
+        clave: 'Guillermo ganó a Harold en la batalla de Hastings (1066) y fue rey de Inglaterra.'
       },
       {
         pregunta: "Informa't sobre la batalla de Hastings. Qui i per què s'hi enfrontaren? Quines conseqüències se'n van derivar? Descriu l'escena del tapís. Com s'hi representen els uns i els altres? Quines armes i elements defensius porten?",
-        traduccion: '¿Quién y por qué se enfrentaron en Hastings? ¿Consecuencias? Describe armas y cómo se representan.',
-        respuesta: 'Guillermo (reclamaba el trono prometido) contra Harold (lo había usurpado). Ganó Guillermo; Harold murió. Consecuencia: Guillermo, rey de Inglaterra; los normandos pasan a gobernar el país.\nSajones: sin barba, bigote, pelo largo, túnica corta, a pie.\nCombatientes: cota de malla hasta las rodillas, casco y escudo.\nNormandos: luchan a caballo.\nTambién aparece el cometa Halley, visto ese mismo año.',
-        donde: 'imagen grande numerada (4), letras A, B, C, D señaladas a la derecha.',
-        clave: 'Normandos a caballo contra sajones a pie: una de las claves de la victoria en Hastings.'
+        traduccion: '¿Quién luchó en Hastings y por qué? ¿Qué pasó después? Fíjate en las armas y en cómo se dibuja a cada bando.',
+        respuesta: 'Se pelearon Guillermo y Harold. Los dos querían ser rey de Inglaterra.
+Ganó Guillermo. Harold murió.
+Consecuencia: Guillermo fue rey. Los normandos mandaron en Inglaterra.
+En el tapiz:
+Los sajones (ingleses) luchan a pie.
+Los normandos luchan a caballo.
+Todos llevan casco, escudo y una cota de malla, que es una camisa de anillos de metal.
+También sale un cometa en el cielo. Era el cometa Halley.',
+        donde: 'Mira la imagen grande número 4. Las letras A, B, C y D están a la derecha.',
+        clave: 'Los normandos iban a caballo y los sajones a pie. Ganaron los normandos.'
       },
       {
         pregunta: 'Valora la importància d\'aquest tapís com a font històrica. Es podria afirmar que és un còmic històric? Per què?',
-        traduccion: '¿Es importante como fuente histórica? ¿Es un cómic histórico?',
-        respuesta: 'Es muy valioso: hecho poco después de los hechos (siglo XI), con muchísimo detalle (armas, ropa, barcos, hasta el cometa Halley). Sí, es como un cómic histórico: escenas ordenadas tipo viñetas, con texto corto en latín encima explicando qué pasa, como los bocadillos de un cómic.',
-        donde: 'el conjunto de las 5 escenas, de izquierda a derecha.',
-        clave: 'El tapiz de Bayeux es una "noticia bordada" de la época, contada como un cómic histórico.'
+        traduccion: '¿Es importante este tapiz para conocer la historia? ¿Es como un cómic? ¿Por qué?',
+        respuesta: 'Sí, es muy importante. Se hizo poco tiempo después de los hechos. Tiene muchos detalles: armas, ropa, barcos y el cometa.
+Sí, es como un cómic. Tiene escenas una detrás de otra, como viñetas. Y tiene frases cortas en latín, como los bocadillos.',
+        donde: 'Mira las 5 escenas, de izquierda a derecha.',
+        clave: 'El tapiz de Bayeux es como un cómic bordado de hace casi mil años.'
       }
     ]
   });
