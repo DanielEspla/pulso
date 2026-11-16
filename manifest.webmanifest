@@ -1,6 +1,6 @@
 {
- "name": "Ruta",
- "short_name": "Ruta",
+ "name": "Misión Gabinete",
+ "short_name": "Misión",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",

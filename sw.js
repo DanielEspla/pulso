@@ -1,4 +1,4 @@
-const CACHE='ruta-v1';
+const CACHE='misiongabinete-v1';
 const ASSETS=['./','./index.html','./manifest.webmanifest','./icons/icon.svg','./icons/icon-180.png','./icons/icon-192.png','./icons/icon-512.png','./contenido/historia.js','./contenido/valenciano.js','./contenido/castellano.js','./contenido/biologia.js','./contenido/matematicas.js','./contenido/ingles.js','./contenido/fisica.js','./assets/anatomia/esqueleto-humano.png','./assets/anatomia/articulaciones-cuerpo-humano.png','./assets/anatomia/sistema-muscular-humano.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
