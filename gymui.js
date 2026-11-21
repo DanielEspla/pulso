@@ -87,7 +87,7 @@ function gymHoy(p){
     <div class="items" style="margin:6px 0 4px">${prev.map(x=>`<button class="item" data-a="ficha" data-id="${x.ex}" data-s="${idx}" data-si="${x.si}"><span class="nm">${x.ss?`<span class="tag" style="margin:0 6px 0 0">${x.ss}</span>`:""}${esc(EXM[x.ex].name)}</span><span class="q small">${x.sets} × ${repTxt(x)} · RIR ${x.rir}</span></button>`).join("")}</div>
     <div class="field"><span>¿Cómo te encuentras hoy?</span><div class="seg">${[["energia","Con energía"],["normal","Normal"],["cansado","Cansado"],["muy","Muy cansado"]].map(([k,t])=>`<button class="${well===k?"on":""}" data-a="well" data-k="${k}">${t}</button>`).join("")}</div>
     ${well==="cansado"?`<span class="hint">Hoy dejas una repetición más en reserva. Es mejor entrenar algo más suave que no entrenar.</span>`:well==="muy"?`<span class="hint">Hoy una serie menos por ejercicio y una repetición más en reserva. Mantienes el estímulo sin cavar más fatiga.</span>`:""}</div>
-    <button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Comenzar sesión</button>
+    ${fwToggle(p)}<button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Comenzar sesión</button>
     ${sessionPicker(p,idx)}
   </div>
   ${cardioCard(p)}
@@ -117,7 +117,7 @@ function viewRunner(p){
   ${ssBox}
   <div class="row" style="gap:6px"><button class="btn sm" data-a="ficha" data-id="${ex.id}">${ic("info",'width="16"')} Técnica y porqué</button><button class="btn sm" data-a="swapOpen" data-i="${d.cur}">${ic("swap",'width="16"')} Cambiar</button></div>
   <div class="card stack">
-    <p class="acc-t"><b>Objetivo: ${it.sets} series · ${repTxt(it)} · RIR ${it.rir}</b> ${infoBtn("rir","RIR")} <span class="muted small">· descanso ${restTxt(it.rest)}</span></p>
+    <p class="acc-t"><b>Objetivo: ${it.sets} ${it.sets===1?"serie":"series"} · ${repTxt(it)} · RIR ${it.rir}</b> ${infoBtn("rir","RIR")} <span class="muted small">· descanso ${restTxt(it.rest)}</span></p>
     ${it.tech?`<p class="tech"><b>${TECHS[it.tech][0]}</b> ${infoBtn("tecnicas","técnicas")}<br><span class="small">${TECHS[it.tech][1]}</span></p>`:""}
     ${sg.last?`<p class="small muted">${esc(sg.last)}</p>`:""}
     ${plateauBox(p,it)}
@@ -187,9 +187,9 @@ function doSwap(p,ctx,newId){
   if(st.reason==="dolor"&&st.joint)(g.pains=g.pains||[]).push({date:today(),joint:st.joint,ex:old.id});
   const ne=EXM[newId];
   if(ctx.mode==="ses"){
-    const d=g.draft;const it=d.exs[ctx.i];const slot=d.mine?null:g.plan.sessions[d.sIdx].slots[it.si];
-    const range=d.mine?[it.lo,it.hi]:repRange(p,ne,slot);
-    const nu=d.mine?{...it,ex:newId}:{...it,ex:newId,lo:range[0],hi:range[1],rir:rirTarget(p,ne,d.week)+(d.wellness==="cansado"||d.wellness==="muy"?1:0),rest:restFor(p,ne,slot)};
+    const d=g.draft;const it=d.exs[ctx.i];const lib=d.mine||it.fw;const slot=lib?null:g.plan.sessions[d.sIdx].slots[it.si];
+    const range=lib?[it.lo,it.hi]:repRange(p,ne,slot);
+    const nu=lib?{...it,ex:newId}:{...it,ex:newId,lo:range[0],hi:range[1],rir:rirTarget(p,ne,d.week)+(d.wellness==="cansado"||d.wellness==="muy"?1:0),rest:restFor(p,ne,slot)};
     if(it.sets_.length){it.done=true;nu.sets_=[];nu.sets=Math.max(1,it.sets-it.sets_.filter(s=>!s.warm).length);d.exs.splice(ctx.i+1,0,nu);d.cur=ctx.i+1;}
     else{nu.sets_=[];d.exs[ctx.i]=nu;}
     if(st.perm&&slot)slot.ex=newId;
@@ -394,7 +394,7 @@ function gymSimple(p){
     <p class="muted">${prev.length} ejercicios · ${series} series · unos ${sessionMinutes(p,idx)} minutos</p>
     <ol class="simple-ex">${prev.map(x=>`<li><div class="row between" style="flex-wrap:nowrap;gap:10px">${exFig(x.ex,42)}<div style="flex:1;min-width:0"><b>${esc(EXM[x.ex].name)}</b><span class="small muted">${x.sets} series de ${x.lo}-${x.hi}${EXM[x.ex].rep==="s"?" s":""}${lastW(x.ex)}</span></div><button class="btn ghost sm" data-a="swSimple" data-s="${idx}" data-si="${x.si}" aria-label="Cambiar ${esc(EXM[x.ex].name)}">Cambiar</button></div></li>`).join("")}</ol>
     <p class="small muted">¿No puedes hacer alguno o no te gusta? Pulsa Cambiar. Durante la sesión también puedes.</p>
-    <button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Empezar</button>
+    ${fwToggle(p)}<button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Empezar</button>
     ${n>1?`<div class="row" style="gap:8px;flex-wrap:nowrap"><button class="btn sm" style="flex:1" data-a="gsel" data-i="${(idx-1+n)%n}">← Otra anterior</button><button class="btn sm" style="flex:1" data-a="gsel" data-i="${(idx+1)%n}">Otra siguiente →</button></div>`:""}
     ${idx!==g.next%n?`<button class="btn ghost sm" style="align-self:center" data-a="gsel" data-i="${g.next%n}">Volver a la que toca</button>`:""}
   </div>
