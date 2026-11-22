@@ -84,7 +84,7 @@ function gymHoy(p){
     <h2 class="disp">${esc(ses.name)}</h2>
     <p class="muted">${sessionMinutes(p,idx)} min aprox. · ${WEEK_NAMES[wk].split(" · ")[1]} · RIR ${prev.length?Math.min(...prev.map(x=>x.rir)):"-"}-${prev.length?Math.max(...prev.map(x=>x.rir)):"-"}</p>
     ${!td.isDay&&!last?`<p class="small muted">Hoy no es día de gimnasio en tu semana tipo. Puedes entrenar igualmente.</p>`:""}
-    <div class="items" style="margin:6px 0 4px">${prev.map(x=>`<button class="item" data-a="ficha" data-id="${x.ex}" data-s="${idx}" data-si="${x.si}"><span class="nm">${x.ss?`<span class="tag" style="margin:0 6px 0 0">${x.ss}</span>`:""}${esc(EXM[x.ex].name)}</span><span class="q small">${x.sets} × ${repTxt(x)} · RIR ${x.rir}</span></button>`).join("")}</div>
+    <div class="items" style="margin:6px 0 4px">${prev.map(x=>`<button class="item" data-a="ficha" data-id="${x.ex}" data-s="${idx}" data-si="${x.si}"><span class="nm">${x.ss?`<span class="tag" style="margin:0 6px 0 0">${x.ss}</span>`:""}${esc(EXM[x.ex].name)}${techTag(x.tech)}</span><span class="q small">${x.sets} × ${repTxt(x)} · RIR ${x.rir}</span></button>`).join("")}</div>${techCount(prev)}
     <div class="field"><span>¿Cómo te encuentras hoy?</span><div class="seg">${[["energia","Con energía"],["normal","Normal"],["cansado","Cansado"],["muy","Muy cansado"]].map(([k,t])=>`<button class="${well===k?"on":""}" data-a="well" data-k="${k}">${t}</button>`).join("")}</div>
     ${well==="cansado"?`<span class="hint">Hoy dejas una repetición más en reserva. Es mejor entrenar algo más suave que no entrenar.</span>`:well==="muy"?`<span class="hint">Hoy una serie menos por ejercicio y una repetición más en reserva. Mantienes el estímulo sin cavar más fatiga.</span>`:""}</div>
     ${fwToggle(p)}<button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Comenzar sesión</button>
@@ -118,7 +118,7 @@ function viewRunner(p){
   <div class="row" style="gap:6px"><button class="btn sm" data-a="ficha" data-id="${ex.id}">${ic("info",'width="16"')} Técnica y porqué</button><button class="btn sm" data-a="swapOpen" data-i="${d.cur}">${ic("swap",'width="16"')} Cambiar</button></div>
   <div class="card stack">
     <p class="acc-t"><b>Objetivo: ${it.sets} ${it.sets===1?"serie":"series"} · ${repTxt(it)} · RIR ${it.rir}</b> ${infoBtn("rir","RIR")} <span class="muted small">· descanso ${restTxt(it.rest)}</span></p>
-    ${it.tech?`<p class="tech"><b>${TECHS[it.tech][0]}</b> ${infoBtn("tecnicas","técnicas")}<br><span class="small">${TECHS[it.tech][1]}</span></p>`:""}
+    ${techBox(p,it,nWork)}
     ${sg.last?`<p class="small muted">${esc(sg.last)}</p>`:""}
     ${plateauBox(p,it)}
     <p class="sug ${sg.act||""}">${esc(sg.txt)}</p>
@@ -392,8 +392,8 @@ function gymSimple(p){
   ${typeof fixedHoyAlert==="function"?fixedHoyAlert(p):""}
   <div class="hero"><span class="lbl acc">${idx===g.next%n?"Hoy toca":"Has elegido"}</span><h2 class="disp">${esc(ses.name)}</h2>
     <p class="muted">${prev.length} ejercicios · ${series} series · unos ${sessionMinutes(p,idx)} minutos</p>
-    <ol class="simple-ex">${prev.map(x=>`<li><div class="row between" style="flex-wrap:nowrap;gap:10px">${exFig(x.ex,42)}<div style="flex:1;min-width:0"><b>${esc(EXM[x.ex].name)}</b><span class="small muted">${x.sets} series de ${x.lo}-${x.hi}${EXM[x.ex].rep==="s"?" s":""}${lastW(x.ex)}</span></div><button class="btn ghost sm" data-a="swSimple" data-s="${idx}" data-si="${x.si}" aria-label="Cambiar ${esc(EXM[x.ex].name)}">Cambiar</button></div></li>`).join("")}</ol>
-    <p class="small muted">¿No puedes hacer alguno o no te gusta? Pulsa Cambiar. Durante la sesión también puedes.</p>
+    <ol class="simple-ex">${prev.map(x=>`<li><div class="row between" style="flex-wrap:nowrap;gap:10px">${exFig(x.ex,42)}<div style="flex:1;min-width:0"><b>${esc(EXM[x.ex].name)}</b>${techTag(x.tech)}<span class="small muted">${x.sets} series de ${x.lo}-${x.hi}${EXM[x.ex].rep==="s"?" s":""}${lastW(x.ex)}</span></div><button class="btn ghost sm" data-a="swSimple" data-s="${idx}" data-si="${x.si}" aria-label="Cambiar ${esc(EXM[x.ex].name)}">Cambiar</button></div></li>`).join("")}</ol>
+    ${techCount(prev)}<p class="small muted">¿No puedes hacer alguno o no te gusta? Pulsa Cambiar. Durante la sesión también puedes.</p>
     ${fwToggle(p)}<button class="btn pri wide big-btn" data-a="startSes" data-i="${idx}">Empezar</button>
     ${n>1?`<div class="row" style="gap:8px;flex-wrap:nowrap"><button class="btn sm" style="flex:1" data-a="gsel" data-i="${(idx-1+n)%n}">← Otra anterior</button><button class="btn sm" style="flex:1" data-a="gsel" data-i="${(idx+1)%n}">Otra siguiente →</button></div>`:""}
     ${idx!==g.next%n?`<button class="btn ghost sm" style="align-self:center" data-a="gsel" data-i="${g.next%n}">Volver a la que toca</button>`:""}

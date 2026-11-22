@@ -418,3 +418,10 @@ ol.simple-ex li span{display:block}
 .fig{flex:none;color:var(--ink);display:block}
 .ex-head{display:flex;align-items:center;gap:12px}
 .ex-head .ex-title{margin:0;flex:1;min-width:0}
+
+.ttag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--warn);color:var(--bg);vertical-align:2px;white-space:nowrap;width:max-content;align-self:flex-start}
+.ttag.big{margin-left:0;font-size:.72rem}
+.tnote{display:flex;gap:10px;align-items:center;padding:10px 12px;margin:8px 0;border-radius:12px;background:var(--warn-soft);font-size:.9rem}.tnote .ttag{margin-left:0}
+.tband{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--warn-soft);border-left:4px solid var(--warn)}.tband .ttag{margin-left:0}
+.tband.first{display:block}.tband.first h3{margin:8px 0 4px;font-size:1.15rem}.tband.first p{margin:6px 0;font-size:.92rem}
+.tnow{display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:14px;border:2px solid var(--warn);background:var(--warn-soft)}.tnow b{font-size:1.1rem;color:var(--warn)}.tnow .btn{margin-top:4px}
