@@ -655,6 +655,168 @@ window.MISSIO_CONTENIDO=window.MISSIO_CONTENIDO||{};
      "fase": "Mapa",
      "emoji": "<span class=\"mapa\"><img src=\"assets/mapas/base.svg\" alt=\"\"><img src=\"assets/mapas/pt.svg\" alt=\"Mapa de Europa con un país pintado de azul\"></span>"
     }
+   },
+   {
+    "id": "eur_be",
+    "asignatura": "Geografía e Historia",
+    "unidad": "Mapa político de Europa",
+    "titulo": "Bélgica",
+    "objetivo": "Localizar Bélgica en el mapa de Europa y saber su capital.",
+    "explicacion": "Bélgica está en el oeste de Europa. Es el país pequeño que está entre Francia, Países Bajos y Luxemburgo.",
+    "ejemplo": "La capital de Bélgica es <b>Bruselas</b>.",
+    "preguntas": [
+     {
+      "id": "eur_be_q1",
+      "tipo": "opcion_multiple",
+      "enunciado": "<span class=\"mapa\"><img src=\"assets/mapas/base.svg\" alt=\"\"><img src=\"assets/mapas/be.svg\" alt=\"Mapa de Europa con un país pintado de azul\"></span>¿Qué país está pintado de azul?",
+      "opciones": [
+       {
+        "id": "a",
+        "texto": "Bélgica"
+       },
+       {
+        "id": "b",
+        "texto": "Países Bajos"
+       },
+       {
+        "id": "c",
+        "texto": "Luxemburgo"
+       }
+      ],
+      "correcta": "a",
+      "pista": "Es el país pequeño que está entre Francia, Países Bajos y Luxemburgo.",
+      "explicacion": "Es Bélgica. Es el país pequeño que está entre Francia, Países Bajos y Luxemburgo."
+     },
+     {
+      "id": "eur_be_q2",
+      "tipo": "opcion_multiple",
+      "enunciado": "¿Cuál es la capital de Bélgica?",
+      "opciones": [
+       {
+        "id": "a",
+        "texto": "Bruselas"
+       },
+       {
+        "id": "b",
+        "texto": "Ámsterdam"
+       },
+       {
+        "id": "c",
+        "texto": "París"
+       }
+      ],
+      "correcta": "a",
+      "pista": "Empieza por la letra B.",
+      "explicacion": "La capital de Bélgica es Bruselas."
+     },
+     {
+      "id": "eur_be_q3",
+      "tipo": "opcion_multiple",
+      "enunciado": "<span class=\"mapa\"><img src=\"assets/mapas/base.svg\" alt=\"\"><img src=\"assets/mapas/be.svg\" alt=\"Mapa de Europa con un país pintado de azul\"></span>Mira el país azul. ¿Cuál es su capital?",
+      "opciones": [
+       {
+        "id": "a",
+        "texto": "Bruselas"
+       },
+       {
+        "id": "b",
+        "texto": "Ámsterdam"
+       },
+       {
+        "id": "c",
+        "texto": "París"
+       }
+      ],
+      "correcta": "a",
+      "pista": "El país azul es Bélgica.",
+      "explicacion": "El país azul es Bélgica y su capital es Bruselas."
+     }
+    ],
+    "presentacion": {
+     "fase": "Mapa",
+     "emoji": "<span class=\"mapa\"><img src=\"assets/mapas/base.svg\" alt=\"\"><img src=\"assets/mapas/be.svg\" alt=\"Mapa de Europa con un país pintado de azul\"></span>"
+    }
+   },
+   {
+    "id": "eur_ad",
+    "asignatura": "Geografía e Historia",
+    "unidad": "Mapa político de Europa",
+    "titulo": "Andorra",
+    "objetivo": "Localizar Andorra en el mapa de Europa y saber su capital.",
+    "explicacion": "Andorra está en los Pirineos, entre Francia y España. Es un país muy pequeño, con un círculo para verlo bien en el mapa.",
+    "ejemplo": "La capital de Andorra es <b>Andorra la Vella</b>.",
+    "preguntas": [
+     {
+      "id": "eur_ad_q1",
+      "tipo": "opcion_multiple",
+      "enunciado": "<span class=\"mapa\"><img src=\"assets/mapas/base.svg\" alt=\"\"><img src=\"assets/mapas/ad.svg\" alt=\"Mapa de Europa con un país pintado de azul\"></span>¿Qué país está marcado con el círculo azul?",
+      "opciones": [
+       {
+        "id": "a",
+        "texto": "Andorra"
+       },
+       {
+        "id": "b",
+        "texto": "Mónaco"
+       },
+       {
+        "id": "c",
+        "texto": "San Marino"
+       }
+      ],
+      "correcta": "a",
+      "pista": "Está en los Pirineos, entre Francia y España.",
+      "explicacion": "Es Andorra. Está en los Pirineos, entre Francia y España."
+     },
+     {
+      "id": "eur_ad_q2",
+      "tipo": "opcion_multiple",
+      "enunciado": "¿Cuál es la capital de Andorra?",
+      "opciones": [
+       {
+        "id": "a",
+        "texto": "Andorra la Vella"
+       },
+       {
+        "id": "b",
+        "texto": "Madrid"
+       },
+       {
+        "id": "c",
+        "texto": "París"
+       }
+      ],
+      "correcta": "a",
+      "pista": "Se llama casi igual que el país.",
+      "explicacion": "La capital de Andorra es Andorra la Vella."
+     },
+     {
+      "id": "eur_ad_q3",
+      "tipo": "opcion_multiple",
+      "enunciado": "<span class=\"mapa\"><img src=\"assets/mapas/base.svg\" alt=\"\"><img src=\"assets/mapas/ad.svg\" alt=\"Mapa de Europa con un país pintado de azul\"></span>Mira el país marcado. ¿Cuál es su capital?",
+      "opciones": [
+       {
+        "id": "a",
+        "texto": "Andorra la Vella"
+       },
+       {
+        "id": "b",
+        "texto": "Madrid"
+       },
+       {
+        "id": "c",
+        "texto": "París"
+       }
+      ],
+      "correcta": "a",
+      "pista": "El país marcado es Andorra.",
+      "explicacion": "El país marcado es Andorra y su capital es Andorra la Vella."
+     }
+    ],
+    "presentacion": {
+     "fase": "Mapa",
+     "emoji": "<span class=\"mapa\"><img src=\"assets/mapas/base.svg\" alt=\"\"><img src=\"assets/mapas/ad.svg\" alt=\"Mapa de Europa con un país pintado de azul\"></span>"
+    }
    }
   ]
  },
