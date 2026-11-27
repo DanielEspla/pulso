@@ -425,3 +425,9 @@ ol.simple-ex li span{display:block}
 .tband{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--warn-soft);border-left:4px solid var(--warn)}.tband .ttag{margin-left:0}
 .tband.first{display:block}.tband.first h3{margin:8px 0 4px;font-size:1.15rem}.tband.first p{margin:6px 0;font-size:.92rem}
 .tnow{display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:14px;border:2px solid var(--warn);background:var(--warn-soft)}.tnow b{font-size:1.1rem;color:var(--warn)}.tnow .btn{margin-top:4px}
+
+.tnow span{font-size:.95rem}
+.tgdots{display:flex;gap:6px;margin-top:4px}.tgdots i{flex:1;height:6px;border-radius:3px;background:var(--line)}.tgdots i.ok{background:var(--ok)}.tgdots i.cur{background:var(--warn)}
+.tgdo{font-size:1.25rem;font-weight:700;line-height:1.3;color:var(--ink)}
+.tgrest{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;text-align:center}.tgrest .num{font-size:3.4rem;line-height:1;color:var(--warn)}.tgrest .bar{width:100%}
+.tgend{font-size:1.05rem;font-weight:700;color:var(--ok)}

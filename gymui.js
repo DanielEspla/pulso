@@ -334,7 +334,7 @@ Object.assign(A,{
       const ssId=supersOn(p)?it.ss:"";const j=ssId?d.exs.findIndex((x,k)=>k!==d.cur&&x.ss===ssId&&!x.done&&!x.skipped):-1;
       const nj=j>=0?d.exs[j].sets_.filter(s=>!s.warm).length:0;
       if(j>=0&&nj<nWork){UI.rest={until:Date.now()+20000,total:20,label:"Cambio a "+EXM[d.exs[j].ex].name};d.cur=j;toast(`Superserie: ahora ${EXM[d.exs[j].ex].name}`);}
-      else{const back=j>=0&&j<d.cur&&d.exs[j].sets_.filter(s=>!s.warm).length<d.exs[j].sets;UI.rest={until:Date.now()+it.rest*1000,total:it.rest,label:back?"Descanso · vuelves a "+EXM[d.exs[j].ex].name:"Descanso"};if(back)d.cur=j;}
+      else{const back=j>=0&&j<d.cur&&d.exs[j].sets_.filter(s=>!s.warm).length<d.exs[j].sets;UI.rest={until:Date.now()+it.rest*1000,total:it.rest,label:back?"Descanso · vuelves a "+EXM[d.exs[j].ex].name:"Descanso entre series"};if(back)d.cur=j;}
     }
     commit();},
   delSet:el=>{const d=G(P()).draft;d.exs[d.cur].sets_.splice(+el.dataset.i,1);commit();},
